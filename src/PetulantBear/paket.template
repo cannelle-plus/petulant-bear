@@ -1,0 +1,23 @@
+type project
+owners
+    Arthis
+authors 
+    Arthis
+projectUrl
+    http://github.com/cannelle-plus/PetulantBear
+iconUrl
+    https://raw.githubusercontent.com/cannelle-plus/PetulantBear/master/docs/files/img/logo.png
+licenseUrl
+    http://github.com/cannelle-plus/PetulantBear/blob/master/LICENSE.txt
+requireLicenseAcceptance
+    false
+copyright
+    Copyright 2015
+tags
+    FSharp Suave
+summary
+    
+description
+    Description not set
+
+

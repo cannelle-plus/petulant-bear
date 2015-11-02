@@ -1,0 +1,23 @@
+source https://nuget.org/api/v2
+
+nuget FSharp.Core
+nuget FSharp.Formatting
+nuget NUnit
+nuget NUnit.Runners
+nuget FAKE
+nuget SourceLink.Fake
+nuget FsCheck
+nuget FsPickler
+nuget Fuchu 
+nuget Suave
+nuget Suave.Testing
+nuget Akka
+nuget Akka.FSharp
+nuget Newtonsoft.Json
+nuget Unquote
+nuget System.Data.SQLite
+
+
+github fsharp/FAKE modules/Octokit/Octokit.fsx
+
+http "https://www.sqlite.org/2015/sqlite-shell-win32-x86-3081101.zip"

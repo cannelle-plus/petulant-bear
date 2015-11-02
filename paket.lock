@@ -1,0 +1,64 @@
+NUGET
+  remote: https://nuget.org/api/v2
+  specs:
+    Akka (1.0.4)
+      Newtonsoft.Json (>= 7.0.1)
+    Akka.FSharp (1.0.4)
+      Akka (>= 1.0.4)
+      FsPickler (>= 1.2.21)
+      FSPowerPack.Core.Community (>= 3.0.0.0)
+      FSPowerPack.Linq.Community (>= 3.0.0.0)
+    EntityFramework (6.1.3) - framework: net40, net45, net451, >= net46
+    FAKE (4.5.3)
+    FsCheck (2.1.0)
+      FSharp.Core (>= 3.1.2.5)
+    FSharp.Compiler.Service (0.0.90)
+    FSharp.Core (4.0.0.1)
+    FSharp.Formatting (2.11.0)
+      FSharp.Compiler.Service (>= 0.0.90 <= 1.3)
+      FSharpVSPowerTools.Core (1.9.0)
+    FSharpVSPowerTools.Core (1.9.0)
+      FSharp.Compiler.Service (>= 0.0.90)
+    FsPickler (1.4.0)
+    FSPowerPack.Core.Community (3.0.0)
+    FSPowerPack.Linq.Community (3.0.0)
+      FSPowerPack.Core.Community
+    Fuchu (0.6.0)
+    Fuchu-suave (0.6.1)
+      FSharp.Core (>= 3.1.2.1)
+    Microsoft.Bcl (1.1.10)
+      Microsoft.Bcl.Build (>= 1.0.14)
+    Microsoft.Bcl.Build (1.0.21) - import_targets: false
+    Microsoft.Net.Http (2.2.29)
+      Microsoft.Bcl (>= 1.1.10)
+      Microsoft.Bcl.Build (>= 1.0.14)
+    Newtonsoft.Json (7.0.1)
+    NUnit (2.6.4)
+    NUnit.Runners (2.6.4)
+    Octokit (0.16.0)
+      Microsoft.Net.Http
+    SourceLink.Fake (1.1.0)
+    Suave (0.31.2)
+      FSharp.Core (>= 3.1.2.5)
+      FsPickler (>= 1.2.5)
+    Suave.Testing (0.31.2)
+      Fuchu (>= 0.6.0.0)
+      Suave (>= 0.31.2)
+    System.Data.SQLite (1.0.98.1)
+      System.Data.SQLite.Core (>= 1.0.98.1)
+      System.Data.SQLite.EF6 (>= 1.0.98.1)
+      System.Data.SQLite.Linq (>= 1.0.98.1)
+    System.Data.SQLite.Core (1.0.98.1) - framework: net20, net40, net45, net451, >= net46
+    System.Data.SQLite.EF6 (1.0.98.1) - framework: net40, net45, net451, >= net46
+      EntityFramework (>= 6.0.0.0)
+    System.Data.SQLite.Linq (1.0.98.1) - framework: net20, net40, net45, net451, >= net46
+    Unquote (3.0.0)
+GITHUB
+  remote: fsharp/FAKE
+  specs:
+    modules/Octokit/Octokit.fsx (7543f29800c1245a04f96b5f1be063b0568fd5d6)
+      Octokit
+HTTP
+  remote: https://www.sqlite.org
+  specs:
+    sqlite-shell-win32-x86-3081101.zip (/2015/sqlite-shell-win32-x86-3081101.zip)

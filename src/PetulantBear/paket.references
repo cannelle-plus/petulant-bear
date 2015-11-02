@@ -1,0 +1,8 @@
+FSharp.Core
+FSharp.Formatting
+FsPickler
+Suave
+Akka
+Akka.FSharp
+Newtonsoft.Json
+System.Data.SQLite
