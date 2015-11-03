@@ -42,6 +42,8 @@ module Contracts =
       bearId : Guid;
       bearUsername : string;
       bearAvatarId : int;
+      mark :int;
+      comment : string
       }  
 
     

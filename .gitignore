@@ -161,7 +161,7 @@ $RECYCLE.BIN/
 .DS_Store
 
 # ===================================================
-# Exclude F# project specific directories and files
+# Exclude F# project specific directories and files 
 # ===================================================
 
 # NuGet Packages Directory
@@ -187,3 +187,4 @@ paket-files
 .fake
 docs/content/license.md
 docs/content/release-notes.md
+72r4

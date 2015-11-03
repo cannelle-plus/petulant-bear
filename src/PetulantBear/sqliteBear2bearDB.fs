@@ -11,6 +11,7 @@ open PetulantBear.Rooms
 
 
 open PetulantBear.Games.Contracts
+open PetulantBear.AfterGames.Contracts
 open PetulantBear.Bears.Contracts
 open PetulantBear.Rooms.Contracts
 
@@ -92,7 +93,7 @@ let retrieveGamesBears connection gameId bearId =
     mark,comment
 
 
-let markBearToDB connection ((id,version,bear):Guid*int*BearSession) (mark:int)=
+let markBearToDB connection ((id,version,bear):Guid*int*BearSession) (cmd:MarkBear)=
 
     let (mark,comment) = retrieveGamesBears connection (id.ToString()) (bear.bearId.ToString())
 
@@ -103,13 +104,13 @@ let markBearToDB connection ((id,version,bear):Guid*int*BearSession) (mark:int)=
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
 
     add("@gameId", id.ToString())
-    add("@bearId", bear.bearId.ToString())
-    add("@mark", mark.ToString())
+    add("@bearId", cmd.bearId.ToString())
+    add("@mark", cmd.mark.ToString())
     
     sqlCmd
 
 
-let commentBearToDB connection ((id,version,bear):Guid*int*BearSession)  (comment:string) =
+let commentBearToDB connection ((id,version,bear):Guid*int*BearSession)  (cmd:CommentBear) =
 
     let (mark,comment) = retrieveGamesBears connection (id.ToString()) (bear.bearId.ToString())
 
@@ -120,8 +121,8 @@ let commentBearToDB connection ((id,version,bear):Guid*int*BearSession)  (commen
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
 
     add("@gameId", id.ToString())
-    add("@bearId", bear.bearId.ToString())
-    add("@comment", comment)
+    add("@bearId", cmd.bearId.ToString())
+    add("@comment", cmd.comment)
     sqlCmd
 
 
@@ -130,7 +131,7 @@ let getGame bearId (filter:GamesFilter) =
     connection.Open()
 
     //retrieving players for the game
-    let sqlPlayers = "select b.bearId, b.bearUsername, b.bearAvatarId   from Bears as b INNER JOIN GamesBears as BearsSelection on BearsSelection.bearId = b.bearId where  BearsSelection.gameId=@gameId  "
+    let sqlPlayers = "select b.bearId, b.bearUsername, b.bearAvatarId , BearsSelection.mark, BearsSelection.comment  from Bears as b INNER JOIN GamesBears as BearsSelection on BearsSelection.bearId = b.bearId where  BearsSelection.gameId=@gameId  "
     let sqlCmdPlayers = new SQLiteCommand(sqlPlayers, connection) 
 
     let add (name:string, value: string) = 
@@ -143,16 +144,19 @@ let getGame bearId (filter:GamesFilter) =
     let bearPlayersList = new System.Collections.Generic.List<BearPlayer>()
 
     while readerPlayers.Read() do
+        let couldParse, mark = Int32.TryParse(readerPlayers.["mark"].ToString())
         bearPlayersList.Add(
             {
                 bearId=Guid.Parse(readerPlayers.["bearId"].ToString());
                 bearUsername= readerPlayers.["bearUsername"].ToString();
                 bearAvatarId = Int32.Parse(readerPlayers.["bearAvatarId"].ToString());
+                mark = mark;
+                comment = readerPlayers.["comment"].ToString()
             }
         )
 
     
-    let sqlGame = "Select gl.id, gl.name,gl.ownerId,gl.ownerBearName,gl.startDate,gl.location,         gl.currentState, COUNT(BearsInGamesToCount.bearId) AS nbPlayers,gl.maxPlayers from GamesList as gl LEFT OUTER  JOIN GamesBears         as BearsInGamesToCount on gl.id = BearsInGamesToCount.gameId              GROUP BY gl.id, gl.name,gl.ownerId,gl.ownerBearName,gl.startDate,gl.location,gl.currentState,gl.maxPlayers          HAVING gl.id = @gameId "
+    let sqlGame = "Select gl.id, gl.name,gl.ownerId,gl.ownerBearName,gl.startDate,gl.location, gl.currentState, COUNT(BearsInGamesToCount.bearId) AS nbPlayers,gl.maxPlayers from GamesList as gl LEFT OUTER  JOIN GamesBears         as BearsInGamesToCount on gl.id = BearsInGamesToCount.gameId              GROUP BY gl.id, gl.name,gl.ownerId,gl.ownerBearName,gl.startDate,gl.location,gl.currentState,gl.maxPlayers          HAVING gl.id = @gameId "
     let sqlCmdGame = new SQLiteCommand(sqlGame, connection) 
 
     let add (name:string, value: string) = 

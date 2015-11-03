@@ -7,6 +7,15 @@ Date.prototype.toMSJSON = function () {
 
     $(function () {
 
+
+        var guid = function () {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0,
+                  v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
         var createCommand = function (id, version, payLoad) {
             return {
                 id: id,
@@ -74,8 +83,10 @@ Date.prototype.toMSJSON = function () {
               });
         }
 
-        var markBear = function (gameId,  mark) {
+        //afterGame
+        var markBear = function (gameId, bearId,  mark) {
             var markBearCmd = createCommand(gameId, 1, {
+                "bearId" : bearId,
                 "mark": mark
             });
             return $.ajax({
@@ -89,8 +100,9 @@ Date.prototype.toMSJSON = function () {
               });
         }
 
-        var commentBear = function (gameId,  comment) {
+        var commentBear = function (gameId, bearId,  comment) {
             var commentBearCmd = createCommand(gameId, 1, {
+                "bearId" : bearId,
                 "comment": comment
             });
             return $.ajax({
@@ -157,8 +169,6 @@ Date.prototype.toMSJSON = function () {
                   $("#stopCalibrationResult").html(err);
               });
         }
-
-
 
         var postMessageToRoom = function (roomId,  message) {
             var postMessageCmd = createCommand(roomId, 1, {
@@ -242,7 +252,6 @@ Date.prototype.toMSJSON = function () {
               });
         };
 
-
         var getGame = function (gameId) {
             $.ajax({
                 type: "POST",
@@ -252,77 +261,96 @@ Date.prototype.toMSJSON = function () {
                     id: gameId
                 })
             })
-              .done(function (data) {
-                  if (data !== null && data !== undefined) {
-                      var msg = [];
+            .done(function (data) {
+                if (data !== null && data !== undefined) {
+                    var msg = [];
 
-                      var msgPlayers = [];
-                      msgPlayers.push("<TABLE  border=\"1\">");
-                      msgPlayers.push("<TR>");
-                      msgPlayers.push("<TH>bearId</TH>");
-                      msgPlayers.push("<TH>bearUsername</TH>");
-                      msgPlayers.push("<TH>bearAvatarId</TH>");
-                      msgPlayers.push("</TR>");
-                      for (var i = 0; i < data.players.length; i++) {
-                          msgPlayers.push("<TR>");
-                          msgPlayers.push("<TD>" + data.players[i].bearId + "</TD>");
-                          msgPlayers.push("<TD>" + data.players[i].bearUsername + "</TD>");
-                          msgPlayers.push("<TD>" + data.players[i].bearAvatarId + "</TD>");
-                          msgPlayers.push("</TR>");
-                      }
-                      msgPlayers.push("</TABLE>");
+                    var msgPlayers = [];
+                    msgPlayers.push("<TABLE  border=\"1\">");
+                    msgPlayers.push("<TR>");
+                    msgPlayers.push("<TH>bearId</TH>");
+                    msgPlayers.push("<TH>bearUsername</TH>");
+                    msgPlayers.push("<TH>bearAvatarId</TH>");
+                    msgPlayers.push("<TH>mark</TH>");
+                    msgPlayers.push("<TH>comment</TH>");
+                    msgPlayers.push("<TH colspan=2>actions</TH>");
+                    msgPlayers.push("</TR>");
+                    for (var i = 0; i < data.players.length; i++) {
+                        msgPlayers.push("<TR>");
+                        msgPlayers.push("<TD>" + data.players[i].bearId + "</TD>");
+                        msgPlayers.push("<TD>" + data.players[i].bearUsername + "</TD>");
+                        msgPlayers.push("<TD>" + data.players[i].bearAvatarId + "</TD>");
+                        msgPlayers.push("<TD>" + data.players[i].mark + "</TD>");
+                        msgPlayers.push("<TD>" + data.players[i].comment + "</TD>");
+                        msgPlayers.push("<TD><div href='#' class='markBearBtn' data-id='" + data.players[i].bearId + "'>mark</div><div id='markBearResult'></div></TD>");
+                        msgPlayers.push("<TD><div href='#' class='commentBearBtn' data-id='" + data.players[i].bearId + "'>comment</div><div id='commentBearResult'></div></TD>");
+                        msgPlayers.push("</TR>");
+                    }
+                    msgPlayers.push("</TABLE>");
 
-                      msg.push("<TABLE  border=\"1\">");
-                      msg.push("<TR>");
-                      msg.push("<TH>id</TH>");
-                      msg.push("<TH>name</TH>");
-                      msg.push("<TH>location</TH>");
-                      msg.push("<TH>starTHate</TH>");
-                      msg.push("<TH>players</TH>");
-                      msg.push("<TH>nbPlayers</TH>");
-                      msg.push("<TH>maxPlayers</TH>");
-                      msg.push("</TR>");
-                      msg.push("<TR>");
-                      msg.push("<TD>" + data.id + "</TD>");
-                      msg.push("<TD>" + data.name + "</TD>");
-                      msg.push("<TD>" + data.location + "</TD>");
-                      msg.push("<TD>" + data.startDate + "</TD>");
-                      msg.push("<TD>" + msgPlayers.join('') + "</TD>");
-                      msg.push("<TD>" + data.nbPlayers + "</TD>");
-                      msg.push("<TD>" + data.maxPlayers + "</TD>");
-                      msg.push("</TR>");
+                    msg.push("<TABLE  border=\"1\">");
+                    msg.push("<TR>");
+                    msg.push("<TH>id</TH>");
+                    msg.push("<TH>name</TH>");
+                    msg.push("<TH>location</TH>");
+                    msg.push("<TH>starDate</TH>");
+                    msg.push("<TH>players</TH>");
+                    msg.push("<TH>nbPlayers</TH>");
+                    msg.push("<TH>maxPlayers</TH>");
+                    msg.push("</TR>");
+                    msg.push("<TR>");
+                    msg.push("<TD>" + data.id + "</TD>");
+                    msg.push("<TD>" + data.name + "</TD>");
+                    msg.push("<TD>" + data.location + "</TD>");
+                    msg.push("<TD>" + data.startDate + "</TD>");
+                    msg.push("<TD>" + msgPlayers.join('') + "</TD>");
+                    msg.push("<TD>" + data.nbPlayers + "</TD>");
+                    msg.push("<TD>" + data.maxPlayers + "</TD>");
+                    msg.push("</TR>");
 
-                      msg.push("</TABLE>");
+                    msg.push("</TABLE>");
 
-                      //room of the game
-                      msg.push("<p>");
-                      msg.push("rooms detail 'api/rooms/detail' <a href='#' id='RoomBtn' data-id='" + data.id + "'>reload</a><br>");
-                      msg.push("postMessage <input id='msgRoom' type=text > <a id='postMessageToRoomBtn' href='#'  data-id='" + data.id + "'> postMessageToRoom </a><div id='postMessageToRoomResult'></div><br>");
-                      msg.push("<div id='roomDetail'></div>");
-                      msg.push("</p>");
-                      $("#gameDetail").html(msg.join(''));
-                  } else {
-                      $("#gameDetail").html("no game found");
-                  }
+                    //after game
 
-                  $("#RoomBtn").click(function (e) {
-                      getDetailRoom($(e.target).data("id"));
-                  });
+                    //room of the game
+                    msg.push("<p>");
+                    msg.push("rooms detail 'api/rooms/detail' <a href='#' id='RoomBtn' data-id='" + data.id + "'>reload</a><br>");
+                    msg.push("postMessage <input id='msgRoom' type=text > <a id='postMessageToRoomBtn' href='#'  data-id='" + data.id + "'> postMessageToRoom </a><div id='postMessageToRoomResult'></div><br>");
+                    msg.push("<div id='roomDetail'></div>");
+                    msg.push("</p>");
+                    $("#gameDetail").html(msg.join(''));
+                } else {
+                    $("#gameDetail").html("no game found");
+                }
 
-                  $("#postMessageToRoomBtn").click(function (e) {
-                      var roomId = $(e.target).data("id");
-                      var message = $("#msgRoom").val();
-                      postMessageToRoom(roomId,  message);
-                  });
+                $("#RoomBtn").click(function (e) {
+                    getDetailRoom($(e.target).data("id"));
+                });
 
-              })
-              .fail(function (err) {
-                  $("#gameDetail").html(err);
-              });
+                $("#postMessageToRoomBtn").click(function (e) {
+                    var roomId = $(e.target).data("id");
+                    var message = $("#msgRoom").val();
+                    postMessageToRoom(roomId,  message);
+                });
+
+                $(".markBearBtn").click(function (e) {
+                    var bearId = $(e.target).data("id");
+                    var mark = 4;
+                    markBear(gameId, bearId, mark);
+                });
+
+                $(".commentBearBtn").click(function (e) {
+                    var bearId = $(e.target).data("id");
+                    var comment = "someComment" + guid();
+                    commentBear(gameId, bearId,comment);
+                });
+                  
+
+            })
+            .fail(function (err) {
+                $("#gameDetail").html(err);
+            });
         };
-
-
-
 
         var getGames = function () {
             $("#gameDetail").html('');
@@ -497,22 +525,9 @@ Date.prototype.toMSJSON = function () {
               });
         }
 
-
-     
-
-
-        var guid = function () {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                var r = Math.random() * 16 | 0,
-                  v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
-
-
-        $("#bearsListBtn").click(getBears);
         
 
+        $("#bearsListBtn").click(getBears);
 
         $("#gamesListBtn").click(getGames);
         $("#gameScheduleBtn").click(function () {
