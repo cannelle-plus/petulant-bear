@@ -100,7 +100,8 @@ type googleProvider(urlSite:string,absoluteRedirectUri:string) =
                         | Choice2Of2(failureMsg) -> None
             }
             
-
+let idClient ="603076340798-2ld1gf9atoefkoo0a3sorl97df9qlgir.apps.googleusercontent.com"
+let secretCode = "vMp2aIvxmXoas5D0TO_ONkDM"
 
 let authenticateWithLogin fSuccess : WebPart= 
     authenticate Session false

@@ -1,6 +1,7 @@
 source https://nuget.org/api/v2
 
 nuget FSharp.Core
+nuget FSharp.Data
 nuget FSharp.Formatting
 nuget NUnit
 nuget NUnit.Runners
@@ -8,7 +9,7 @@ nuget FAKE
 nuget SourceLink.Fake
 nuget FsCheck
 nuget FsPickler
-nuget Fuchu 
+nuget Fuchu.FsCheck
 nuget Suave
 nuget Suave.Testing
 nuget Akka
@@ -16,6 +17,7 @@ nuget Akka.FSharp
 nuget Newtonsoft.Json
 nuget Unquote
 nuget System.Data.SQLite
+nuget Facebook
 
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx

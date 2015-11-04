@@ -353,7 +353,7 @@ Target "Release" (fun _ ->
 )
 
 Target "Zip" (fun _ ->
-         [   
+         [
             @"wwwroot", !! "bin/wwwroot/**"
             @"PetulantBear", !! "bin/PetulantBear/**"
             @"db", !! "bin/db/**"
@@ -362,7 +362,7 @@ Target "Zip" (fun _ ->
      )
 
 Target "FtpUpload" (fun _ ->
-        Fake.FtpHelper.uploadAFile "ftp://52.24.234.43" "yoann" "yogolo49" "/MyWebApp.LocalBuild.zip" @"E:\Github Repositories\petulant-bear\bin\MyWebApp.LocalBuild.zip" 
+        Fake.FtpHelper.uploadAFile "ftp://52.24.234.43" "yoann" "yogolo49" "/MyWebApp.LocalBuild.zip" @"E:\Github Repositories\petulant-bear\bin\MyWebApp.LocalBuild.zip"
     )
 
 // --------------------------------------------------------------------------------------
@@ -382,7 +382,7 @@ Target "All" DoNothing
   //==> "GenerateReferenceDocs"
   //==> "GenerateDocs"
   ==> "Zip"
-  ==> "FtpUpload"
+  //==> "FtpUpload"
   ==> "All"
   //=?> ("ReleaseDocs",isLocalBuild)
 

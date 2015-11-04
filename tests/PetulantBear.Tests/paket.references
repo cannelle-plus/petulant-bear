@@ -2,9 +2,8 @@ FSharp.Core
 FSharp.Data
 FSharp.Formatting
 FsPickler
-Suave
-Akka
+Suave.Testing
 Akka.FSharp
 Newtonsoft.Json
-System.Data.SQLite
-Facebook
+Fuchu.FsCheck
+Unquote
