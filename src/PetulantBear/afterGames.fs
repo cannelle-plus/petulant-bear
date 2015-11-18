@@ -24,7 +24,7 @@ module Contracts =
       { 
       bearId : Guid;
       comment : string;
-      }
+      } 
 
     type BearMarked =
       { 

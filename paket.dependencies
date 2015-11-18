@@ -1,5 +1,7 @@
 source https://nuget.org/api/v2
 
+
+nuget Facebook 
 nuget FSharp.Core
 nuget FSharp.Data
 nuget FSharp.Formatting
@@ -17,7 +19,8 @@ nuget Akka.FSharp
 nuget Newtonsoft.Json
 nuget Unquote
 nuget System.Data.SQLite
-nuget Facebook
+
+
 
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx

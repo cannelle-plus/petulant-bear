@@ -15,6 +15,7 @@ open Suave.Types
 open Suave.Cookie
 
 module Navigation = 
+    let currentBear = "/api/bears/current"
     let list = "/api/bears/list"
     let detail = "/api/bears/detail"
     let signin = "/api/bears/signin"
@@ -118,6 +119,17 @@ let authRoutes  findBears findBear   =
         POST >>= choose [ 
             path Navigation.list >>=  mapJson (getBears findBears)
             path Navigation.detail >>=  mapJson (getBear  findBear)
+        ]
+        GET >>= choose [ 
+            path Navigation.currentBear >>= session ( fun s ->
+                    match s with 
+                    | NoSession -> Http.RequestErrors.BAD_REQUEST "no session found" 
+                    | NewBear nb -> nb |> toJson |> Successful.ok  >>= Writers.setMimeType "application/json" 
+                    | Bear b -> 
+                        match findBear b.bearId with 
+                        | Some(bear) -> bear |> toJson |> Successful.ok  >>= Writers.setMimeType "application/json" 
+                        | None -> Http.ServerErrors.INTERNAL_ERROR "bear not known in db"
+                )
         ]
     ]
 

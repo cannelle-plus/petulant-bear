@@ -330,9 +330,9 @@ Target "ReleaseDocs" (fun _ ->
     CopyRecursive "docs/output" tempDocsDir true |> tracefn "%A"
     StageAll tempDocsDir
     Git.Commit.Commit tempDocsDir (sprintf "Update generated documentation for version %s" release.NugetVersion)
+
     Branches.push tempDocsDir
 )
-
 #load "paket-files/fsharp/FAKE/modules/Octokit/Octokit.fsx"
 open Octokit
 
@@ -382,7 +382,7 @@ Target "All" DoNothing
   //==> "GenerateReferenceDocs"
   //==> "GenerateDocs"
   ==> "Zip"
-  //==> "FtpUpload"
+  ==> "FtpUpload"
   ==> "All"
   //=?> ("ReleaseDocs",isLocalBuild)
 
