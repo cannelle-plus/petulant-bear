@@ -133,7 +133,7 @@ Target "deployToProd" (fun _ ->
 // Clean build results
 
 Target "Clean" (fun _ ->
-    CleanDirs ["bin"; "temp"]
+    CleanDirs ["bin"; "temp"; "deploy"]
 )
 
 Target "CleanDocs" (fun _ ->
@@ -354,21 +354,20 @@ Target "Release" (fun _ ->
 
 Target "Zip" (fun _ ->
          [
-            @"wwwroot", !! "bin/wwwroot/**"
-            @"PetulantBear", !! "bin/PetulantBear/**"
-            @"db", !! "bin/db/**"
+            @"/", !! "/bin/**"
          ]
-         |> ZipOfIncludes (sprintf @"bin\MyWebApp.%s.zip" buildVersion)
+         |> ZipOfIncludes (sprintf @"deploy\petulant.%s.build.zip" buildVersion)
      )
 
 Target "FtpUpload" (fun _ ->
-        Fake.FtpHelper.uploadAFile "ftp://52.24.234.43" "yoann" "yogolo49" "/MyWebApp.LocalBuild.zip" @"E:\Github Repositories\petulant-bear\bin\MyWebApp.LocalBuild.zip"
+        Fake.FtpHelper.uploadAFile "ftp://52.24.234.43" "yoann" "yogolo49" (sprintf @"/MyWebApp.%s.zip" buildVersion) (sprintf @"bin\MyWebApp.%s.zip" buildVersion)
     )
 
 // --------------------------------------------------------------------------------------
 // Run all targets by default. Invoke 'build <Target>' to override
 
 Target "All" DoNothing
+
 
 "Clean"
   ==> "AssemblyInfo"
@@ -382,7 +381,7 @@ Target "All" DoNothing
   //==> "GenerateReferenceDocs"
   //==> "GenerateDocs"
   ==> "Zip"
-  ==> "FtpUpload"
+//  ==> "FtpUpload"
   ==> "All"
   //=?> ("ReleaseDocs",isLocalBuild)
 
