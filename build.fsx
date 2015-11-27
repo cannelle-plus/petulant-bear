@@ -360,7 +360,7 @@ Target "Zip" (fun _ ->
      )
 
 Target "FtpUpload" (fun _ ->
-        Fake.FtpHelper.uploadAFile "ftp://52.24.234.43" "yoann" "yogolo49" (sprintf @"/MyWebApp.%s.zip" buildVersion) (sprintf @"bin\MyWebApp.%s.zip" buildVersion)
+        Fake.FtpHelper.uploadAFile "ftp://52.24.234.43" "yoann" "yogolo49" (sprintf @"/petulant.%s.build.zip" buildVersion) (sprintf @"deploy\petulant.%s.build.zip" buildVersion)
     )
 
 // --------------------------------------------------------------------------------------
@@ -381,7 +381,7 @@ Target "All" DoNothing
   //==> "GenerateReferenceDocs"
   //==> "GenerateDocs"
   ==> "Zip"
-//  ==> "FtpUpload"
+  ==> "FtpUpload"
   ==> "All"
   //=?> ("ReleaseDocs",isLocalBuild)
 

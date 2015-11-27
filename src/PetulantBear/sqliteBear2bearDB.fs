@@ -15,6 +15,7 @@ open PetulantBear.AfterGames.Contracts
 open PetulantBear.Bears.Contracts
 open PetulantBear.Rooms.Contracts
 
+open System.Linq
 
 
 let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].ConnectionString
@@ -156,7 +157,19 @@ let getGame bearId (filter:GamesFilter) =
         )
 
     
-    let sqlGame = "Select gl.id, gl.name,gl.ownerId,gl.ownerBearName,gl.startDate,gl.location, gl.currentState, COUNT(BearsInGamesToCount.bearId) AS nbPlayers,gl.maxPlayers from GamesList as gl LEFT OUTER  JOIN GamesBears         as BearsInGamesToCount on gl.id = BearsInGamesToCount.gameId              GROUP BY gl.id, gl.name,gl.ownerId,gl.ownerBearName,gl.startDate,gl.location,gl.currentState,gl.maxPlayers          HAVING gl.id = @gameId "
+    let sqlGame = "Select gl.id, 
+    gl.name,
+    gl.ownerId,
+    gl.ownerBearName,
+    gl.startDate,
+    gl.location, 
+    gl.currentState,
+     COUNT(BearsInGamesToCount.bearId) AS nbPlayers,
+     gl.maxPlayers
+      from GamesList as gl 
+    LEFT OUTER  JOIN GamesBears         as BearsInGamesToCount on gl.id = BearsInGamesToCount.gameId  
+    GROUP BY gl.id, gl.name,gl.ownerId,gl.ownerBearName,gl.startDate,gl.location,gl.currentState,gl.maxPlayers 
+    HAVING gl.id = @gameId "
     let sqlCmdGame = new SQLiteCommand(sqlGame, connection) 
 
     let add (name:string, value: string) = 
@@ -167,16 +180,25 @@ let getGame bearId (filter:GamesFilter) =
     use readerGame = sqlCmdGame.ExecuteReader() 
 
     if (readerGame.Read()) then
+        let ownerId = Guid.Parse(readerGame.["ownerId"].ToString())
+        let isCancellable = match ownerId with
+                            | bearId -> true
+                            | _ -> false
+        let isPartOfGame = bearPlayersList.Any( fun b -> b.bearId =bearId)
+
         let gameDetail:GameDetail = {
             id=Guid.Parse(readerGame.["id"].ToString());
             name= readerGame.["name"].ToString();
-            ownerId = Guid.Parse(readerGame.["ownerId"].ToString());
+            ownerId = ownerId;
             ownerUserName = readerGame.["ownerBearName"].ToString();
             startDate = DateTime.Parse(readerGame.["startDate"].ToString());
             location = readerGame.["location"].ToString();
             players = bearPlayersList;
             nbPlayers = Int32.Parse(readerGame.["nbPlayers"].ToString());
             maxPlayers = Int32.Parse(readerGame.["maxPlayers"].ToString());
+            isJoinable = not <| isPartOfGame;
+            isCancellable = isCancellable;
+            isAbandonnable = isPartOfGame;
         }
         Some(gameDetail)
     else None        
@@ -202,8 +224,8 @@ let getGames bearId filter =
                 LEFT OUTER JOIN
                                              (SELECT        gameId, COUNT(bearId) AS IsPartOfGame
                 FROM            GamesBears
-                GROUP BY gameId
-                HAVING        (bearId = @bearId)) bearInGame ON main.id = bearInGame.gameId"
+                WHERE        (bearId = @bearId)
+                GROUP BY gameId ) bearInGame ON main.id = bearInGame.gameId"
 
     let sqlCmd = new SQLiteCommand(sql, connection) 
 

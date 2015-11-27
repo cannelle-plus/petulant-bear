@@ -58,6 +58,9 @@ module Contracts =
       players : System.Collections.Generic.List<BearPlayer>;
       nbPlayers : int;
       maxPlayers : int;
+      isJoinable : bool;
+      isCancellable : bool;
+      isAbandonnable : bool;
       }
 
 

@@ -22,13 +22,13 @@
     </hocon>
   </akka>
   <connectionStrings>
-    <add name="bear2bearDB" connectionString="Data Source=C:\Petulant\db\Bear2Bear.db;Version=3"/>
+    <add name="bear2bearDB" connectionString="Data Source=C:\Petulant\production\db\Bear2Bear.db;Version=3"/>
   </connectionStrings>
   <appSettings>
-    <add key="rootPath" value="C:\Petulant\wwwroot\"/>
+    <add key="rootPath" value="C:\Petulant\production\wwwroot\"/>
     <add key="IPAddress" value="172.31.24.48"/>
     <add key="Port" value="80"/>
-    <add key="urlSite" value="http://52.24.234.43"/>
+    <add key="urlSite" value="http://www.bear2bear.fr"/>
   </appSettings>
   <runtime>
     <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
