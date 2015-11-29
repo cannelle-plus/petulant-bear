@@ -13,34 +13,25 @@ Date.prototype.toMSJSON = function () {
                 version: version,
                 payLoad: payLoad
             };
-        }        
-        
-        var guid = function () {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                var r = Math.random() * 16 | 0,
-                  v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
         }
 
         var signin = function (bearId, bearUsername, bearAvatarId) {
             var signinCmd = createCommand(bearId, 1, {
                 "bearAvatarId": bearAvatarId,
                 "bearUsername": bearUsername
-            });            
+            });
             return $.ajax({
                 type: "POST",
                 url: "api/bears/signin",
                 dataType: "json",
                 data: JSON.stringify(signinCmd)
             });
-        };
+        }
 
-<<<<<<< HEAD
         //New******************
         var signinBear = function (bearId, bearUsername, bearPassword, bearAvatarId) {
             var signinCmd = createCommand(bearId, 1, {
-                "bearPassword" : bearPassword,
+                "bearPassword": bearPassword,
                 "bearAvatarId": bearAvatarId,
                 "bearUsername": bearUsername
             });
@@ -51,6 +42,7 @@ Date.prototype.toMSJSON = function () {
                 data: JSON.stringify(signinCmd)
             });
         }
+
         
         
         var guid = function () {
@@ -62,19 +54,14 @@ Date.prototype.toMSJSON = function () {
         }
 
         $("#bearsSignInBtn").click(function () {
-=======
-        $("#signIn form").on('submit', function (e) {
-            doNothing(e);
->>>>>>> 06abe27be8a9c2ae97d4bf4d02b7df7ea40f07c6
             var bearId = guid(); //fake bear id used only to provide an id to the commmand
-            var bearUsername = $('#bearUsername').val();
-            var bearAvatarId = $('input[name=bearAvatarId]:checked').val();
+            var bearUsername = "bear_" + guid();
+            var bearAvatarId = 12;
             signin(bearId, bearUsername, bearAvatarId).done(function (data) {
-               document.location.replace(data.msg);
+                document.location.replace(data.msg);
             }).fail(function (err) {
                 $("#signinResult").html(err);
             });
-<<<<<<< HEAD
         });
 
         //New******************
@@ -89,22 +76,16 @@ Date.prototype.toMSJSON = function () {
                 $("#signinResult").html(err);
             });
         });
-        
 
 
 
 
-=======
-        });     
->>>>>>> 06abe27be8a9c2ae97d4bf4d02b7df7ea40f07c6
 
 
-    });
 
 
-    $('.avatars input').on('click', function(){
-      $('.avatars li').removeClass('checked');
-      $(this).closest('li').addClass('checked');
+
+
     });
 
 })(jQuery)

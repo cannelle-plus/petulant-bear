@@ -1,0 +1,187 @@
+/* Font-Face */
+@font-face {
+  font-family: 'OpenSansExtrabold';
+  src: url("../fonts/opensans-extrabold.eot");
+  src: url("../fonts/opensans-extrabold.eot?#iefix") format("embedded-opentype"), url("../fonts/opensans-extrabold.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'OpenSansLight';
+  src: url("../fonts/opensans-light.eot");
+  src: url("../fonts/opensans-light.eot?#iefix") format("embedded-opentype"), url("../fonts/opensans-light.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+body {
+  background: #022a52;
+  background: url(../images/bg.jpg) 50% 50% no-repeat;
+  background-size: cover;
+  font-family: "OpenSansExtrabold", Helvetica, Arial, sans-serif;
+}
+
+select, textarea, button, input[type="text"], input[type="password"], input[type="datetime"], input[type="datetime-local"], input[type="date"], input[type="month"],
+input[type="time"], input[type="week"], input[type="number"], input[type="email"], input[type="url"], input[type="search"], input[type="tel"], input[type="color"] {
+  font-family: "OpenSansExtrabold", Helvetica, Arial, sans-serif;
+}
+.checkbox input,
+.checkbox label { 
+  display: inline-block;
+  vertical-align: middle;
+}
+
+header h1 {
+  font-size: 1.5em;
+  line-height: 3;
+}
+header h1 a {
+  text-decoration: none;
+}
+.logout {
+  display: inline-block;
+  padding-right: 1.4em;
+  background: url(../images/logout-icon.png) 100% 50% no-repeat;
+  background-size: 1em 1em;
+  font-weight: 400;
+}
+header p img { vertical-align: middle; }
+header p a { 
+  text-decoration: none; 
+  font-size: 1.5em;
+}
+header h1 a:active, 
+header h1 a:focus, 
+header h1 a:hover,
+header p a:active, 
+header p a:focus, 
+header p a:hover { text-decoration: underline; }
+
+footer p {
+  font: 1.6em/1 "OpenSansLight", Helvetica, Arial, sans-serif;
+  margin: 1.25em;
+}
+footer a {
+  text-decoration: none;
+  background: url(../images/icoPlus.gif) .5em 50% no-repeat;
+  padding: .5em 0 .5em 2em;
+  display: block;
+}
+footer a:active, footer a:focus, footer a:hover {
+  background-color: rgba(248, 192, 119, 0.3);
+  border-radius: 0.3em;
+}
+
+.title {
+  font: 1.6em/1.25 "OpenSansLight", Helvetica, Arial, sans-serif;
+  margin: 0 0 1.5em;
+}
+
+.overlay {
+  font: 1.2em/1.25 "OpenSansLight", Helvetica, Arial, sans-serif;
+  padding: 12em 3em 0;
+}
+
+.overlay ul {
+  margin: 3em 0;
+}
+
+
+/* SIGNIN */
+.avatars li {
+  background: url(../images/avatar-01.png) 50% 50% no-repeat;
+  background-size: 100%;
+  border-radius: 50%;
+}
+.avatars .avatar-02 { background-image: url(../images/avatar-02.png); }
+.avatars .avatar-03 { background-image: url(../images/avatar-03.png); }
+.avatars .avatar-04 { background-image: url(../images/avatar-04.png); }
+.avatars .avatar-05 { background-image: url(../images/avatar-05.png); }
+.avatars .avatar-06 { background-image: url(../images/avatar-06.png); }
+.avatars .avatar-07 { background-image: url(../images/avatar-07.png); }
+.avatars .avatar-08 { background-image: url(../images/avatar-08.png); }
+.avatars .avatar-09 { background-image: url(../images/avatar-09.png); }
+.avatars .avatar-10 { background-image: url(../images/avatar-010.png); }
+.avatars .avatar-11 { background-image: url(../images/avatar-011.png); }
+.avatars .avatar-12 { background-image: url(../images/avatar-012.png); }
+.avatars .avatar-13 { background-image: url(../images/avatar-013.png); }
+.avatars .avatar-14 { background-image: url(../images/avatar-014.png); }
+
+/* APP */
+.games,
+#gameDetailled {
+  position: absolute;
+  top: 2em;
+  left: 2em;
+  right: 2em;
+  bottom: 5.6em;
+  overflow: auto;
+}
+
+.games .infos {
+  font: 1em/1.5 "OpenSansLight", Helvetica, Arial, sans-serif;
+}
+.games .infos strong {
+  display: block;
+  font: 1.2em/1.3 "OpenSansExtrabold", Helvetica, Arial, sans-serif;
+}
+.games .number {
+  font: 1.6em/1 "OpenSansLight", Helvetica, Arial, sans-serif;
+}
+.games .more a {
+  display: inline-block;
+  background: url(../images/icoAdd@2x.png) 100% 0 no-repeat;
+  width: 2em;
+  height: 2em;
+  text-indent: 100%;
+  overflow: hidden;
+  background-size: 4em 2em;
+}
+.games .more a:active, .games .more a:focus, .games .more a:hover {
+  background-position: 0 0;
+}
+.games .action {
+  padding: 0 2em;
+  font-size: 1.2em;
+}
+.games button {
+  padding: 0;
+  background: none;
+  float: none;
+  height: 100%;
+  font: 1em/1 "OpenSansLight", Helvetica, Arial, sans-serif;
+  margin: 0 0 0 1em;
+}
+
+#gameDetail > ul > li + li {
+  padding: 0 0 0 12.5%;
+  font: 1.2em/1.25 "OpenSansLight", Helvetica, Arial, sans-serif;
+}
+#gameDetail strong {
+  font-family: "OpenSansExtrabold", Helvetica, Arial, sans-serif;
+}
+#gameDetail .detailAction { margin: 1em 0m; }
+.game-detail .state { 
+  position: absolute;
+  right: 0;
+  top: 2em;
+}
+.roomDetailButton { text-decoration: none;}
+.roomDetailButton:active,
+.roomDetailButton:focus,
+.roomDetailButton:hover { text-decoration: underline;}
+.roomDetailButton img { vertical-align: middle; }
+
+/* High res screens */
+@media only screen and (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  footer a {
+    background-image: url(../images/icoPlus@2x.gif);
+    background-size: 1em 1em;
+  }
+}
+
+#comments {
+  position: absolute;
+  top: 50%;
+  left: 2em;
+  right: 2em;
+}
