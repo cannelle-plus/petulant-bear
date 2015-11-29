@@ -36,36 +36,10 @@ Date.prototype.toMSJSON = function () {
             });
         };
 
-<<<<<<< HEAD
-        //New******************
-        var signinBear = function (bearId, bearUsername, bearPassword, bearAvatarId) {
-            var signinCmd = createCommand(bearId, 1, {
-                "bearPassword" : bearPassword,
-                "bearAvatarId": bearAvatarId,
-                "bearUsername": bearUsername
-            });
-            return $.ajax({
-                type: "POST",
-                url: "api/bears/signinBear",
-                dataType: "json",
-                data: JSON.stringify(signinCmd)
-            });
-        }
-        
-        
-        var guid = function () {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                var r = Math.random() * 16 | 0,
-                  v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
 
-        $("#bearsSignInBtn").click(function () {
-=======
         $("#signIn form").on('submit', function (e) {
             doNothing(e);
->>>>>>> 06abe27be8a9c2ae97d4bf4d02b7df7ea40f07c6
+
             var bearId = guid(); //fake bear id used only to provide an id to the commmand
             var bearUsername = $('#bearUsername').val();
             var bearAvatarId = $('input[name=bearAvatarId]:checked').val();
@@ -74,29 +48,9 @@ Date.prototype.toMSJSON = function () {
             }).fail(function (err) {
                 $("#signinResult").html(err);
             });
-<<<<<<< HEAD
-        });
 
-        //New******************
-        $("#bearsSignInBearBtn").click(function () {
-            var bearId = guid(); //fake bear id used only to provide an id to the commmand
-            var bearUsername = "yoann"; // always the same for convenience purposes
-            var bearAvatarId = 12;
-            var bearPassword = "yoann";//fake bear id used only to provide an id to the commmand
-            signinBear(bearId, bearUsername, bearPassword, bearAvatarId).done(function (data) {
-                document.location.replace(data.msg);
-            }).fail(function (err) {
-                $("#signinResult").html(err);
-            });
-        });
-        
-
-
-
-
-=======
         });     
->>>>>>> 06abe27be8a9c2ae97d4bf4d02b7df7ea40f07c6
+
 
 
     });
