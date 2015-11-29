@@ -173,10 +173,6 @@ footer a:active, footer a:focus, footer a:hover {
 
 /* High res screens */
 @media only screen and (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  body {
-    background-image: url(../images/bg@2x.jpg);
-  }
-
   footer a {
     background-image: url(../images/icoPlus@2x.gif);
     background-size: 1em 1em;
