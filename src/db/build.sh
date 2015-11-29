@@ -1,15 +1,16 @@
-if [ ! -d "temp" ]
+if [ ! -d "src/db/temp" ]
 then
-	mkdir temp 
+	mkdir src/db/temp 
 fi
 
-if [ ! -d "db" ]
+if [ ! -d "src/db/db" ]
 then
-	mkdir db
+	mkdir src/db/db
 fi
 
-rm -r db/Bear2Bear.db
+rm -r src/db/db/Bear2Bear.db
+rm -r src/db/temp/script.db
 
-sqlite3 db/Bear2Bear.db < scripts/authenticationScript.sql
+sqlite3 src/db/db/Bear2Bear.db < src/db/scripts/authenticationScript.sql
 
 

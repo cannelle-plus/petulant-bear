@@ -2,6 +2,9 @@ language: csharp
 
 sudo: true  # use the new container-based Travis infrastructure 
 
+before_install:
+  - sudo apt-get install sqlite3 libsqlite3-dev
+
 before_script:
  - chmod +x build.sh
 

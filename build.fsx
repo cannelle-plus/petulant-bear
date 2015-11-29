@@ -150,8 +150,13 @@ Target "Build" (fun _ ->
 )
 
 Target "BuildDB" (fun _ ->
+#if MONO
+    Shell.Exec "src/db/buildDB.sh" |> ignore
+#else
     Copy "src/db" ["paket-files/www.sqlite.org/sqlite3.exe"]
     Shell.Exec "src/db/buildDB.bat" |> ignore
+#endif
+    
 )
 
 // --------------------------------------------------------------------------------------
