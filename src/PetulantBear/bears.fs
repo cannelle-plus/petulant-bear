@@ -18,10 +18,12 @@ module Navigation =
     let currentBear = "/api/bears/current"
     let list = "/api/bears/list"
     let detail = "/api/bears/detail"
+    let signinBear = "/api/bears/signinBear"
     let signin = "/api/bears/signin"
     
 
 module Contracts = 
+
 
     [<DataContract>]
     type BearsFilter =
@@ -41,14 +43,27 @@ module Contracts =
       [<field: DataMember(Name = "bearUsername")>]
       bearUsername: string;
       }
+
+    [<DataContract>]
+    type SignInBear =
+      { 
+      [<field: DataMember(Name = "bearAvatarId")>]
+      bearAvatarId: int;
+      [<field: DataMember(Name = "bearUsername")>]
+      bearUsername: string;
+      [<field: DataMember(Name = "bearPassword")>]
+      bearPassword: string;
+      }
   
     [<DataContract>]
-    type Bear =
+    type BearDetail =
       { 
       [<field: DataMember(Name = "bearId")>]
       bearId : Guid;
       [<field: DataMember(Name = "bearUsername")>]
       bearUsername : string;
+      [<field: DataMember(Name = "socialId")>]
+      socialId : string;
       [<field: DataMember(Name = "bearAvatarId")>]
       bearAvatarId : int; 
       }
@@ -82,8 +97,31 @@ let signIn (store:StateStore) saveSignin bearId socialId  =
             |> toJson
             |> Http.RequestErrors.bad_request 
             >>= Writers.setMimeType "application/json"
+    )
 
+let signInBear (store:StateStore) saveSigninBear  = 
+    Types.request(fun r ->
+        try
+            let cmd:Command<Contracts.SignInBear> = fromJson r.rawForm
+            let bearId =  Guid.NewGuid()
+            let socialId = sprintf "bear-%A" (Guid.NewGuid())
 
+            saveSigninBear bearId socialId cmd.payLoad  |> ignore
+            
+            { msg = PetulantBear.Home.Navigation.root  }     
+            |> toJson
+            |> Successful.ok 
+            >>= Writers.setMimeType "application/json"
+            >>= store.set bearStore bearId
+            >>= store.set userNameStore cmd.payLoad.bearUsername
+            >>= Auth.authenticated Session false
+
+        with | ex -> 
+            Failure(ex.Message) 
+            |> toMessage
+            |> toJson
+            |> Http.RequestErrors.bad_request 
+            >>= Writers.setMimeType "application/json"
     )
 
 let signin save =   
@@ -107,10 +145,22 @@ let signin save =
                 
     ) 
 
+let signinBear saveBear =   
+    statefulForSession  
+    >>= context (fun x -> 
+            match HttpContext.state x with
+            | None ->
+                // restarted server without keeping the key; set key manually?
+                let msg = "Server Key, Cookie Serialiser reset, or Cookie Data Corrupt, "
+                            + "if you refresh the browser page, you'll have gotten a new cookie."
+                OK msg
+            | Some store -> signInBear store saveBear ) 
 
-let routes save = 
+
+let routes save saveBear= 
     [
         path Navigation.signin >>= signin save
+        path Navigation.signinBear >>= signinBear saveBear
 
     ]
 

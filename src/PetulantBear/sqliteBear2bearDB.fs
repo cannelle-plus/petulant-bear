@@ -273,6 +273,8 @@ let mapAfterGamesCmds connection (((id,version,bear):Guid*int*BearSession):Guid*
     | CommentBear(c) -> commentBearToDB connection ((id,version,bear):Guid*int*BearSession) c
 
 
+
+
 let signinToDB (id,version,bearId) ((socialId,cmd):string*SignIn) =
     use connection = new SQLiteConnection(dbConnection)
     connection.Open()
@@ -293,13 +295,35 @@ let signinToDB (id,version,bearId) ((socialId,cmd):string*SignIn) =
 
     Success(socialId,cmd)
 
+let signinBearToDB bearId socialId (cmd:SignInBear) =
+    use connection = new SQLiteConnection(dbConnection)
+    connection.Open()
+
+
+    let sql = "Insert into Bears VALUES (@bearId, @bearUsername, @bearAvatarId); Insert into Users (socialId,bearId) VALUES (@socialId,@bearId); Insert into Authentication (authId, username, password) VALUES (@socialId,@bearUsername,@bearPassword)"
+    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@bearId", bearId.ToString())
+    add("@socialId", socialId)
+    add("@bearUsername", cmd.bearUsername)
+    add("@bearAvatarId", cmd.bearAvatarId.ToString())
+    add("@bearPassword", cmd.bearPassword)
+    
+
+    sqlCmd.ExecuteNonQuery() |> ignore
+
+    Success(socialId)
+
    
 
 let getBears (filter:BearsFilter) = 
     use connection = new SQLiteConnection(dbConnection)
     connection.Open()
 
-    let sqlBear = "select b.bearId,b.bearUsername,b.bearAvatarId from Bears as b  "
+    let sqlBear = "select b.bearId,b.bearUsername,b.bearAvatarId,u.socialId from Bears as b inner join Users as u on b.bearId = u.bearId"
     let sqlCmdBear = new SQLiteCommand(sqlBear, connection) 
 
     //let add (name:string, value: string) = 
@@ -308,13 +332,14 @@ let getBears (filter:BearsFilter) =
     //add("@bearId", filter.bearId.ToString())
 
     use reader = sqlCmdBear.ExecuteReader() 
-    let bearList = new System.Collections.Generic.List<Bear>()
+    let bearList = new System.Collections.Generic.List<BearDetail>()
 
     while (reader.Read()) do
         bearList.Add( 
             {
                 bearId=Guid.Parse(reader.["bearId"].ToString());
                 bearUsername= reader.["bearUsername"].ToString();
+                socialId = reader.["socialId"].ToString();
                 bearAvatarId = Int32.Parse(reader.["bearAvatarId"].ToString());
             }
         )
@@ -345,6 +370,8 @@ let getBear (bearId:Guid) =
         Some(bearFound)
     else None
 
+
+
 let getBearFromSocialId (socialId:string) =
     use connection = new SQLiteConnection(dbConnection)
     connection.Open()
@@ -368,7 +395,34 @@ let getBearFromSocialId (socialId:string) =
             }
         Some(bearFound)
     else None
-        
+
+
+let login username password =
+    use connection = new SQLiteConnection(dbConnection)
+    connection.Open()
+
+    let sql =  "SELECT        Bears.bearId
+                FROM            Authentication INNER JOIN
+                                         Users ON Authentication.authId = Users.socialId INNER JOIN
+                                         Bears ON Users.bearId = Bears.bearId
+                WHERE        (Authentication.username = @username) AND (Authentication.password = @password)"
+    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@username", username)
+    add("@password", password)
+
+    use reader = sqlCmd.ExecuteReader() 
+
+    if (reader.Read()) then
+        reader.["bearId"].ToString()
+        |> Guid.Parse
+        |> getBear
+
+    else 
+        None        
 
 let getRoomDetail (filter :RoomFilter) =
     use connection = new SQLiteConnection(dbConnection)
@@ -458,7 +512,7 @@ let resetDB ctx =
     use connection = new SQLiteConnection(dbConnection)
     connection.Open()
 
-    let sql = "Delete from  Users;Delete from  Bears;Delete from  GamesList;Delete from  GamesBears;Delete from  Rooms;Delete from  RoomMessages;"
+    let sql = "Delete from  Users;Delete from  Bears;Delete from  GamesList;Delete from  GamesBears;Delete from  Rooms;Delete from  RoomMessages;Delete from  Rooms;Delete from  Authentication;"
     let sqlCmd = new SQLiteCommand(sql, connection) 
 
     sqlCmd.ExecuteNonQuery() |> ignore

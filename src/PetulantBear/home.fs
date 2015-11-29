@@ -19,6 +19,7 @@ module Navigation =
     let home = "/home"
     let welcome = "/welcome"
     let signIn = "/signInHome"
+    let signUp = "/signUp"
 
 let authRoutes = 
     [
@@ -27,9 +28,11 @@ let authRoutes =
 
 let routes = 
     [
-        path Navigation.home  >>= noCache >>= browseFileHome "home.html"
+        path Navigation.home  >>= noCache >>= statefulForSession >>= browseFileHome "home.html"
         path Navigation.welcome  >>= noCache >>= browseFileHome "welcome.html"
         path Navigation.signIn  >>= noCache >>= browseFileHome "signin.html"
+        path Navigation.signUp  >>= noCache >>= browseFileHome "signin.html"
+        
         browseHome >>= noCache //used only for dev purposes
     ]
 

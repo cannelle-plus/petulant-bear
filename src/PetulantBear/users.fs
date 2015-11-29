@@ -17,6 +17,7 @@ open Facebook
 open FSharp.Data
 
 module Navigation =
+    let bearLogin = "/bearLogin"
     let adminAuth = "/adminAuth"
     let facebookAuth = "/facebookAuth"
     let facebookCallbackAuth = "/facebookCallbackAuth"
@@ -146,6 +147,36 @@ let oAuth (provider:oAuthProvider) (getBearFromSocialId: string -> BearSession o
 
 
 let socialAuth (provider:oAuthProvider) = Redirection.redirect <|  provider.GetRedirectionAuthUrl()
+
+
+let userPassAuth (login: string-> string -> PetulantBear.Bears.Contracts.BearDetail option) =
+    context  (fun x ->
+                match HttpContext.state x with
+                | None ->
+                    // restarted server without keeping the key; set key manually?
+                    let msg = "Server Key, Cookie Serialiser reset, or Cookie Data Corrupt, "
+                                + "if you refresh the browser page, you'll have gotten a new cookie."
+                    OK msg
+                | Some store ->
+                    let a = x.request.formData  "username"
+                    let b = x.request.formData  "password"
+                    match a,b with
+                    | Choice1Of2(username),Choice1Of2(password) -> 
+                        match login username password with
+                        | Some(bear) -> 
+                            store.set socialIdStore bear.socialId
+                            >>= store.set  bearStore bear.bearId 
+                            >>= store.set  userNameStore bear.bearUsername 
+                        | None -> Http.RequestErrors.FORBIDDEN "unknown login and/or password"
+                    | _,_ -> Http.RequestErrors.BAD_REQUEST "login attempt not correct" 
+            ) 
+    >>= inSession (fun s ->
+        match s with
+        | NoSession -> Http.RequestErrors.FORBIDDEN "bad login password"
+        | NewBear n -> Http.RequestErrors.FORBIDDEN "Incoherent data, not possible, bearId missing"
+        | Bear b -> Auth.authenticated Session false >>= Redirection.found PetulantBear.Home.Navigation.root
+    )
+    
     
 
 let logout =  
@@ -154,11 +185,12 @@ let logout =
     >>= OK "logged out <br> <a href='/' > return to home  </a>"
 
 
-let routes  urlSite getBearFromSocialId = 
+let routes  urlSite getBearFromSocialId bearLogin = 
     let fb = facebookProvider(urlSite, Navigation.facebookCallbackAuth,"1536474526596015","97f0961242c1f94abf45d3eaeb243399")
     let gplus = googleProvider(urlSite, Navigation.googleCallbackAuth)
 
     [
+        path Navigation.bearLogin >>= statefulForSession >>=  userPassAuth bearLogin
         path Navigation.adminAuth >>= Auth.authenticated Session false >>= OK "authed"
         path Navigation.facebookAuth >>= statefulForSession >>= socialAuth fb 
         path Navigation.googleAuth  >>= statefulForSession >>= socialAuth gplus

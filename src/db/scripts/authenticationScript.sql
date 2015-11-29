@@ -4,6 +4,7 @@ BEGIN TRANSACTION;
 
 
 CREATE TABLE Users (socialId text not null, bearId text not null);
+CREATE TABLE Authentication (authId text not null, username text not null, password text not null);
 CREATE TABLE Bears (bearId text not null, bearUsername text not null, bearAvatarId text not null);
 
 -- currentState 

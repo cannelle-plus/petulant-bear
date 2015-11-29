@@ -39,10 +39,10 @@ let addRoutes routes authRoutes existing =
 let app root urlSite (system:ActorSystem) saveEvents auth = 
     //list the available routes for each module
     let (routes, authRoutes) = 
-        (Users.routes urlSite getBearFromSocialId,Users.authRoutes)
+        (Users.routes urlSite getBearFromSocialId login,Users.authRoutes)
         |> addRoutes Games.routes (Games.authRoutes system saveEvents getGames getGame (saveToDB mapGameCmds))
         |> addRoutes AfterGames.routes (AfterGames.authRoutes system saveEvents (saveToDB mapAfterGamesCmds))
-        |> addRoutes (Bears.routes signinToDB) (Bears.authRoutes getBears getBear)
+        |> addRoutes (Bears.routes signinToDB signinBearToDB) (Bears.authRoutes getBears getBear)
         |> addRoutes Rooms.routes (Rooms.authRoutes getRoomDetail (saveToDB mapRoomCmds))
         |> addRoutes Home.routes Home.authRoutes
         

@@ -18,18 +18,7 @@ module Navigation =
 
 module Contracts =
 
-    [<DataContract>]
-    type BearDetail =
-      { 
-      [<field: DataMember(Name = "bearId")>]
-      bearId : Guid;
-      [<field: DataMember(Name = "bearUsername")>]
-      bearUsername : string;
-      [<field: DataMember(Name = "socialId")>]
-      socialId : string;
-      [<field: DataMember(Name = "bearAvatarId")>]
-      bearAvatarId : int; 
-      }
+    open PetulantBear.Bears.Contracts
 
 
     [<DataContract>]

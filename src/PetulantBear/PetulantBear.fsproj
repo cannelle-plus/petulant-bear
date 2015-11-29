@@ -95,11 +95,11 @@
     <Compile Include="aggregateCoordinator.fs" />
     <Compile Include="getEventStoreRepo.fs" />
     <Compile Include="servingFiles.fs" />
-    <Compile Include="rooms.fs" />
     <Compile Include="games.fs" />
     <Compile Include="afterGames.fs" />
     <Compile Include="home.fs" />
     <Compile Include="bears.fs" />
+    <Compile Include="rooms.fs" />
     <Compile Include="users.fs" />
     <Compile Include="sqliteBear2bearDB.fs" />
     <Compile Include="App.fs" />
