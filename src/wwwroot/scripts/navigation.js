@@ -33,3 +33,13 @@ window.addEventListener("hashchange", function(e) {
 if(window.location.hash.substr(2) !== null) {
 	$('header p a').click();
 }
+
+// Loader
+var loader = {
+	show: function() {
+        $('.loading').show();
+	},
+	hide: function() {
+        $('.loading').hide();
+	}
+}

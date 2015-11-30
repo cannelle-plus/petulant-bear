@@ -31,6 +31,7 @@ Date.prototype.toMSJSON = function () {
                 "name": $('#gameName').val(),
                 "startDate": new Date($('#gameDate').val() + ' ' + $('#gameHour').val()).toMSJSON()
             });
+            loader.show();
             return $.ajax({
                 type: "POST",
                 url: "api/games/schedule",
@@ -44,6 +45,7 @@ Date.prototype.toMSJSON = function () {
 
         var cancel = function (id) {
             var cancelCmd = createCommand(id, 1, { });
+            loader.show();
             return $.ajax({
                 type: "POST",
                 url: "api/games/cancel",
@@ -58,6 +60,7 @@ Date.prototype.toMSJSON = function () {
 
         var join = function (id) {
             var joinCmd = createCommand(id, 1, {});
+            loader.show();
             return $.ajax({
                 type: "POST",
                 url: "api/games/join",
@@ -71,6 +74,7 @@ Date.prototype.toMSJSON = function () {
 
         var abandon = function (id) {
             var abandonCmd = createCommand(id, 1, { });
+            loader.show();
             return $.ajax({
                 type: "POST",
                 url: "api/games/abandon",
@@ -88,6 +92,7 @@ Date.prototype.toMSJSON = function () {
                 "bearId" : bearId,
                 "mark": mark
             });
+            loader.show();
             return $.ajax({
                 type: "POST",
                 url: "api/afterGames/markBear",
@@ -104,6 +109,7 @@ Date.prototype.toMSJSON = function () {
                 "bearId" : bearId,
                 "comment": comment
             });
+            loader.show();
             return $.ajax({
                 type: "POST",
                 url: "api/afterGames/commentBear",
@@ -158,6 +164,7 @@ Date.prototype.toMSJSON = function () {
                 "receiverId": receiverId,
                 "distance": distance
             });
+            loader.show();
             return $.ajax({
                 type: "POST",
                 url: "api/signals/stopCalibration",
@@ -174,6 +181,7 @@ Date.prototype.toMSJSON = function () {
                 "message": message
             });
             if(message !== "") {
+              loader.show();
               return $.ajax({
                 type: "POST",
                 url: "api/rooms/postmessage",
@@ -182,6 +190,7 @@ Date.prototype.toMSJSON = function () {
               })
               .done(function(data){                                
                 getDetailRoom(roomId);
+                loader.hide();
               })
               .fail(function (err) {
                   $("#postMessageToRoomResult").html(err);
@@ -190,6 +199,7 @@ Date.prototype.toMSJSON = function () {
         };
 
         var getDetailRoom = function (gameRoomId) {
+            loader.show();
             $.ajax({
                 type: "POST",
                 url: "api/rooms/detail",
@@ -220,6 +230,7 @@ Date.prototype.toMSJSON = function () {
                   else {
                       $(".roomDetail").html("room not found");
                   }
+                  loader.hide();
               })
               .fail(function (err) {
                   $(".roomDetail").html(err);
@@ -227,6 +238,7 @@ Date.prototype.toMSJSON = function () {
         };
 
         var getGame = function (gameId) {
+            loader.show();
             $.ajax({
                 type: "POST",
                 url: "api/games/detail",
@@ -336,6 +348,7 @@ Date.prototype.toMSJSON = function () {
                 $(".actionCancelGame").click(gameAction(cancel, "cancelResult"));
                 $(".actionAbandonGame").click(gameAction(abandon, "abandonResult"));
                   
+                loader.hide();
 
             })
             .fail(function (err) {
@@ -344,7 +357,7 @@ Date.prototype.toMSJSON = function () {
         };
 
         var getGames = function () {
-            $("#gameDetailxxx").html('');
+            loader.show();
             $.ajax({
                 type: "POST",
                 url: "api/games/list",
@@ -449,6 +462,7 @@ Date.prototype.toMSJSON = function () {
                     $(this).closest('li').find('.action').show();
                   });
                   
+                  loader.hide();
 
               })
               .fail(function (err) {
@@ -458,6 +472,7 @@ Date.prototype.toMSJSON = function () {
 
         var getBear = function (id) {
             //extract the detail of the first bear
+            loader.show();
             $.ajax({
                 type: "POST",
                 url: "api/bears/detail",
@@ -473,8 +488,7 @@ Date.prototype.toMSJSON = function () {
                   } else {
                       $("#bearDetail").html("no bear found");
                   }
-
-
+                  loader.hide();
               })
               .fail(function (err) {
                   $("#bearDetail").html(err);
@@ -483,6 +497,7 @@ Date.prototype.toMSJSON = function () {
 
         var getBears = function () {
             $("#bearDetail").html('');
+            loader.show();
             $.ajax({
                 type: "POST",
                 url: "api/bears/list",
@@ -513,14 +528,14 @@ Date.prototype.toMSJSON = function () {
                   $(".bearsDetailBtn").click(function (e) {
                       getBear($(e.target).data("id"));
                   });
+                  loader.hide();
               })
               .fail(function (err) {
                   $("#bearsList").html(err);
               });
         }
 
-        var addOwnerAvatar = function(id, index) {
-          
+        var addOwnerAvatar = function(id, index) {          
             //extract the detail of the first bear
             $.ajax({
                 type: "POST",
@@ -562,12 +577,14 @@ Date.prototype.toMSJSON = function () {
         //Onload
         getGames();
 
+        loader.show();
         $.ajax({
             type: "GET",
             url: "api/bears/current"
           })
           .done(function (data) {
             $('header img').attr('src', 'images/avatar-0' + data.bearAvatarId + '.png');
+            loader.hide();
           })
             .fail(function (err) {
         });
@@ -576,6 +593,7 @@ Date.prototype.toMSJSON = function () {
 
         $('.logout').on('click', function(e){
           doNothing(e);
+          loader.show();
           $.ajax({
               url: "/logout"
           })
