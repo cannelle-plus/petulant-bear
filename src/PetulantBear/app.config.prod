@@ -26,7 +26,7 @@
   </connectionStrings>
   <appSettings>
     <add key="rootPath" value="C:\Petulant\production\wwwroot\"/>
-    <add key="IPAddress" value="172.31.24.48"/>
+    <add key="IPAddress" value="172.31.20.17"/>
     <add key="Port" value="80"/>
     <add key="urlSite" value="http://www.bear2bear.fr"/>
   </appSettings>

@@ -41,14 +41,26 @@ let saveEvents name (id, expectedVersion, evt) =
 //    cookieSerialiser = 
 
 
+
+open Suave.Logging
+open Logary
+open Logary.Configuration
+open Logary.Targets
+open Logary.Metrics
+open NodaTime
+
+
+
+
 [<EntryPoint>]
 let main args =
+
     let rootPath = ConfigurationManager.AppSettings.["rootPath"]
     let ipAddress = ConfigurationManager.AppSettings.["IPAddress"]
     let port = Int32.Parse( ConfigurationManager.AppSettings.["Port"])
     let urlSite = ConfigurationManager.AppSettings.["urlSite"]
 
-    let logger = Suave.Logging.Loggers.ConsoleWindowLogger LogLevel.Verbose
+    let logger = Suave.Logging.Loggers.ConsoleWindowLogger Suave.Logging.LogLevel.Verbose
 
     let section = ConfigurationManager.GetSection("akka"):?> AkkaConfigurationSection
     let system = System.create "System" ( section.AkkaConfig)

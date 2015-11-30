@@ -34,7 +34,7 @@ let scheduleToDB connection (((id,version,bear):Guid*int*BearSession):Guid*int*B
     add("@name", cmd.name)
     add("@ownerId", bear.bearId.ToString())
     add("@ownerUserName", bear.username)
-    add("@begins", cmd.startDate.ToString())
+    add("@begins", cmd.startDate.ToString("yyyy-MM-ddTHH:mm:ssZ"))
     add("@location", cmd.location.ToString())
     add("@maxPlayers", cmd.maxPlayers.ToString())
     sqlCmd
@@ -225,7 +225,8 @@ let getGames bearId filter =
                                              (SELECT        gameId, COUNT(bearId) AS IsPartOfGame
                 FROM            GamesBears
                 WHERE        (bearId = @bearId)
-                GROUP BY gameId ) bearInGame ON main.id = bearInGame.gameId"
+                GROUP BY gameId ) bearInGame ON main.id = bearInGame.gameId
+                order by main.startDate Desc"
 
     let sqlCmd = new SQLiteCommand(sql, connection) 
 
