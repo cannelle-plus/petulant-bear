@@ -7,7 +7,6 @@ Date.prototype.toMSJSON = function () {
 
     $(function () {
 
-
         var guid = function () {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                 var r = Math.random() * 16 | 0,
@@ -30,7 +29,7 @@ Date.prototype.toMSJSON = function () {
                 "location": $('#gameLocation').val(),
                 "maxPlayers": $('#nbPlayersRequired').val(),
                 "name": $('#gameName').val(),
-                "startDate": "\/Date(1532802039368+0200)\/"
+                "startDate": new Date($('#gameDate').val() + ' ' + $('#gameHour').val()).toMSJSON()
             });
             return $.ajax({
                 type: "POST",
@@ -182,7 +181,7 @@ Date.prototype.toMSJSON = function () {
                 data: JSON.stringify(postMessageCmd)
               })
               .done(function(data){                                
-                getDetailRoom(gameId);
+                getDetailRoom(roomId);
               })
               .fail(function (err) {
                   $("#postMessageToRoomResult").html(err);
@@ -205,7 +204,7 @@ Date.prototype.toMSJSON = function () {
                       msg.push("<dl class='chat'>");
                       //msg.push("<TD>" + data.roomId + "</TD>");
                       //msg.push("<TD>" + data.name + "</TD>");
-                      for (var i = data.messages.length - 1; i > ((data.messages.length < 10) ? 0 : data.messages.length - 9); i--) {
+                      for (var i = data.messages.length - 1; i >= ((data.messages.length < 10) ? 0 : data.messages.length - 9); i--) {
 
                           //msg.push("<TD>" + data.messages[i].bear.bearId + "</TD>");
                           msg.push("<dt>" + data.messages[i].bear.bearUsername + "</dt>");
@@ -301,7 +300,8 @@ Date.prototype.toMSJSON = function () {
                     var roomId = $(e.target).data("id");
                     var message = $("#msgRoom").val();
                     $("#msgRoom").val('');
-                    postMessageToRoom(roomId,  message, data.id);    
+                    if(message !== '')
+                      postMessageToRoom(roomId,  message, data.id);    
                 });
 
                 $('body').on('click', '.roomDetailButton', function() {
