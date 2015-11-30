@@ -3,6 +3,17 @@ Date.prototype.toMSJSON = function () {
     return date;
 };
 
+function toBEARDATE(MSDate) {
+  var bearDate = MSDate.split('T'),
+      year = bearDate[0].split('-')[0],
+      month = bearDate[0].split('-')[1],
+      day = bearDate[0].split('-')[2],
+      hour = bearDate[1].split(':')[0],
+      min = bearDate[1].split(':')[1];
+
+  return day + '/' + month + '/' + year + ' à ' + hour + 'h' + min;
+}
+
 (function ($) {
 
     $(function () {
@@ -258,7 +269,7 @@ Date.prototype.toMSJSON = function () {
                     msg.push('<p class="infos">');
                     msg.push('<strong>' + data.name + '</strong>');
                     msg.push(data.location + '<br />');
-                    msg.push(data.startDate);
+                    msg.push(toBEARDATE(data.startDate));
 
                     var coloredClass = '';
                     if(data.nbPlayers/data.maxPlayers < .6)
