@@ -309,13 +309,13 @@ function toBEARDATE(MSDate) {
 
                     //room of the game
                     msg.push("<a href='#' class='roomDetailButton' data-target='room' data-id='" + data.id + "'><img src='images/chat-icon.png' width='20' height='20' /> Chat</a>")
-                    msg.push("<div class='roomDetail'></div>");
+                    msg.push("<div class='roomDetail' data-target='room'></div>");
                     $("#gameDetailled").html(msg.join(''));
                     $("#chat .infos strong").html(data.name);
                     getDetailRoom(data.id);
                     bearInterval = setInterval(function() {
                       getDetailRoom(data.id);
-                    }, 3000);
+                    }, 30000);
                 } else {
                     $("#gameDetailled").html("no game found");
                 }

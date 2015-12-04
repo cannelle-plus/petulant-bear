@@ -73,11 +73,15 @@ Date.prototype.toMSJSON = function () {
             var bearUsername = $('#bearUsernameUp').val();
             var bearPassword = $('#bearPasswordUp').val();
             var bearAvatarId = $('input[name=bearAvatarIdUp]:checked').val();
-            signinBear(bearId, bearUsername, bearPassword, bearAvatarId).done(function (data) {
-               document.location.replace(data.msg);
-            }).fail(function (err) {
-                $("#signinResult").html(err);
-            });
+            if(bearPassword !== $('#confirmBearPasswordUp').val()) {
+                $('p.error').html('Les passwords sont différents !').show();
+            } else {
+                signinBear(bearId, bearUsername, bearPassword, bearAvatarId).done(function (data) {
+                   document.location.replace(data.msg);
+                }).fail(function (err) {
+                    $("#signinResult").html(err);
+                });                
+            }
 
         });     
 
