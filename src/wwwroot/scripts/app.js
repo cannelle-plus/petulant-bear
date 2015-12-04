@@ -1,7 +1,8 @@
-Date.prototype.toMSJSON = function () {
-    var date = '/Date(' + this.getTime() + ')/'; //CHANGED LINE
-    return date;
-};
+
+Date.prototype.addHours = function (h) {
+    this.setTime(this.getTime() + (h * 60 * 60 * 1000));
+    return this;
+}
 
 function toBEARDATE(MSDate) {
   var bearDate = MSDate.split('T'),
@@ -36,11 +37,12 @@ function toBEARDATE(MSDate) {
 
         
         var schedule = function (id) {
+            var startDate = (new Date($('#gameDate').val() + ' ' + $('#gameHour').val())).addHours(1)
             var scheduleCmd = createCommand(id, 1, {
                 "location": $('#gameLocation').val(),
                 "maxPlayers": $('#nbPlayersRequired').val(),
                 "name": $('#gameName').val(),
-                "startDate": new Date($('#gameDate').val() + ' ' + $('#gameHour').val()).toMSJSON()
+                "startDate": startDate.toJSON()
             });
             loader.show();
             return $.ajax({

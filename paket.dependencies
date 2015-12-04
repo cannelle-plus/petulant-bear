@@ -19,6 +19,7 @@ nuget Akka.FSharp
 nuget Newtonsoft.Json
 nuget Unquote
 nuget System.Data.SQLite
+nuget Logary.Adapters.Suave
 
 
 

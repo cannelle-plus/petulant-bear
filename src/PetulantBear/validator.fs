@@ -1,6 +1,7 @@
 ﻿[<AutoOpen>]
 module Validator
 
+open System
 
 let validator predicate error x =
     if predicate x then Choice1Of2 x
