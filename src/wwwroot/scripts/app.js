@@ -225,7 +225,7 @@ function toBEARDATE(MSDate) {
                       msg.push("<dl class='chat'>");
                       //msg.push("<TD>" + data.roomId + "</TD>");
                       //msg.push("<TD>" + data.name + "</TD>");
-                      for (var i = data.messages.length - 1; i >= ((data.messages.length < 10) ? 0 : data.messages.length - 9); i--) {
+                      for (var i = data.messages.length - 1; i >= ((data.messages.length < 50) ? 0 : data.messages.length - 9); i--) {
 
                           //msg.push("<TD>" + data.messages[i].bear.bearId + "</TD>");
                           msg.push("<dt>" + data.messages[i].bear.bearUsername + "</dt>");
@@ -313,7 +313,7 @@ function toBEARDATE(MSDate) {
                     getDetailRoom(data.id);
                     bearInterval = setInterval(function() {
                       getDetailRoom(data.id);
-                    }, 30000);
+                    }, 3000);
                 } else {
                     $("#gameDetailled").html("no game found");
                 }
