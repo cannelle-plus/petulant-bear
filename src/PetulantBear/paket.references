@@ -10,3 +10,5 @@ System.Data.SQLite
 Facebook
 elmah.corelibrary
 elmah.io.core
+NodaTime
+Logary.Adapters.Suave
