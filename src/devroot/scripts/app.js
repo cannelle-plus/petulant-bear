@@ -185,6 +185,51 @@ Date.prototype.toMSJSON = function () {
               });
         };
 
+        var changePassword = function (password) {
+            var changePasswordCmd = createCommand(guid(), 1, {
+                bearPassword: password
+            });
+            return $.ajax({
+                type: "POST",
+                url: "api/bear/changePassword",
+                dataType: "json",
+                data: JSON.stringify(changePasswordCmd)
+            })
+              .fail(function (err) {
+                  $("#changePasswordResult").html(err);
+              });
+        };
+
+        var changeUserName = function (username) {
+            var changeUsernameCmd = createCommand(guid(), 1, {
+                bearUsername: username
+            });
+            return $.ajax({
+                type: "POST",
+                url: "api/bear/changeUserName",
+                dataType: "json",
+                data: JSON.stringify(changeUsernameCmd)
+            })
+              .fail(function (err) {
+                  $("#changeUsernameResult").html(err);
+              });
+        };
+
+        var changeAvatarId = function (avatarId) {
+            var changeAvatarIdCmd = createCommand(guid(), 1, {
+                bearAvatarId: avatarId
+            });
+            return $.ajax({
+                type: "POST",
+                url: "api/bear/changeAvatarId",
+                dataType: "json",
+                data: JSON.stringify(changeAvatarIdCmd)
+            })
+              .fail(function (err) {
+                  $("#changeAvatarIdResult").html(err);
+              });
+        };
+
         var getDetailRoom = function (gameRoomId) {
             $.ajax({
                 type: "POST",
@@ -487,6 +532,10 @@ Date.prototype.toMSJSON = function () {
               });
         }
 
+        
+            
+        
+
         var getBears = function () {
             $("#bearDetail").html('');
             $.ajax({
@@ -527,24 +576,77 @@ Date.prototype.toMSJSON = function () {
 
         
 
-        $("#bearsListBtn").click(getBears);
+    $("#bearsListBtn").click(getBears);
 
-        $("#gamesListBtn").click(getGames);
-        $("#gameScheduleBtn").click(function () {
-            var gameBearId = $("#gameBearId").val();
-            var gameId = guid();
-            schedule(gameId, gameBearId).done(function (data) {
-                $("#scheduleResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
-            });
+    $("#gamesListBtn").click(getGames);
+    $("#gameScheduleBtn").click(function () {
+        var gameBearId = $("#gameBearId").val();
+        var gameId = guid();
+        schedule(gameId, gameBearId).done(function (data) {
+            $("#scheduleResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
         });
+    });
 
+    $("#bearChangePasswordBtn").click(function () {
+        var newPassword = "newPassword" + guid();
+        changePassword(newPassword).done(function (data) {
+            $("#changePasswordResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+        });
+    });
 
+    $("#bearChangeUsernameBtn").click(function () {
+        var newUserName = "newUserName" + guid();
+        changeUserName(newUserName).done(function (data) {
+            $("#changeUsernameResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+        });
+    });
+
+    var i = 1;
+    $("#bearChangeAvatarIdBtn").click(function () {
+        
+        changeAvatarId(i++).done(function (data) {
+            $("#changeAvatarIdResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+        });
+    });
+    
+    
 
         
 
 
 
+    //extract the detail of the current bear
+    $.ajax({
+        type: "GET",
+        url: "api/bears/current",
+        dataType: "json"
+    })
+    .done(function (data) {
+        if (data !== null && data !== undefined) {
+            var msg = [];
+            msg.push("<TABLE  border=\"1\">");
+            msg.push("<TR>");
+            msg.push("<TH>bearId</TH>");
+            msg.push("<TH>bearUsername</TH>");
+            msg.push("<TH>socialId</TH>");
+            msg.push("<TH>bearAvatarId</TH>");
+            msg.push("</TR>");
+            msg.push("<TR>");
+            msg.push("<TD>" + data.bearId + "</TD>");
+            msg.push("<TD>" + data.bearUsername + "</TD>");
+            msg.push("<TD>" + data.socialId + "</TD>");
+            msg.push("<TD>" + data.bearAvatarId + "</TD>");
+            msg.push("</TR>");
 
+            msg.push("</TABLE>");
+            $("#currentBearDetail").html(msg.join(''));
+        } else {
+            $("#currentBearDetail").html("no current bear found");
+        }
+    })
+    .fail(function (err) {
+        $("#bearDetail").html(err);
+    });
 
 
 

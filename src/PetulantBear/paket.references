@@ -8,4 +8,5 @@ Akka.FSharp
 Newtonsoft.Json
 System.Data.SQLite
 Facebook
-Logary.Adapters.Suave
+elmah.corelibrary
+elmah.io.core

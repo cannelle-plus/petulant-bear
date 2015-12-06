@@ -20,6 +20,8 @@ module Navigation =
     let detail = "/api/bears/detail"
     let signinBear = "/api/bears/signinBear"
     let signin = "/api/bears/signin"
+    let changeUserName = "/api/bears/changeUserName"
+    let changeAvatarId = "/api/bears/changeAvatarId"
     
 
 module Contracts = 
@@ -68,6 +70,26 @@ module Contracts =
       bearAvatarId : int; 
       }
 
+    [<DataContract>]
+    type ChangeUserName =
+      { 
+      [<field: DataMember(Name = "bearUsername")>]
+      bearUsername: string;
+      }
+    
+    [<DataContract>]
+    type ChangeAvatarId =
+      { 
+      [<field: DataMember(Name = "bearAvatarId")>]
+      bearAvatarId: int;
+      }
+
+    [<DataContract>]
+    type ChangePassword =
+      { 
+      [<field: DataMember(Name = "bearPassword")>]
+      bearPassword: string;
+      }
 
 type Commands = 
     | SignIn of Contracts.SignIn
@@ -112,6 +134,7 @@ let signInBear (store:StateStore) saveSigninBear  =
             |> toJson
             |> Successful.ok 
             >>= Writers.setMimeType "application/json"
+            >>= store.set socialIdStore socialId
             >>= store.set bearStore bearId
             >>= store.set userNameStore cmd.payLoad.bearUsername
             >>= Auth.authenticated Session false
@@ -161,7 +184,6 @@ let routes save saveBear=
     [
         path Navigation.signin >>= signin save
         path Navigation.signinBear >>= signinBear saveBear
-
     ]
 
 let authRoutes  findBears findBear   =
