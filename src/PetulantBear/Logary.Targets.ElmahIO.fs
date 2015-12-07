@@ -30,41 +30,43 @@ module internal Impl =
     type State = { log : ErrorLog }
     // http://blog.elmah.io/logging-custom-errors-to-elmah-io/
     let loop (conf : ElmahIOConf) (ri : RuntimeInfo) (inbox : IActor<_>) =
-    let rec init () = async {
-        let config = new Dictionary<string, string>()
-        config.Add( "LogId", conf.logId.ToString())
+        let rec init () = async {
+            let config = new Dictionary<string, string>()
+            config.Add( "LogId", conf.logId.ToString())
           
-        let log = new Elmah.Io.ErrorLog(config)
+            let log = new Elmah.Io.ErrorLog(config)
           
-        return! running { log = log }
-        }
-    and running state = async {
-        let! msg, _ = inbox.Receive()
-        match msg with
-        | Log l ->
-            match l.``exception`` with
-            | None -> return! running state
-            | Some ex ->
-                let err = Elmah.Error ex
-                err.ApplicationName <- ri.serviceName
-                err.Time <- l.timestamp.ToDateTimeUtc()
-                let! entryId = Async.FromBeginEnd(err, state.log.BeginLog, state.log.EndLog)
-                // do nothing with entry id, yes tutorial?
+            return! running { log = log }
+            }
+        and running state = async {
+            let! msg, _ = inbox.Receive()
+            match msg with
+            | Log l ->
+                match l.``exception`` with
+                | None -> return! running state
+                | Some ex ->
+                    
+                    let err = Elmah.Error ex
+                    err.ApplicationName <- ri.serviceName
+                    err.Time <- l.timestamp.ToDateTimeUtc()
+                    err.Message <- l.message
+                    let! entryId = Async.FromBeginEnd(err, state.log.BeginLog, state.log.EndLog)
+                    // do nothing with entry id, yes tutorial?
+                    return! running state
+            | Measure msr ->
+                // Elmah IO doesn't care
                 return! running state
-        | Measure msr ->
-            // Elmah IO doesn't care
-            return! running state
-        | Flush ackChan ->
-            ackChan.Reply Ack
-            return! running state
-        | Shutdown ackChan ->
-            ackChan.Reply Ack
-            return shutdown state
-        }
-    and shutdown state =
-        ()
+            | Flush ackChan ->
+                ackChan.Reply Ack
+                return! running state
+            | Shutdown ackChan ->
+                ackChan.Reply Ack
+                return shutdown state
+            }
+        and shutdown state =
+            ()
 
-    init ()
+        init ()
 
 /// Create a new Elmah.IO target
 let create conf = TargetUtils.stdNamedTarget (Impl.loop conf)

@@ -26,17 +26,17 @@ type StateRequest = {
 }
 with static member Initial = { isHandled= false }
 
-let getCmdFromContract<'TContract,'TCommands> (toCmd:'TContract -> 'TCommands) ctx =
-     //get the command part of the request
-    let cmd = fromJson<Command<'TContract>> ctx.request.rawForm
-    //decompose the pack in id,version, cmd
-    cmd.id, cmd.version:>obj, (toCmd(cmd.payLoad)):> obj
+//let getCmdFromContract<'TContract,'TCommands> (toCmd:'TContract -> 'TCommands) ctx =
+//     //get the command part of the request
+//    let cmd = fromJson<Command<'TContract>> ctx.request.rawForm
+//    //decompose the pack in id,version, cmd
+//    cmd.id, cmd.version:>obj, (toCmd(cmd.payLoad)):> obj
 
-let getCmdFromRequest<'TCommands> toCmd ctx =
-     //get the command part of the request
-    let cmd = fromJson<Command<'TCommands>> ctx.request.rawForm
-    //decompose the pack in id,version, cmd
-    cmd.id, cmd.version:>obj, toCmd:> obj
+//let getCmdFromRequest<'TCommands> toCmd ctx =
+//     //get the command part of the request
+//    let cmd = fromJson<Command<'TCommands>> ctx.request.rawForm
+//    //decompose the pack in id,version, cmd
+//    cmd.id, cmd.version:>obj, toCmd:> obj
 
 let  handleRequest<'TAggCommand> system (aggCoordinator :IActorRef) getCmdFromJson =
 

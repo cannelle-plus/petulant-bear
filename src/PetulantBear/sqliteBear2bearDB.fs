@@ -336,6 +336,7 @@ let mapAfterGamesCmds connection (((id,version,bear):Guid*int*BearSession):Guid*
     match command with 
     | MarkBear(m) -> markBearToDB connection ((id,version,bear):Guid*int*BearSession) m
     | CommentBear(c) -> commentBearToDB connection ((id,version,bear):Guid*int*BearSession) c
+    
 
 
 

@@ -67,8 +67,9 @@ let authRoutes  findBear (system:ActorSystem) saveEvents getGameList getGame  sa
                             + "if you refresh the browser page, you'll have gotten a new cookie."
                 OK msg
             | Some store ->
-                let cmd = fromJson<Command<Contracts.ChangeUserName>> x.request.rawForm
-                store.set userNameStore cmd.payLoad.bearUsername
+                deserializingCmd<Contracts.ChangeUserName> x.request ( fun cmd ->
+                    store.set userNameStore cmd.payLoad.bearUsername
+                )
         ) 
         path Navigation.changePassword >>= apply saveToDB ChangePassword
         //the following method might leak into the bear module with BearDetail... beware!!!

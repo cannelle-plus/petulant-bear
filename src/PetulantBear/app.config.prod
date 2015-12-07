@@ -25,6 +25,7 @@
     <add name="bear2bearDB" connectionString="Data Source=C:\Petulant\production\db\Bear2Bear.db;Version=3"/>
   </connectionStrings>
   <appSettings>
+    <add key="elmah.io" value="xxxxx"/>
     <add key="rootPath" value="C:\Petulant\production\wwwroot\"/>
     <add key="IPAddress" value="172.31.20.17"/>
     <add key="Port" value="80"/>
