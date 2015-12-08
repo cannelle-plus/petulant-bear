@@ -189,3 +189,4 @@ docs/content/license.md
 docs/content/release-notes.md
 72r4
 deploy/petulant.LocalBuild.build.zip
+src/db/Bear2Bear.db
