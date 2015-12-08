@@ -41,6 +41,7 @@ let app root urlSite (system:ActorSystem) saveEvents auth =
     let (routes, authRoutes) = 
         (Users.routes urlSite getBearFromSocialId login,Users.authRoutes)
         |> addRoutes Games.routes (Games.authRoutes system saveEvents getGames getGame (saveToDB mapGameCmds))
+        |> addRoutes CurrentBear.routes (CurrentBear.authRoutes getBear system saveEvents getGames getGame (saveToDB mapCurrentBearCmds))
         |> addRoutes AfterGames.routes (AfterGames.authRoutes system saveEvents (saveToDB mapAfterGamesCmds))
         |> addRoutes (Bears.routes signinToDB signinBearToDB) (Bears.authRoutes getBears getBear)
         |> addRoutes Rooms.routes (Rooms.authRoutes getRoomDetail (saveToDB mapRoomCmds))

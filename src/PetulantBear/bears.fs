@@ -20,6 +20,8 @@ module Navigation =
     let detail = "/api/bears/detail"
     let signinBear = "/api/bears/signinBear"
     let signin = "/api/bears/signin"
+    let changeUserName = "/api/bears/changeUserName"
+    let changeAvatarId = "/api/bears/changeAvatarId"
     
 
 module Contracts = 
@@ -68,6 +70,26 @@ module Contracts =
       bearAvatarId : int; 
       }
 
+    [<DataContract>]
+    type ChangeUserName =
+      { 
+      [<field: DataMember(Name = "bearUsername")>]
+      bearUsername: string;
+      }
+    
+    [<DataContract>]
+    type ChangeAvatarId =
+      { 
+      [<field: DataMember(Name = "bearAvatarId")>]
+      bearAvatarId: int;
+      }
+
+    [<DataContract>]
+    type ChangePassword =
+      { 
+      [<field: DataMember(Name = "bearPassword")>]
+      bearPassword: string;
+      }
 
 type Commands = 
     | SignIn of Contracts.SignIn
@@ -77,51 +99,55 @@ let getBear findBear (filter:Contracts.BearsFilter) = findBear filter.bearId
 
 let signIn (store:StateStore) saveSignin bearId socialId  = 
     Types.request(fun r ->
-        try
-            let cmd:Command<Contracts.SignIn> = fromJson r.rawForm
-            let id,version = (cmd.id,cmd.version)
+        deserializingCmd<Contracts.SignIn> r (fun (cmd:Command<Contracts.SignIn>) ->
+            try
+                let id,version = (cmd.id,cmd.version)
 
-            saveSignin (id,version,bearId) (socialId,cmd.payLoad)  |> ignore
+                saveSignin (id,version,bearId) (socialId,cmd.payLoad)  |> ignore
             
-            { msg = PetulantBear.Home.Navigation.root  }     
-            |> toJson
-            |> Successful.ok 
-            >>= Writers.setMimeType "application/json"
-            >>= store.set bearStore bearId
-            >>= store.set userNameStore cmd.payLoad.bearUsername
-            >>= Auth.authenticated Session false
-
-        with | ex -> 
-            Failure(ex.Message) 
-            |> toMessage
-            |> toJson
-            |> Http.RequestErrors.bad_request 
-            >>= Writers.setMimeType "application/json"
+                { msg = PetulantBear.Home.Navigation.root  }     
+                |> toJson
+                |> Successful.ok 
+                >>= Writers.setMimeType "application/json"
+                >>= store.set bearStore bearId
+                >>= store.set userNameStore cmd.payLoad.bearUsername
+                >>= Auth.authenticated Session false
+            with | ex -> 
+                Failure(ex.Message) 
+                |> toMessage
+                |> toJson
+                |> Http.RequestErrors.bad_request 
+                >>= Writers.setMimeType "application/json"
+        )
+           
     )
 
 let signInBear (store:StateStore) saveSigninBear  = 
     Types.request(fun r ->
-        try
-            let cmd:Command<Contracts.SignInBear> = fromJson r.rawForm
-            let bearId =  Guid.NewGuid()
-            let socialId = sprintf "bear-%A" (Guid.NewGuid())
+        deserializingCmd<Contracts.SignInBear> r (fun (cmd:Command<Contracts.SignInBear>) ->
+            try
+        
+                let bearId =  Guid.NewGuid()
+                let socialId = sprintf "bear-%A" (Guid.NewGuid())
 
-            saveSigninBear bearId socialId cmd.payLoad  |> ignore
+                saveSigninBear bearId socialId cmd.payLoad  |> ignore
             
-            { msg = PetulantBear.Home.Navigation.root  }     
-            |> toJson
-            |> Successful.ok 
-            >>= Writers.setMimeType "application/json"
-            >>= store.set bearStore bearId
-            >>= store.set userNameStore cmd.payLoad.bearUsername
-            >>= Auth.authenticated Session false
+                { msg = PetulantBear.Home.Navigation.root  }     
+                |> toJson
+                |> Successful.ok 
+                >>= Writers.setMimeType "application/json"
+                >>= store.set socialIdStore socialId
+                >>= store.set bearStore bearId
+                >>= store.set userNameStore cmd.payLoad.bearUsername
+                >>= Auth.authenticated Session false
 
-        with | ex -> 
-            Failure(ex.Message) 
-            |> toMessage
-            |> toJson
-            |> Http.RequestErrors.bad_request 
-            >>= Writers.setMimeType "application/json"
+            with | ex -> 
+                Failure(ex.Message) 
+                |> toMessage
+                |> toJson
+                |> Http.RequestErrors.bad_request 
+                >>= Writers.setMimeType "application/json"
+            )
     )
 
 let signin save =   
@@ -161,7 +187,6 @@ let routes save saveBear=
     [
         path Navigation.signin >>= signin save
         path Navigation.signinBear >>= signinBear saveBear
-
     ]
 
 let authRoutes  findBears findBear   =

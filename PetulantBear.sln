@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{63297B98-5CED-492C-A5B7-A5B4F73CF142}"
 	ProjectSection(SolutionItems) = preProject
@@ -37,6 +37,22 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PetulantBear.Tests", "tests
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3E7D3D56-4314-4DB8-B324-8C102C6EA9DF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "devRoot", "devRoot", "{3701EAA8-B6E0-4053-9922-DC07571EF39F}"
+	ProjectSection(SolutionItems) = preProject
+		src\devroot\home.html = src\devroot\home.html
+		src\devroot\index.html = src\devroot\index.html
+		src\devroot\signin.html = src\devroot\signin.html
+		src\devroot\welcome.html = src\devroot\welcome.html
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{69C50619-E4A1-4E0F-9E7A-D919665CFDD8}"
+	ProjectSection(SolutionItems) = preProject
+		src\devroot\scripts\app.js = src\devroot\scripts\app.js
+		src\devroot\scripts\home.js = src\devroot\scripts\home.js
+		src\devroot\scripts\jquery-2.1.4.js = src\devroot\scripts\jquery-2.1.4.js
+		src\devroot\scripts\signin.js = src\devroot\scripts\signin.js
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +75,7 @@ Global
 		{83F16175-43B1-4C90-A1EE-8E351C33435D} = {A6A6AF7D-D6E3-442D-9B1E-58CC91879BE1}
 		{8E6D5255-776D-4B61-85F9-73C37AA1FB9A} = {A6A6AF7D-D6E3-442D-9B1E-58CC91879BE1}
 		{8F0FE6D0-0865-4A72-AA07-2E294A995B15} = {ED8079DD-2B06-4030-9F0F-DC548F98E1C4}
+		{69C50619-E4A1-4E0F-9E7A-D919665CFDD8} = {3701EAA8-B6E0-4053-9922-DC07571EF39F}
 	EndGlobalSection
 	GlobalSection(PerforceSourceControlProviderSolutionProperties) = preSolution
 		SolutionIsControlled = True

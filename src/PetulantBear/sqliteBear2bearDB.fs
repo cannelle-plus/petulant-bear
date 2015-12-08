@@ -8,12 +8,14 @@ open PetulantBear.AfterGames
 open PetulantBear.Games
 open PetulantBear.Bears
 open PetulantBear.Rooms
+open PetulantBear.CurrentBear
 
 
 open PetulantBear.Games.Contracts
 open PetulantBear.AfterGames.Contracts
 open PetulantBear.Bears.Contracts
 open PetulantBear.Rooms.Contracts
+open PetulantBear.CurrentBear.Contracts
 
 open System.Linq
 
@@ -70,6 +72,63 @@ let abandonToDB connection ((id,version,bear):Guid*int*BearSession)  =
     add("@id", id.ToString())
     add("@bearId", bear.bearId.ToString())
     sqlCmd    
+
+let changeName connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (cmd:Games.Contracts.ChangeName) =
+    let sql = "Update  GamesList set name= @name where id=@id"
+    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@id", id.ToString())
+    add("@name", cmd.name)
+    sqlCmd
+
+let changeLocation connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (cmd:Games.Contracts.ChangeLocation) =
+    let sql = "Update  GamesList set location= @location where id=@id"
+    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@id", id.ToString())
+    add("@location", cmd.location)
+    sqlCmd
+
+let changeStartDate connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (cmd:Games.Contracts.ChangeStartDate) =
+    let sql = "Update  GamesList set startDate= @startDate where id=@id"
+    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@id", id.ToString())
+    add("@startDate", cmd.startDate.ToString("yyyy-MM-ddTHH:mm:ssZ"))
+    sqlCmd
+
+let changeMaxPlayer connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (cmd:Games.Contracts.ChangeMaxPlayer) =
+    let sql = "Update  GamesList set maxPlayers= @maxPlayers where id=@id"
+    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@id", id.ToString())
+    add("@maxPlayers", cmd.maxPlayers.ToString())
+    sqlCmd
+
+let kickPlayer connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (cmd:Games.Contracts.KickPlayer) =
+    let sql = "delete from GamesBears  where gameId=@id and bearId=@bearId"
+    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@id", id.ToString())
+    add("@bearId", cmd.kickedBearId.ToString())
+    sqlCmd
+
+
 
 let retrieveGamesBears connection gameId bearId =
      //retrieving information for the game if existing
@@ -266,12 +325,18 @@ let mapGameCmds connection (((id,version,bear):Guid*int*BearSession):Guid*int*Be
     | Join -> joinToDB connection ((id,version,bear):Guid*int*BearSession) 
     | Cancel -> cancelToDB connection ((id,version,bear):Guid*int*BearSession) 
     | Abandon -> abandonToDB connection ((id,version,bear):Guid*int*BearSession) 
+    | ChangeName(cmd) -> changeName connection ((id,version,bear):Guid*int*BearSession) cmd
+    | ChangeStartDate(cmd) -> changeStartDate connection ((id,version,bear):Guid*int*BearSession) cmd
+    | ChangeLocation(cmd) -> changeLocation connection ((id,version,bear):Guid*int*BearSession) cmd
+    | KickPlayer(cmd) -> kickPlayer connection ((id,version,bear):Guid*int*BearSession) cmd
+    | ChangeMaxPlayer(cmd) -> changeMaxPlayer connection ((id,version,bear):Guid*int*BearSession) cmd
     
 
 let mapAfterGamesCmds connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (command:AfterGames.Commands) =    
     match command with 
     | MarkBear(m) -> markBearToDB connection ((id,version,bear):Guid*int*BearSession) m
     | CommentBear(c) -> commentBearToDB connection ((id,version,bear):Guid*int*BearSession) c
+    
 
 
 
@@ -493,6 +558,50 @@ let postMessage connection ((id,version,bear):Guid*int*BearSession)  (cmd:PostMe
 let mapRoomCmds connection (id,version,bearId)  (command:PetulantBear.Rooms.Commands) =    
     match command with 
     | PostMessage(cmd) -> postMessage connection (id,version,bearId) cmd
+
+
+let changeAvatarId connection ((id,version,bear):Guid*int*BearSession)  (cmd:ChangeAvatarId) =
+    let sql = "Update Bears set bearAvatarId =@bearAvatarId where  bearId=@bearId"
+    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@bearId", bear.bearId.ToString())
+    add("@bearAvatarId", cmd.bearAvatarId.ToString())
+    
+    sqlCmd
+    
+let changePassword connection ((id,version,bear):Guid*int*BearSession)  (cmd:ChangePassword) =
+    let sql = "Update Authentication set password =@bearPassword where  username=@bearUsername"
+    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@bearUsername", bear.username)
+    add("@bearPassword", cmd.bearPassword)
+    
+    sqlCmd
+
+let changeUserName connection ((id,version,bear):Guid*int*BearSession)  (cmd:ChangeUserName) =
+    let sql = "Update Bears set bearUsername =@bearUsername where  bearId=@bearId;Update Authentication set username =@bearUsername where  username=@oldBearUsername"
+    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@bearId", bear.bearId.ToString())
+    add("@bearUsername", cmd.bearUsername)
+    add("@oldBearUsername", bear.username)
+    
+    sqlCmd
+
+let mapCurrentBearCmds connection (id,version,bearId)  (command:PetulantBear.CurrentBear.Commands) =    
+    match command with 
+    | ChangeAvatarId(cmd) -> changeAvatarId connection (id,version,bearId) cmd
+    | ChangePassword(cmd) -> changePassword connection (id,version,bearId) cmd
+    | ChangeUserName(cmd) -> changeUserName connection (id,version,bearId) cmd
 
 
 

@@ -89,10 +89,19 @@ let ApplyCmdToActor buildGameActor (actorsDic :Dictionary<Guid, IActorRef>) (cmd
     actorsDic.[cmd.id].Tell(cmd)
 
 
+type DeserializingResult<'T> =
+| Serialized of 'T
+| DeserializingException of string*Newtonsoft.Json.JsonSerializationException
 
 let fromJson<'a> byteArray= 
     let json = System.Text.Encoding.UTF8.GetString(byteArray) 
-    JsonConvert.DeserializeObject<'a>(json)
+    try
+        Serialized(JsonConvert.DeserializeObject<'a>(json))
+    with
+    | :?Newtonsoft.Json.JsonSerializationException as ex ->  
+        DeserializingException(json,ex)
+    | _ -> reraise()
+                
 
 let toJson<'a> (obj:'a) = 
     JsonConvert.SerializeObject(obj)
@@ -100,6 +109,31 @@ let toJson<'a> (obj:'a) =
 
 let toJsonString<'a> (obj:'a) = 
     JsonConvert.SerializeObject(obj)
+
+let deserializingRawForm<'T> req fSuccess =
+    match fromJson<'T> req.rawForm with
+        | Serialized(cmd) -> fSuccess cmd
+        | DeserializingException(rawText,ex) ->
+            let t = typedefof<'T>
+            let elmahLogger = Logary.Logging.getLoggerByName "elmah"
+            ex.ToString()
+            |> sprintf "raw form sent : '%s', serialization type : '%s', err trace : '%s'" rawText ((typedefof<'T>).FullName)
+            |> Logary.LogLine.error 
+            |> elmahLogger.Log 
+            RequestErrors.BAD_REQUEST "body not understood"
+
+let deserializingCmd<'T> req fSuccess =
+    match fromJson<Command<'T>> req.rawForm with
+        | Serialized(cmd) -> fSuccess cmd
+        | DeserializingException(rawText,ex) ->
+            let logger = Logary.Logging.getLoggerByName "Logary.Targets.ElmahIO"
+            
+            sprintf "raw form sent : '%s', serialization type : '%s'" rawText ((typedefof<'T>).FullName)
+            |> Logary.LogLine.error
+            |> Logary.LogLine.setExn ex
+            |> logger.Log
+            
+            RequestErrors.BAD_REQUEST "body not understood"
 
 let socialIdStore = "socialId"
 let accessTokenStore = "accessToken"
@@ -131,7 +165,7 @@ type Session =
 let sessionCmd<'Tcontract> f=
     statefulForSession 
     >>= context (fun x ->
-            let cmd = fromJson<Command<'Tcontract>> x.request.rawForm
+        deserializingCmd<'Tcontract> x.request (fun cmd ->
             let store = x |> HttpContext.state
             match  store with
             | None -> f NoSession cmd
@@ -140,6 +174,8 @@ let sessionCmd<'Tcontract> f=
                 | Some bearId, Some socialId, Some username -> f (Bear { bearId= bearId; socialId=socialId; username = username} ) cmd
                 | None ,  Some socialId , None-> f (NewBear {socialId = socialId}) cmd
                 | _ , _,_ -> f NoSession cmd
+            )   
+
         )
 
 
@@ -173,7 +209,7 @@ let inSession f =
             | _ , _ , _-> f NoSession 
         )
 
-let apply<'TContract,'TCommand> save (mapCmd:'Tcontract->'TCommand) =
+let apply<'TContract,'TCommand> save (mapCmd:'TContract->'TCommand) =
     sessionCmd<'TContract>(fun s cmd ->
         match s  with
         | NoSession -> Http.RequestErrors.BAD_REQUEST "no session found" 
@@ -196,14 +232,19 @@ let apply<'TContract,'TCommand> save (mapCmd:'Tcontract->'TCommand) =
     )
 
 
-let toJsonFromOptions<'T> = function Some(a) -> toJson<'T>(a) | None ->  toJson("")
+let toJsonFromOptions<'T> = function 
+| Some(a) -> toJson<'T>(a) 
+| None ->  toJson("")
 
 let mapJson<'a,'b> f = 
-     Types.request(fun r ->
-      f (fromJson<'a> r.rawForm) 
-      |> toJsonFromOptions<'b>
-      |> Successful.ok
-      >>= Writers.setMimeType "application/json") 
+    Types.request(fun r ->
+        deserializingRawForm<'a> r (fun cmd ->
+            f cmd
+            |> toJsonFromOptions<'b>
+            |> Successful.ok
+            >>= Writers.setMimeType "application/json"
+        )
+    ) 
 
 
 

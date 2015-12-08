@@ -22,6 +22,8 @@ open PetulantBear
 
 open System
 open System.Collections.Generic
+open System.Text.RegularExpressions
+
 
 let events = new List<Event<Games.Events>>()
 let saveEvents name (id, expectedVersion, evt) =
@@ -50,8 +52,6 @@ open Logary.Metrics
 open NodaTime
 
 
-
-
 [<EntryPoint>]
 let main args =
 
@@ -60,17 +60,37 @@ let main args =
     let port = Int32.Parse( ConfigurationManager.AppSettings.["Port"])
     let urlSite = ConfigurationManager.AppSettings.["urlSite"]
 
-    let logger = Suave.Logging.Loggers.ConsoleWindowLogger Suave.Logging.LogLevel.Verbose
 
+    let confElmah :Logary.Targets.ElmahIO.ElmahIOConf =
+        match Guid.TryParse(ConfigurationManager.AppSettings.Get("elmah.io")) with
+        | true, logId ->{ logId = logId; }
+        | false, _->{ logId = Guid.Empty; }
+     
+    
+    use logary =
+      withLogary' "logibit.web" (
+        withTargets [
+          Console.create Console.empty "console"
+          Logary.Targets.ElmahIO.create  confElmah "elmah"
+
+        ] >>
+          withRules [
+            Rule.create (Regex(".*", RegexOptions.Compiled)) "console" (fun _ -> true) (fun _ -> true) Info
+            Rule.create (Regex(".*", RegexOptions.Compiled)) "elmah" (fun _ -> true) (fun _ -> true) Error
+          ]
+        )
+    
+    
     let section = ConfigurationManager.GetSection("akka"):?> AkkaConfigurationSection
+    
     let system = System.create "System" ( section.AkkaConfig)
     let config = 
-        { defaultConfig with  
+        { defaultConfig with 
+            logger = SuaveAdapter(logary.GetLogger "suave")
             bindings = [ HttpBinding.mk' HTTP ipAddress port ] 
             homeFolder = Some(rootPath)
         }
 
     (PetulantBear.Application.app rootPath urlSite system saveEvents Users.authenticateWithLogin)
-    >>= Suave.Http.Applicatives.log logger logFormat
     |> startWebServer config
     0
