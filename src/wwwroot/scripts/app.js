@@ -228,9 +228,9 @@ function toBEARDATE(MSDate) {
                       //msg.push("<TD>" + data.roomId + "</TD>");
                       //msg.push("<TD>" + data.name + "</TD>");
                       for (var i = data.messages.length - 1; i >= ((data.messages.length < 50) ? 0 : data.messages.length - 9); i--) {
-
+                          data.messages[i].avatardID = 1;
                           //msg.push("<TD>" + data.messages[i].bear.bearId + "</TD>");
-                          msg.push("<dt>" + data.messages[i].bear.bearUsername + "</dt>");
+                          msg.push("<dt style='background-image:url(images/avatar-0" + data.messages[i].avatardID + ".png);'>" + data.messages[i].bear.bearUsername + "</dt>");
                           //msg.push("<TD>" + data.messages[i].bear.socialId + "</TD>");
                           //msg.push("<TD>" + data.messages[i].bear.bearAvatarId + "</TD>");
                           msg.push("<dd>" + data.messages[i].message + "</dd>");
