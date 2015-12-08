@@ -371,13 +371,14 @@ function toBEARDATE(MSDate) {
 
         var getGames = function () {
             loader.show();
+
             $.ajax({
                 type: "POST",
                 url: "api/games/list",
                 dataType: "json",
                 data: JSON.stringify({
-                    "from": "01/01/2001",
-                    "to": "01/01/2021"
+                    "from": new Date(),
+                    "to": new Date().addHours(168)
                 })
             })
               .done(function (data) {
