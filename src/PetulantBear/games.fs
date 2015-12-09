@@ -65,6 +65,7 @@ module Contracts =
       isJoinable : bool;
       isCancellable : bool;
       isAbandonnable : bool;
+      isOwner: bool;
       }
 
 
@@ -82,6 +83,7 @@ module Contracts =
       isJoinable : bool;
       isCancellable : bool;
       isAbandonnable : bool;
+      isOwner : bool;
       }
 
     type ScheduleGame =

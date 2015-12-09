@@ -240,7 +240,7 @@ let getGame bearId (filter:GamesFilter) =
 
     if (readerGame.Read()) then
         let ownerId = Guid.Parse(readerGame.["ownerId"].ToString())
-        let isCancellable = match ownerId with
+        let isOwner = match ownerId with
                             | bearId -> true
                             | _ -> false
         let isPartOfGame = bearPlayersList.Any( fun b -> b.bearId =bearId)
@@ -256,7 +256,8 @@ let getGame bearId (filter:GamesFilter) =
             nbPlayers = Int32.Parse(readerGame.["nbPlayers"].ToString());
             maxPlayers = Int32.Parse(readerGame.["maxPlayers"].ToString());
             isJoinable = not <| isPartOfGame;
-            isCancellable = isCancellable;
+            isCancellable = isOwner;
+            isOwner = isOwner;
             isAbandonnable = isPartOfGame;
         }
         Some(gameDetail)
@@ -268,6 +269,7 @@ let getGames bearId filter =
 
     let sql = "SELECT        main.id, main.name, main.ownerId, main.ownerBearName, main.startDate, main.location, main.currentState, main.nbPlayers, main.maxPlayers, players.bearnames, 
                          CASE WHEN main.ownerId = @bearId THEN 'true' ELSE 'false' END AS isCancellable,
+                         CASE WHEN main.ownerId = @bearId THEN 'true' ELSE 'false' END AS isOwner,
                          CASE WHEN bearInGame.IsPartOfGame =0 or bearInGame.IsPartOfGame is null THEN 'true' ELSE 'false' END AS  isJoinable,
                                          CASE WHEN bearInGame.IsPartOfGame =1 THEN 'true' ELSE 'false' END AS  isAbandonnable
                 FROM            (SELECT        gl.id, gl.name, gl.ownerId, gl.ownerBearName, gl.startDate, gl.location, gl.currentState, COUNT(GamesBearsToCount.bearId) AS nbPlayers, 
@@ -313,6 +315,7 @@ let getGames bearId filter =
                 maxPlayers = Int32.Parse(reader.["maxPlayers"].ToString());
                 isJoinable = bool.Parse(reader.["isJoinable"].ToString());
                 isCancellable = bool.Parse(reader.["isCancellable"].ToString());
+                isOwner =bool.Parse(reader.["isOwner"].ToString());
                 isAbandonnable = bool.Parse(reader.["isAbandonnable"].ToString());
             }
         )
