@@ -1,6 +1,6 @@
-Date.prototype.toMSJSON = function () {
-    var date = '/Date(' + this.getTime() + ')/'; //CHANGED LINE
-    return date;
+Date.prototype.addHours = function (h) {
+    this.setTime(this.getTime() + (h * 60 * 60 * 1000));
+    return this;
 };
 
 (function ($) {
@@ -23,7 +23,7 @@ Date.prototype.toMSJSON = function () {
                 payLoad: payLoad
             };
         }
-     
+
 
         var schedule = function (id) {
             var scheduleCmd = createCommand(id, 1, {
@@ -44,7 +44,7 @@ Date.prototype.toMSJSON = function () {
         }
 
         var cancel = function (id) {
-            var cancelCmd = createCommand(id, 1, { });
+            var cancelCmd = createCommand(id, 1, {});
             return $.ajax({
                 type: "POST",
                 url: "api/games/cancel",
@@ -70,8 +70,52 @@ Date.prototype.toMSJSON = function () {
               });
         }
 
+        var changeName = function (id) {
+            var changeNameCmd = createCommand(id, 1, {
+                name: "new Name" + guid()
+            });
+            return $.ajax({
+                type: "POST",
+                url: "api/games/changeName",
+                dataType: "json",
+                data: JSON.stringify(changeNameCmd)
+            })
+              .fail(function (err) {
+                  $("#changeNameResult").html(err);
+              });
+        }
+        var changeStartDate = function (id) {
+            var newStartDate = (new Date()).addHours(10);
+            var changeStartDateCmd = createCommand(id, 1, {
+                startDate: newStartDate.toJSON()
+            });
+            return $.ajax({
+                type: "POST",
+                url: "api/games/changeStartDate",
+                dataType: "json",
+                data: JSON.stringify(changeStartDateCmd)
+            })
+                .fail(function (err) {
+                    $("#changeStartDateResult").html(err);
+                });
+        }
+        var changeLocation = function (id) {
+            var changeLocationCmd = createCommand(id, 1, {
+                location: "new location" + guid()
+            });
+            return $.ajax({
+                type: "POST",
+                url: "api/games/changeLocation",
+                dataType: "json",
+                data: JSON.stringify(changeLocationCmd)
+            })
+                .fail(function (err) {
+                    $("#changeLocationResult").html(err);
+                });
+
+        }
         var abandon = function (id) {
-            var abandonCmd = createCommand(id, 1, { });
+            var abandonCmd = createCommand(id, 1, {});
             return $.ajax({
                 type: "POST",
                 url: "api/games/abandon",
@@ -84,9 +128,9 @@ Date.prototype.toMSJSON = function () {
         }
 
         //afterGame
-        var markBear = function (gameId, bearId,  mark) {
+        var markBear = function (gameId, bearId, mark) {
             var markBearCmd = createCommand(gameId, 1, {
-                "bearId" : bearId,
+                "bearId": bearId,
                 "mark": mark
             });
             return $.ajax({
@@ -100,9 +144,9 @@ Date.prototype.toMSJSON = function () {
               });
         }
 
-        var commentBear = function (gameId, bearId,  comment) {
+        var commentBear = function (gameId, bearId, comment) {
             var commentBearCmd = createCommand(gameId, 1, {
-                "bearId" : bearId,
+                "bearId": bearId,
                 "comment": comment
             });
             return $.ajax({
@@ -170,7 +214,7 @@ Date.prototype.toMSJSON = function () {
               });
         }
 
-        var postMessageToRoom = function (roomId,  message) {
+        var postMessageToRoom = function (roomId, message) {
             var postMessageCmd = createCommand(roomId, 1, {
                 "message": message
             });
@@ -375,7 +419,7 @@ Date.prototype.toMSJSON = function () {
                 $("#postMessageToRoomBtn").click(function (e) {
                     var roomId = $(e.target).data("id");
                     var message = $("#msgRoom").val();
-                    postMessageToRoom(roomId,  message);
+                    postMessageToRoom(roomId, message);
                 });
 
                 $(".markBearBtn").click(function (e) {
@@ -387,9 +431,9 @@ Date.prototype.toMSJSON = function () {
                 $(".commentBearBtn").click(function (e) {
                     var bearId = $(e.target).data("id");
                     var comment = "someComment" + guid();
-                    commentBear(gameId, bearId,comment);
+                    commentBear(gameId, bearId, comment);
                 });
-                  
+
 
             })
             .fail(function (err) {
@@ -425,9 +469,9 @@ Date.prototype.toMSJSON = function () {
                   for (var i = 0; i < data.length; i++) {
                       msg.push("<TR>");
                       msg.push("<TD>" + data[i].id + "</TD>");
-                      msg.push("<TD>" + data[i].name + "</TD>");
-                      msg.push("<TD>" + data[i].location + "</TD>");
-                      msg.push("<TD>" + data[i].startDate + "</TD>");
+                      msg.push("<TD>" + data[i].name + "<div href='#' class='changeName' ><img data-id='" + data[i].id + "' width=16 height=16 src ='img/edit.png' /></div><div id='changeNameResult'></div></TD>");
+                      msg.push("<TD>" + data[i].location + "<div href='#' class='changeLocation' ><img data-id='" + data[i].id + "' width=16 height=16 src ='img/edit.png' /></div><div id='changeLocationResult'></div></TD>");
+                      msg.push("<TD>" + data[i].startDate + "<div href='#' class='changeStartDate' ><img data-id='" + data[i].id + "' width=16 height=16 src ='img/edit.png' /></div><div id='changeStartDateResult'></div></TD>");
                       msg.push("<TD>" + data[i].players + "</TD>");
                       msg.push("<TD>" + data[i].nbPlayers + "</TD>");
                       msg.push("<TD>" + data[i].maxPlayers + "</TD>");
@@ -447,7 +491,7 @@ Date.prototype.toMSJSON = function () {
                           msg.push("<TD><div href='#' class='abandonBtn' data-id='" + data[i].id + "'>abandon</div><div id='abandonResult'></div></TD>");
                       else
                           msg.push("<TD>&nbsp;</TD>");
-                      
+
                       //these should on the bears in games
                       //msg.push("<TD><div href='#' class='markBtn' data-id='" + data[i].id + "'>mark</div><div id='markResult'></div></TD>");
                       //msg.push("<TD><div href='#' class='commentBtn' data-id='" + data[i].id + "'>comment</div><div id='commentResult'></div></TD>");
@@ -469,22 +513,25 @@ Date.prototype.toMSJSON = function () {
                       }
                   }
 
+                  $(".changeName").click(gameAction(changeName, "changeNameResult"));
+                  $(".changeStartDate").click(gameAction(changeStartDate, "changeStartDateResult"));
+                  $(".changeLocation").click(gameAction(changeLocation, "changeLocationResult"));
                   $(".joinBtn").click(gameAction(join, "joinResult"));
                   $(".cancelBtn").click(gameAction(cancel, "cancelResult"));
                   $(".abandonBtn").click(gameAction(abandon, "abandonResult"));
                   $(".markBtn").click(function (e) {
                       var gameId = $(e.target).data("id");
-                      markBear(gameId,7).done(function (data) {
+                      markBear(gameId, 7).done(function (data) {
                           $("#markResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
                       })
                   });
                   $(".commentBtn").click(function (e) {
-                        var gameId = $(e.target).data("id");
-                        commentBear(gameId,"some comment" +guid()).done(function (data) {
-                            $("#commentResult" ).html("received at " + Date.now() + ", " + JSON.stringify(data));
-                        });
+                      var gameId = $(e.target).data("id");
+                      commentBear(gameId, "some comment" + guid()).done(function (data) {
+                          $("#commentResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+                      });
                   });
-                  
+
 
               })
               .fail(function (err) {
@@ -532,9 +579,9 @@ Date.prototype.toMSJSON = function () {
               });
         }
 
-        
-            
-        
+
+
+
 
         var getBears = function () {
             $("#bearDetail").html('');
@@ -574,79 +621,79 @@ Date.prototype.toMSJSON = function () {
               });
         }
 
-        
 
-    $("#bearsListBtn").click(getBears);
 
-    $("#gamesListBtn").click(getGames);
-    $("#gameScheduleBtn").click(function () {
-        var gameBearId = $("#gameBearId").val();
-        var gameId = guid();
-        schedule(gameId, gameBearId).done(function (data) {
-            $("#scheduleResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+        $("#bearsListBtn").click(getBears);
+
+        $("#gamesListBtn").click(getGames);
+        $("#gameScheduleBtn").click(function () {
+            var gameBearId = $("#gameBearId").val();
+            var gameId = guid();
+            schedule(gameId, gameBearId).done(function (data) {
+                $("#scheduleResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+            });
         });
-    });
 
-    $("#bearChangePasswordBtn").click(function () {
-        var newPassword = "newPassword" + guid();
-        changePassword(newPassword).done(function (data) {
-            $("#changePasswordResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+        $("#bearChangePasswordBtn").click(function () {
+            var newPassword = "newPassword" + guid();
+            changePassword(newPassword).done(function (data) {
+                $("#changePasswordResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+            });
         });
-    });
 
-    $("#bearChangeUsernameBtn").click(function () {
-        var newUserName = "newUserName" + guid();
-        changeUserName(newUserName).done(function (data) {
-            $("#changeUsernameResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+        $("#bearChangeUsernameBtn").click(function () {
+            var newUserName = "newUserName" + guid();
+            changeUserName(newUserName).done(function (data) {
+                $("#changeUsernameResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+            });
         });
-    });
 
-    var i = 1;
-    $("#bearChangeAvatarIdBtn").click(function () {
-        
-        changeAvatarId(i++).done(function (data) {
-            $("#changeAvatarIdResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+        var i = 1;
+        $("#bearChangeAvatarIdBtn").click(function () {
+
+            changeAvatarId(i++).done(function (data) {
+                $("#changeAvatarIdResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+            });
         });
-    });
-    
-    
-
-        
 
 
 
-    //extract the detail of the current bear
-    $.ajax({
-        type: "GET",
-        url: "api/bears/current",
-        dataType: "json"
-    })
-    .done(function (data) {
-        if (data !== null && data !== undefined) {
-            var msg = [];
-            msg.push("<TABLE  border=\"1\">");
-            msg.push("<TR>");
-            msg.push("<TH>bearId</TH>");
-            msg.push("<TH>bearUsername</TH>");
-            msg.push("<TH>socialId</TH>");
-            msg.push("<TH>bearAvatarId</TH>");
-            msg.push("</TR>");
-            msg.push("<TR>");
-            msg.push("<TD>" + data.bearId + "</TD>");
-            msg.push("<TD>" + data.bearUsername + "</TD>");
-            msg.push("<TD>" + data.socialId + "</TD>");
-            msg.push("<TD>" + data.bearAvatarId + "</TD>");
-            msg.push("</TR>");
 
-            msg.push("</TABLE>");
-            $("#currentBearDetail").html(msg.join(''));
-        } else {
-            $("#currentBearDetail").html("no current bear found");
-        }
-    })
-    .fail(function (err) {
-        $("#bearDetail").html(err);
-    });
+
+
+
+        //extract the detail of the current bear
+        $.ajax({
+            type: "GET",
+            url: "api/bears/current",
+            dataType: "json"
+        })
+        .done(function (data) {
+            if (data !== null && data !== undefined) {
+                var msg = [];
+                msg.push("<TABLE  border=\"1\">");
+                msg.push("<TR>");
+                msg.push("<TH>bearId</TH>");
+                msg.push("<TH>bearUsername</TH>");
+                msg.push("<TH>socialId</TH>");
+                msg.push("<TH>bearAvatarId</TH>");
+                msg.push("</TR>");
+                msg.push("<TR>");
+                msg.push("<TD>" + data.bearId + "</TD>");
+                msg.push("<TD>" + data.bearUsername + "</TD>");
+                msg.push("<TD>" + data.socialId + "</TD>");
+                msg.push("<TD>" + data.bearAvatarId + "</TD>");
+                msg.push("</TR>");
+
+                msg.push("</TABLE>");
+                $("#currentBearDetail").html(msg.join(''));
+            } else {
+                $("#currentBearDetail").html("no current bear found");
+            }
+        })
+        .fail(function (err) {
+            $("#bearDetail").html(err);
+        });
 
 
 
