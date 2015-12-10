@@ -26,7 +26,8 @@ open System.Text.RegularExpressions
 
 
 let events = new List<Event<Games.Events>>()
-let saveEvents name (id, expectedVersion, evt) =
+let saveEvents streamName (id, expectedVersion, evt) =
+    
     events.Add({ id= id; version=expectedVersion;payLoad= evt })
 
 
@@ -82,6 +83,7 @@ let main args =
     
     
     let section = ConfigurationManager.GetSection("akka"):?> AkkaConfigurationSection
+//    let saveEvts  = EventSourceRepo.SaveEvtsAsync
     
     let system = System.create "System" ( section.AkkaConfig)
     let config = 

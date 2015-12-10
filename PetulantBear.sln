@@ -53,6 +53,30 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{69C5
 		src\devroot\scripts\signin.js = src\devroot\scripts\signin.js
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wwwroot", "wwwroot", "{1DC437A4-03E4-465D-85A6-A579A45DBD6C}"
+	ProjectSection(SolutionItems) = preProject
+		src\wwwroot\home.html = src\wwwroot\home.html
+		src\wwwroot\index.html = src\wwwroot\index.html
+		src\wwwroot\signin.html = src\wwwroot\signin.html
+		src\wwwroot\welcome.html = src\wwwroot\welcome.html
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{121CBE16-6D50-46AF-93D7-C3D0A3699812}"
+	ProjectSection(SolutionItems) = preProject
+		src\wwwroot\scripts\app.js = src\wwwroot\scripts\app.js
+		src\wwwroot\scripts\home.js = src\wwwroot\scripts\home.js
+		src\wwwroot\scripts\navigation.js = src\wwwroot\scripts\navigation.js
+		src\wwwroot\scripts\signin.js = src\wwwroot\scripts\signin.js
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "css", "css", "{FE7E1B9D-4197-4328-BD43-BB853D79297B}"
+	ProjectSection(SolutionItems) = preProject
+		src\wwwroot\css\base.css = src\wwwroot\css\base.css
+		src\wwwroot\css\form.css = src\wwwroot\css\form.css
+		src\wwwroot\css\main.css = src\wwwroot\css\main.css
+		src\wwwroot\css\template.css = src\wwwroot\css\template.css
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +100,8 @@ Global
 		{8E6D5255-776D-4B61-85F9-73C37AA1FB9A} = {A6A6AF7D-D6E3-442D-9B1E-58CC91879BE1}
 		{8F0FE6D0-0865-4A72-AA07-2E294A995B15} = {ED8079DD-2B06-4030-9F0F-DC548F98E1C4}
 		{69C50619-E4A1-4E0F-9E7A-D919665CFDD8} = {3701EAA8-B6E0-4053-9922-DC07571EF39F}
+		{121CBE16-6D50-46AF-93D7-C3D0A3699812} = {1DC437A4-03E4-465D-85A6-A579A45DBD6C}
+		{FE7E1B9D-4197-4328-BD43-BB853D79297B} = {1DC437A4-03E4-465D-85A6-A579A45DBD6C}
 	EndGlobalSection
 	GlobalSection(PerforceSourceControlProviderSolutionProperties) = preSolution
 		SolutionIsControlled = True

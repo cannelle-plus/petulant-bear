@@ -228,9 +228,8 @@ function toBEARDATE(MSDate) {
                       //msg.push("<TD>" + data.roomId + "</TD>");
                       //msg.push("<TD>" + data.name + "</TD>");
                       for (var i = data.messages.length - 1; i >= ((data.messages.length < 50) ? 0 : data.messages.length - 9); i--) {
-                          data.messages[i].avatardID = 1;
                           //msg.push("<TD>" + data.messages[i].bear.bearId + "</TD>");
-                          msg.push("<dt style='background-image:url(images/avatar-0" + data.messages[i].avatardID + ".png);'>" + data.messages[i].bear.bearUsername + "</dt>");
+                          msg.push("<dt style='background-image:url(images/avatar-0" + data.messages[i].bear.bearAvatarId + ".png);'>" + data.messages[i].bear.bearUsername + "</dt>");
                           //msg.push("<TD>" + data.messages[i].bear.socialId + "</TD>");
                           //msg.push("<TD>" + data.messages[i].bear.bearAvatarId + "</TD>");
                           msg.push("<dd>" + data.messages[i].message + "</dd>");
@@ -286,9 +285,19 @@ function toBEARDATE(MSDate) {
 
                     //msg.push("<TD>" + data.startDate + "</TD>");
                     //msg.push("<TD>" + msgPlayers.join('') + "</TD>");
+                    var waitingListIndex = 0;
                     for (var i = 0; i < data.players.length; i++) {
-                        msg.push('<li data-id=" ' + data.players[i].bearId + '">');
+                        var cssWaitingList = "";
+                        var infos = "";
+                        if (data.players[i].isWaitingList) {
+                            waitingListIndex++
+                            cssWaitingList = "waitingList";
+                            infos += " (" + waitingListIndex + ")";
+                        }
+
+                        msg.push('<li class="' + cssWaitingList  + '" data-id=" ' + data.players[i].bearId + '">');
                         msg.push(data.players[i].bearUsername);
+                        msg.push(infos);
                         //msgPlayers.push("<TD>" + data.players[i].bearAvatarId + "</TD>");
                         //msgPlayers.push("<TD>" + data.players[i].mark + "</TD>");
                         //msgPlayers.push("<TD>" + data.players[i].comment + "</TD>");

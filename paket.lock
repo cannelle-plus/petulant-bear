@@ -8,14 +8,15 @@ NUGET
       FsPickler (>= 1.2.21)
       FSPowerPack.Core.Community (>= 3.0.0.0)
       FSPowerPack.Linq.Community (>= 3.0.0.0)
-    elmah.corelibrary (1.2.2) 
-    elmah.io (2.0.25) 
-      elmah.io.core 
-    elmah.io.client (2.0.25) 
-    elmah.io.core (2.0.25) 
-      elmah.corelibrary (>= 1.2.2) 
-      elmah.io.client 
+    elmah.corelibrary (1.2.2)
+    elmah.io (2.0.25)
+      elmah.io.core
+    elmah.io.client (2.0.25)
+    elmah.io.core (2.0.25)
+      elmah.corelibrary (>= 1.2.2)
+      elmah.io.client
     EntityFramework (6.1.3) - framework: net40, net45, net451, >= net46
+    EventStore.Client (3.3.1)
     Facebook (7.0.6)
     FAKE (4.7.3)
     FsCheck (2.2.0)

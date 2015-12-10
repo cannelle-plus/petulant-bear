@@ -44,4 +44,67 @@
 
     
 //    ()
-    
+
+open System
+open System.Threading
+open System.Text
+open System.Threading.Tasks
+
+open Newtonsoft.Json
+
+type Enveloppe = {
+  version : int
+}
+
+
+open EventStore.ClientAPI
+open EventStore.ClientAPI.Common.Log
+
+let SaveEvtsAsync<'T> (conn:IEventStoreConnection) streamName  (id, v, evts) =  async {
+        let typeEvts = (typedefof<'T>).ToString() 
+        let enveloppeMetadata = toJson<Enveloppe>({ version= v })
+
+        let events = evts
+                        |> List.mapi (fun index e ->
+                                    let data=  toJson<'T> e 
+                                    let enveloppeMetadata = toJson<Enveloppe>({ version= v })
+                                    new EventData(id,typeEvts,true, data,enveloppeMetadata)
+                                    )
+
+
+        let expectedVersion = v
+        let n = sprintf "%s - %s" streamName (id.ToString())
+
+
+        printfn "uncommitted events have been produced according to version %i" expectedVersion
+        let! writeResult = conn.AppendToStreamAsync(n,expectedVersion,events) |> Async.AwaitTask
+
+        printfn "events appended to %s, next expected version : %i"  n writeResult.NextExpectedVersion
+
+    }
+
+
+let hydrateAggAsync<'T>  streamName applyTo initialState (conn:IEventStoreConnection) id =
+
+  let rec applyRemainingEvents evts =
+      match evts with
+      | [] -> initialState
+      | head :: tail ->  applyTo (applyRemainingEvents tail) head
+
+
+  async {
+
+    printfn "reading stream events..."
+    let n = sprintf "%s - %s" streamName (id.ToString())
+    let! slice = conn.ReadStreamEventsForwardAsync(n,0,99,false) |> Async.AwaitTask
+
+    let evts =
+      slice.Events
+      |> Seq.map (fun (e:ResolvedEvent) -> fromJson<'T> e.Event.Data) //'
+      |> Seq.toList
+    printfn "%i events read" evts.Length
+    evts |> List.iteri (fun i e-> printfn "applying event %i" i)
+    let aggregate = evts |> applyRemainingEvents
+
+    return aggregate
+  }

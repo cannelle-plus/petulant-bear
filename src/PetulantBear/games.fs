@@ -48,6 +48,7 @@ module Contracts =
       bearAvatarId : int;
       mark :int;
       comment : string
+      isWaitingList: bool
       }
 
 

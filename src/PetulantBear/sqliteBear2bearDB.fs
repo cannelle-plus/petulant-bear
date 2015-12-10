@@ -191,7 +191,11 @@ let getGame bearId (filter:GamesFilter) =
     connection.Open()
 
     //retrieving players for the game
-    let sqlPlayers = "select b.bearId, b.bearUsername, b.bearAvatarId , BearsSelection.mark, BearsSelection.comment  from Bears as b INNER JOIN GamesBears as BearsSelection on BearsSelection.bearId = b.bearId where  BearsSelection.gameId=@gameId  "
+    let sqlPlayers = "SELECT        b.bearId, b.bearUsername, b.bearAvatarId, BearsSelection.mark, BearsSelection.comment, GamesList.maxPlayers
+                        FROM            Bears b INNER JOIN
+                                                 GamesBears BearsSelection ON BearsSelection.bearId = b.bearId INNER JOIN
+                                                 GamesList ON GamesList.id = BearsSelection.gameId
+                        WHERE        BearsSelection.gameId =@gameId  "
     let sqlCmdPlayers = new SQLiteCommand(sqlPlayers, connection) 
 
     let add (name:string, value: string) = 
@@ -202,8 +206,10 @@ let getGame bearId (filter:GamesFilter) =
 
     let readerPlayers = sqlCmdPlayers.ExecuteReader() 
     let bearPlayersList = new System.Collections.Generic.List<BearPlayer>()
+    let playerCount = ref 0
 
     while readerPlayers.Read() do
+        incr playerCount
         let couldParse, mark = Int32.TryParse(readerPlayers.["mark"].ToString())
         bearPlayersList.Add(
             {
@@ -211,7 +217,8 @@ let getGame bearId (filter:GamesFilter) =
                 bearUsername= readerPlayers.["bearUsername"].ToString();
                 bearAvatarId = Int32.Parse(readerPlayers.["bearAvatarId"].ToString());
                 mark = mark;
-                comment = readerPlayers.["comment"].ToString()
+                comment = readerPlayers.["comment"].ToString();
+                isWaitingList = Int32.Parse(readerPlayers.["maxPlayers"].ToString())< playerCount.Value;
             }
         )
 
