@@ -290,10 +290,12 @@ let getGames bearId filter =
                                                                          GamesBears BearsSelection ON BearsSelection.bearId = b.bearId
                                                GROUP BY BearsSelection.gameId) players ON main.id = players.gameId
                 LEFT OUTER JOIN
-                                             (SELECT        gameId, COUNT(bearId) AS IsPartOfGame
-                FROM            GamesBears
-                WHERE        (bearId = @bearId)
-                GROUP BY gameId ) bearInGame ON main.id = bearInGame.gameId
+                                (SELECT        gameId, COUNT(bearId) AS IsPartOfGame
+                                FROM            GamesBears
+                                WHERE        (bearId = @bearId)
+                                GROUP BY gameId ) bearInGame 
+                                ON main.id = bearInGame.gameId
+                WHERE main.startDate>=@fromDate and main.startDate<=@toDate
                 order by main.startDate Desc"
 
     let sqlCmd = new SQLiteCommand(sql, connection) 
@@ -302,6 +304,8 @@ let getGames bearId filter =
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
     
     add("@bearId", bearId.ToString())
+    add("@fromDate", filter.From.ToString("yyyy-MM-ddTHH:mm:ssZ"))
+    add("@toDate", filter.To.ToString("yyyy-MM-ddTHH:mm:ssZ"))
 
     use reader = sqlCmd.ExecuteReader() 
     let gamesList = new System.Collections.Generic.List<Game>()

@@ -36,8 +36,8 @@ module Contracts =
     type GamesFilter =
       {
       id : Guid;
-      From : string;
-      To: string;
+      From : DateTime;
+      To: DateTime;
       }
 
 
