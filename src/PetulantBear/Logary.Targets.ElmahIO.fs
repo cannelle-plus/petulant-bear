@@ -45,17 +45,30 @@ module internal Impl =
                 match l.``exception`` with
                 | None -> return! running state
                 | Some ex ->
-                    
                     let err = Elmah.Error ex
+                    
                     err.ApplicationName <- ri.serviceName
                     err.Time <- l.timestamp.ToDateTimeUtc()
-                    
-                    err.Message <- Map.fold (fun agg key item->
+                    err.Message <- ex.Message
+                    let msgDetail = Map.fold (fun agg key item->
                                         match key with
                                         | "bear" -> sprintf "%s , bear: %A" agg item
                                         | "url" -> sprintf "%s , url: %A" agg item
+                                        | "rawForm" -> sprintf "%s , raw form sent: %A" agg item
+                                        | "serializationType" -> sprintf "%s , serialization type: %A" agg item
                                         | _ -> agg
-                                    ) l.message l.data
+                                    ) "" l.data
+                    err.Detail <- sprintf "%s , stackTrace : %A" msgDetail ex
+                    Map.iter (fun key item->
+                        match key with
+                        | "bear" -> err.User <- item.ToString()
+                        | "url" -> err.HostName <- item.ToString()
+                        | _ -> ()
+                    ) l.data
+
+                    //add the headers                        
+                    if l.data.ContainsKey "headers" then
+                        List.iter (fun (k,i ) -> err.ServerVariables.Add(k,i)) (l.data.Item("headers"):?> (string*string) list)
                     
                     let! entryId = Async.FromBeginEnd(err, state.log.BeginLog, state.log.EndLog)
                     // do nothing with entry id, yes tutorial?

@@ -118,15 +118,14 @@ let ApplyCmdToActor buildGameActor (actorsDic :Dictionary<Guid, IActorRef>) (cmd
 
 type DeserializingResult<'T> =
 | Serialized of 'T
-| DeserializingException of string*Newtonsoft.Json.JsonSerializationException
+| DeserializingException of string*Newtonsoft.Json.JsonException
 
 let fromJson<'a> byteArray= 
     let json = System.Text.Encoding.UTF8.GetString(byteArray) 
     try
         Serialized(JsonConvert.DeserializeObject<'a>(json))
     with
-    | :?Newtonsoft.Json.JsonSerializationException as ex ->  
-        DeserializingException(json,ex)
+    | :?Newtonsoft.Json.JsonException as ex ->  DeserializingException(json,ex)
     | _ -> reraise()
 
 
@@ -306,11 +305,15 @@ let withCommand<'T> =
                 let bear = x.userState.["bear"] :?> BearSession
                 let logger = Logary.Logging.getLoggerByName "Logary.Targets.ElmahIO"
             
-                sprintf "raw form sent : '%s', serialization type : '%s'" rawText ((typedefof<'T>).FullName)
-                |> Logary.LogLine.error
+                Logary.LogLine.error "DeserializingException"
                 |> Logary.LogLine.setExn ex
                 |> Logary.LogLine.setData "bear" bear
                 |> Logary.LogLine.setData "url" x.request.url
+                |> Logary.LogLine.setData "url" x.request.url
+                |> Logary.LogLine.setData "rawForm" rawText
+                |> Logary.LogLine.setData "serializationType" (typedefof<'T>).FullName
+                |> Logary.LogLine.setData "headers" x.request.headers
+                
                 |> logger.Log
             
                 RequestErrors.BAD_REQUEST "body not understood"

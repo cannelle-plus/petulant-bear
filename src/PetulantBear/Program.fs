@@ -69,7 +69,7 @@ let main args =
      
     
     use logary =
-      withLogary' "logibit.web" (
+      withLogary' "bear2bear.web" (
         withTargets [
           Console.create Console.empty "console"
           Logary.Targets.ElmahIO.create  confElmah "elmah"
