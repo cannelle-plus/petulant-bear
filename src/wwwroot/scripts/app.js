@@ -582,6 +582,29 @@ function toBEARDATE(MSDate) {
               });
         }
 
+        var setAvatar = function() {       
+          loader.show();
+          $.ajax({
+              type: "GET",
+              url: "api/bears/current"
+            })
+            .done(function (data) {
+              $('header img').attr('src', 'images/avatar-0' + data.bearAvatarId + '.png');
+                      
+              //-- Set profile screen
+              $('#profile #bearUsername').val(data.bearUsername);
+              $('#profile .avatars li:eq(' + (data.bearAvatarId - 1) + ')').addClass('checked');
+              $('#profile .avatars li:eq(' + (data.bearAvatarId - 1) + ') input').attr('checked', 'checked');
+              $('.avatars input').on('click', function(){
+                $('.avatars li').removeClass('checked');
+                $(this).closest('li').addClass('checked');
+              });
+              loader.hide();
+            })
+              .fail(function (err) {
+          });
+        }
+
         $("#bearsListBtn").click(getBears);
 
         $(".gameForm").on('submit', function (e) {
@@ -600,68 +623,50 @@ function toBEARDATE(MSDate) {
         $("#changeBearName").on('submit', function (e) {
             doNothing(e);
             loader.show();
-            $.ajax({
+
+            var changeUsernameCmd = createCommand(guid(), 1, {
+                bearUsername: $('#bearUsername').val()
+            });
+            return $.ajax({
                 type: "POST",
-                url: "/api/bear/changeUserName",
+                url: "api/bear/changeUserName",
                 dataType: "json",
-                data: JSON.stringify({
-                    bearUsername: $('#profile #bearUsername').val()
-                })
+                data: JSON.stringify(changeUsernameCmd)
             })
-              .done(function (data) {
-                 
+              .done(function (data) {                 
                   loader.hide();
               })
               .fail(function (err) {
-                  
+                  $("#changeUsernameResult").html(err);
               });
+
         });
         $("#changeBearAvatar").on('submit', function (e) {
             doNothing(e);
             loader.show();
-            $.ajax({
+
+            var changeAvatarIdCmd = createCommand(guid(), 1, {
+                bearAvatarId: $('#changeBearAvatar input[name=bearAvatarId]:checked').val()
+            });
+            return $.ajax({
                 type: "POST",
-                url: "/api/bear/changeAvatarId",
+                url: "api/bear/changeAvatarId",
                 dataType: "json",
-                data: JSON.stringify({
-                    bearAvatarId: $('#changeBearAvatar input[name=bearAvatarId]:checked').val()
-                })
+                data: JSON.stringify(changeAvatarIdCmd)
             })
               .done(function (data) {
-                 
-                  loader.hide();
+                  setAvatar();
+                  getGames();
               })
               .fail(function (err) {
-                  
+                  $("#changeAvatarIdResult").html(err);
               });
         });
 
 
         //Onload
         getGames();
-
-        loader.show();
-        $.ajax({
-            type: "GET",
-            url: "api/bears/current"
-          })
-          .done(function (data) {
-            $('header img').attr('src', 'images/avatar-0' + data.bearAvatarId + '.png');
-                    
-            //-- Set profile screen
-            $('#profile #bearUsername').val(data.bearUsername);
-            $('#profile .avatars li:eq(' + (data.bearAvatarId - 1) + ')').addClass('checked');
-            $('#profile .avatars li:eq(' + (data.bearAvatarId - 1) + ') input').attr('checked', 'checked');
-            $('.avatars input').on('click', function(){
-              $('.avatars li').removeClass('checked');
-              $(this).closest('li').addClass('checked');
-            });
-            loader.hide();
-          })
-            .fail(function (err) {
-        });
-
-        
+        setAvatar();        
 
         $('.logout').on('click', function(e){
           doNothing(e);
