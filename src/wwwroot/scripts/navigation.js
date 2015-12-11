@@ -8,7 +8,7 @@ doNothing = function(event){
 showSection = function(destination) {
 	clearInterval(bearInterval);
 	var id = '#' + destination,
-			tX = -100 * $(id).index();
+		tX = -100 * $(id).index();
 	$('#main > section').css('transform','translateX( ' + tX + '%)');
 };
 
@@ -31,7 +31,7 @@ window.addEventListener("hashchange", function(e) {
   showSection(window.location.hash.substr(2));
 })
 if(window.location.hash.substr(2) !== null) {
-	$('header p a').click();
+	$('header h1 a').click();
 }
 
 // Loader
