@@ -44,6 +44,13 @@ header h1 a {
   background-size: 1em 1em;
   font-weight: 400;
 }
+.profile {
+  display: inline-block;
+  padding-right: 1.4em;
+  background: url(../images/profile-icon.png) 100% 50% no-repeat;
+  background-size: 1em 1em;
+  font-weight: 400;
+}
 header p img { vertical-align: middle; }
 header p a { 
   text-decoration: none; 

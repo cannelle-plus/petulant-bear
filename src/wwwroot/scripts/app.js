@@ -306,7 +306,7 @@ function toBEARDATE(MSDate) {
                         msg.push('</li>');
                     }                    
 
-                    msg.push('</ul></li>');
+                    msg.push('</ul></li><br />');
 
                     if (data.isJoinable)
                       msg.push('<li class="detailAction infos"><a href="#" class="actionJoin button button-small" data-id="' + data.id + '">Rejoindre</a></li>');
@@ -397,7 +397,7 @@ function toBEARDATE(MSDate) {
                       addOwnerAvatar(data[i].ownerId, i);
                       msg.push('<li data-id="' + data[i].id + '">');
                       msg.push('<p class="avatar"><img src="images/avatar.png" alt="" height="25" width="25"></p>');
-                      msg.push('<p class="infos"><strong>' + data[i].name + '</strong><span>'+ data[i].location +'</span></p>');
+                      msg.push('<p class="infos"><strong>' + data[i].name + '</strong><span>'+ data[i].location +' <br /> '+ toBEARDATE(data[i].startDate) +'</span></p>');
 
                       var coloredClass = '';
                       if(data[i].nbPlayers/data[i].maxPlayers < .6)
@@ -572,7 +572,7 @@ function toBEARDATE(MSDate) {
                   if (data !== null && data !== undefined) {
                     $('.games li:eq(' + index + ') img').attr('src', 'images/avatar-0' + data.bearAvatarId + '.png');
                   } else {
-                      $("#bearDetail").html("no bear found");
+                    $("#bearDetail").html("no bear found");
                   }
 
 
@@ -596,6 +596,46 @@ function toBEARDATE(MSDate) {
             });
         });
 
+        // Change Profile
+        $("#changeBearName").on('submit', function (e) {
+            doNothing(e);
+            loader.show();
+            $.ajax({
+                type: "POST",
+                url: "/api/bear/changeUserName",
+                dataType: "json",
+                data: JSON.stringify({
+                    bearUsername: $('#profile #bearUsername').val()
+                })
+            })
+              .done(function (data) {
+                 
+                  loader.hide();
+              })
+              .fail(function (err) {
+                  
+              });
+        });
+        $("#changeBearAvatar").on('submit', function (e) {
+            doNothing(e);
+            loader.show();
+            $.ajax({
+                type: "POST",
+                url: "/api/bear/changeAvatarId",
+                dataType: "json",
+                data: JSON.stringify({
+                    bearAvatarId: $('#changeBearAvatar input[name=bearAvatarId]:checked').val()
+                })
+            })
+              .done(function (data) {
+                 
+                  loader.hide();
+              })
+              .fail(function (err) {
+                  
+              });
+        });
+
 
         //Onload
         getGames();
@@ -607,6 +647,15 @@ function toBEARDATE(MSDate) {
           })
           .done(function (data) {
             $('header img').attr('src', 'images/avatar-0' + data.bearAvatarId + '.png');
+                    
+            //-- Set profile screen
+            $('#profile #bearUsername').val(data.bearUsername);
+            $('#profile .avatars li:eq(' + (data.bearAvatarId - 1) + ')').addClass('checked');
+            $('#profile .avatars li:eq(' + (data.bearAvatarId - 1) + ') input').attr('checked', 'checked');
+            $('.avatars input').on('click', function(){
+              $('.avatars li').removeClass('checked');
+              $(this).closest('li').addClass('checked');
+            });
             loader.hide();
           })
             .fail(function (err) {
