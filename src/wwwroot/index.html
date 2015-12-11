@@ -15,7 +15,7 @@
 <body>
   <header class="clearfix">
     <p><a href="#" data-target="games"><img src="" alt="" width="50" height="50" /> Liste</a></p>
-    <h1><a href='/logout' class="logout">Log out</a></h1>
+    <h1><a href="#" data-target="profile" class="profile">Profil</a></h1>
   </header>
   <div id="main">
     <section id="games">
@@ -40,7 +40,7 @@
         <select id="gameLocation" ref="location">
           <option >Lieu</option>
           <option selected>Playsoccer</option>
-          <option>Soccer 5</option>
+          <option>Events 5</option>
           <option>Event soccer</option>
         </select>
         <select id="nbPlayersRequired" ref="required">
@@ -64,6 +64,37 @@
       </form>
       <div id="postMessageToRoomResult"></div>
       <div class="roomDetail"></div>
+    </section>
+    <section id="profile">
+      <a href='/logout' class="logout">Log out</a>
+      <!--<form id="changeBearName" action="#" method="post" enctype="application/x-www-form-urlencoded">
+        <input type="text" id="bearUsername" name="bearUsername" placeholder="Nom de Bear *" required>
+        <div class="clearfix">
+          <button type="submit" id="bearsSignInBtn" name="envoyer" class="button">Modifier</button>
+        </div>
+      </form>
+      <br />
+      <form id="changeBearAvatar"  action="#" method="post" enctype="application/x-www-form-urlencoded">
+        <ul class="avatars clearfix">
+          <li class="avatar-01"><input type="radio" name="bearAvatarId" value="1" class="avatar-01" /></li>
+          <li class="avatar-02"><input type="radio" name="bearAvatarId" value="2" class="avatar-02" /></li>
+          <li class="avatar-03"><input type="radio" name="bearAvatarId" value="3" class="avatar-03" /></li>
+          <li class="avatar-04"><input type="radio" name="bearAvatarId" value="4" class="avatar-04" /></li>
+          <li class="avatar-05"><input type="radio" name="bearAvatarId" value="5" class="avatar-05" /></li>
+          <li class="avatar-06"><input type="radio" name="bearAvatarId" value="6" class="avatar-06" /></li>
+          <li class="avatar-07"><input type="radio" name="bearAvatarId" value="7" class="avatar-07" /></li>
+          <li class="avatar-08"><input type="radio" name="bearAvatarId" value="8" class="avatar-08" /></li>
+          <li class="avatar-09"><input type="radio" name="bearAvatarId" value="9" class="avatar-09" /></li>
+          <li class="avatar-10"><input type="radio" name="bearAvatarId" value="10" class="avatar-10" /></li>
+          <li class="avatar-11"><input type="radio" name="bearAvatarId" value="11" class="avatar-11" /></li>
+          <li class="avatar-12"><input type="radio" name="bearAvatarId" value="12" class="avatar-12" /></li>
+          <li class="avatar-13"><input type="radio" name="bearAvatarId" value="13" class="avatar-13" /></li>
+          <li class="avatar-14"><input type="radio" name="bearAvatarId" value="14" class="avatar-14" /></li>
+        </ul>
+        <div class="clearfix">
+          <button type="submit" id="bearsSignInBtn" name="envoyer" class="button">Modifier</button>
+        </div>
+      </form>-->
     </section>
     <div class="overlay loading"></div>
   </div>
