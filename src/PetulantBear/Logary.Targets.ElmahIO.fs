@@ -49,7 +49,14 @@ module internal Impl =
                     let err = Elmah.Error ex
                     err.ApplicationName <- ri.serviceName
                     err.Time <- l.timestamp.ToDateTimeUtc()
-                    err.Message <- l.message
+                    
+                    err.Message <- Map.fold (fun agg key item->
+                                        match key with
+                                        | "bear" -> sprintf "%s , bear: %A" agg item
+                                        | "url" -> sprintf "%s , url: %A" agg item
+                                        | _ -> agg
+                                    ) l.message l.data
+                    
                     let! entryId = Async.FromBeginEnd(err, state.log.BeginLog, state.log.EndLog)
                     // do nothing with entry id, yes tutorial?
                     return! running state

@@ -77,8 +77,8 @@ let routes = []
 let authRoutes (system:ActorSystem) saveEvents  saveToDB= 
     [
         POST >>= choose [
-            path Navigation.commentBear >>=  apply saveToDB CommentBear
-            path Navigation.markBear >>=  apply saveToDB MarkBear
+            path Navigation.commentBear >>=  withBear >>= withCommand<Contracts.CommentBear> >>= processing saveToDB CommentBear
+            path Navigation.markBear >>=  withBear >>= withCommand<Contracts.MarkBear> >>= processing saveToDB MarkBear
         ] 
     ]
     

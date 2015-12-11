@@ -20,6 +20,20 @@ open Suave.State.CookieStateStore
 open Newtonsoft.Json
 
 
+type BearSession = {
+    bearId : Guid;
+    socialId : string;
+    username : string;
+}
+
+
+type NewBearNotLoggedOnSession = {
+    socialId : string
+}
+type Session =
+    | NoSession
+    | NewBear of NewBearNotLoggedOnSession
+    | Bear of BearSession
 
 [<DataContract>]
 type Command<'a> = {
@@ -48,6 +62,19 @@ type Event<'a> = {
     [<field: DataMember(Name = "payLoad")>]
     payLoad : 'a; 
 }
+
+type LoggedInContext = {
+    httpContext : HttpContext;
+    bear : BearSession
+}
+
+type Bear2BearContext<'T> = {
+    httpContext : HttpContext;
+    command :Command<'T>;
+    bear : BearSession
+}
+
+
 
 type Result<'TSuccess> =
     | Success of 'TSuccess
@@ -101,6 +128,8 @@ let fromJson<'a> byteArray=
     | :?Newtonsoft.Json.JsonSerializationException as ex ->  
         DeserializingException(json,ex)
     | _ -> reraise()
+
+
                 
 
 let toJson<'a> (obj:'a) = 
@@ -135,21 +164,15 @@ let deserializingCmd<'T> req fSuccess =
             
             RequestErrors.BAD_REQUEST "body not understood"
 
+
+
+
+    
 let socialIdStore = "socialId"
 let accessTokenStore = "accessToken"
 let bearStore = "bearInSession"
 let userNameStore = "username"
 
-type BearSession = {
-    bearId : Guid;
-    socialId : string;
-    username : string;
-}
-
-
-type NewBearNotLoggedOnSession = {
-    socialId : string
-}
 
 let noCache = 
   setHeader "Cache-Control" "no-cache, no-store, must-revalidate"
@@ -157,10 +180,6 @@ let noCache =
   >>= setHeader "Expires" "0"
   
 
-type Session =
-    | NoSession
-    | NewBear of NewBearNotLoggedOnSession
-    | Bear of BearSession
 
 let sessionCmd<'Tcontract> f=
     statefulForSession 
@@ -177,8 +196,6 @@ let sessionCmd<'Tcontract> f=
             )   
 
         )
-
-
 
 
 let session f=
@@ -262,5 +279,63 @@ let getInSession f =
         | NoSession -> Http.RequestErrors.BAD_REQUEST "no session found" 
         | NewBear nb -> Http.RequestErrors.BAD_REQUEST "new bear found" 
         | Bear b -> f b.bearId
+    )
+    
+let withBear  =
+    statefulForSession 
+    >>= context (fun x ->
+            let store = x |> HttpContext.state
+            match  store with
+            | None -> Http.RequestErrors.BAD_REQUEST "no state found"
+            | Some state ->
+                match state.get bearStore,state.get socialIdStore, state.get userNameStore  with
+                | Some bearId, Some socialId, Some username -> 
+                    Writers.setUserData "bear"  { bearId= bearId; socialId=socialId; username = username}
+                | None ,  Some (_) , None->Http.RequestErrors.BAD_REQUEST "new bear found"
+                | _ , _,_ -> Http.RequestErrors.BAD_REQUEST "no session found" 
+        )
+
+    
+
+let withCommand<'T> = 
+    context (fun x ->
+        match fromJson<Command<'T>> x.request.rawForm with
+            | Serialized(cmd) -> Writers.setUserData "cmd"  cmd
+            | DeserializingException(rawText,ex) ->
+
+                let bear = x.userState.["bear"] :?> BearSession
+                let logger = Logary.Logging.getLoggerByName "Logary.Targets.ElmahIO"
+            
+                sprintf "raw form sent : '%s', serialization type : '%s'" rawText ((typedefof<'T>).FullName)
+                |> Logary.LogLine.error
+                |> Logary.LogLine.setExn ex
+                |> Logary.LogLine.setData "bear" bear
+                |> Logary.LogLine.setData "url" x.request.url
+                |> logger.Log
+            
+                RequestErrors.BAD_REQUEST "body not understood"
+    )
+
+let processing<'TContract,'TCommand> save (mapCmd:'TContract->'TCommand) =
+    context (fun x ->
+        try
+            let cmd = x.userState.["cmd"] :?> Command<'TContract>
+            let bear = x.userState.["bear"] :?> BearSession
+
+            cmd.payLoad
+            |> mapCmd
+            |> Success
+            |> tryCatch (save (cmd.id,cmd.version,bear)) 
+            |> toMessage
+            |> toJson
+            |> Successful.ok 
+            >>= Writers.setMimeType "application/json"
+        with
+        | ex -> 
+            Failure(ex.Message) 
+            |> toMessage
+            |> toJson
+            |> Successful.ok 
+            >>= Writers.setMimeType "application/json"
     )
     

@@ -58,18 +58,13 @@ let routes = []
 
 let authRoutes  findBear (system:ActorSystem) saveEvents getGameList getGame  saveToDB   =
     [
-        path Navigation.changeAvatarId >>=  apply saveToDB ChangeAvatarId
-        path Navigation.changeUserName >>= apply saveToDB ChangeUserName >>= context (fun x -> 
+        path Navigation.changeAvatarId >>=  withBear >>= withCommand<Contracts.ChangeAvatarId> >>= processing saveToDB ChangeAvatarId
+        path Navigation.changeUserName >>= withBear >>= withCommand<Contracts.ChangeUserName> >>= processing saveToDB ChangeUserName
+         >>= context (fun x ->
+            let cmd = x.userState.["cmd"] :?> Command<Contracts.ChangeUserName> 
             match HttpContext.state x with
-            | None ->
-                // restarted server without keeping the key; set key manually?
-                let msg = "Server Key, Cookie Serialiser reset, or Cookie Data Corrupt, "
-                            + "if you refresh the browser page, you'll have gotten a new cookie."
-                OK msg
-            | Some store ->
-                deserializingCmd<Contracts.ChangeUserName> x.request ( fun cmd ->
-                    store.set userNameStore cmd.payLoad.bearUsername
-                )
+            | None ->  Http.RequestErrors.BAD_REQUEST "no store found"
+            | Some store -> store.set userNameStore cmd.payLoad.bearUsername
         ) 
         path Navigation.changePassword >>= apply saveToDB ChangePassword
         //the following method might leak into the bear module with BearDetail... beware!!!

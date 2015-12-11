@@ -245,7 +245,7 @@ let gameActor id saveEvents  saveToDB=
 //open the contracts for simple use in the definition of the routes
 open Contracts
 
-   
+    
 
 let authRoutes (system:ActorSystem) saveEvents getGameList getGame  saveToDB=
 
@@ -271,15 +271,16 @@ let authRoutes (system:ActorSystem) saveEvents getGameList getGame  saveToDB=
 //            path Navigation.commentBear >>=  handle (getCmdFromRequest CommentBear)
 //            path Navigation.markBear >>=  handle (getCmdFromRequest MarkBear)
 
-            path Navigation.schedule >>=  apply saveToDB Schedule
-            path Navigation.join >>=  apply saveToDB (fun () -> Join)
-            path Navigation.abandon >>=  apply saveToDB (fun () -> Abandon)
-            path Navigation.cancel >>=  apply saveToDB (fun () -> Cancel)
-            path Navigation.changeName >>=  apply saveToDB ChangeName
-            path Navigation.changeStartDate >>=  apply saveToDB ChangeStartDate
-            path Navigation.changeLocation >>=  apply saveToDB ChangeLocation
-            path Navigation.kickPlayer >>=  apply saveToDB KickPlayer
-            path Navigation.changeMaxPlayer >>=  apply saveToDB ChangeMaxPlayer
+//            path Navigation.schedule >>=  apply saveToDB Schedule
+            path Navigation.schedule >>= withBear >>= withCommand<Contracts.ScheduleGame> >>= processing saveToDB Schedule
+            path Navigation.join >>=   withBear >>= withCommand<Unit> >>= processing saveToDB (fun () -> Join)
+            path Navigation.abandon >>=  withBear >>= withCommand<Unit> >>=  processing saveToDB (fun () -> Abandon)
+            path Navigation.cancel >>=  withBear >>= withCommand<Unit> >>=  processing saveToDB (fun () -> Cancel)
+            path Navigation.changeName >>=  withBear >>= withCommand<Contracts.ChangeName> >>=  processing saveToDB ChangeName
+            path Navigation.changeStartDate >>=  withBear >>= withCommand<Contracts.ChangeStartDate> >>=  processing saveToDB ChangeStartDate
+            path Navigation.changeLocation >>=  withBear >>= withCommand<Contracts.ChangeLocation> >>=  processing saveToDB ChangeLocation
+            path Navigation.kickPlayer >>=  withBear >>= withCommand<Contracts.KickPlayer> >>=  processing saveToDB KickPlayer
+            path Navigation.changeMaxPlayer >>=  withBear >>= withCommand<Contracts.ChangeMaxPlayer> >>=  processing saveToDB ChangeMaxPlayer
         ]
     ]
     

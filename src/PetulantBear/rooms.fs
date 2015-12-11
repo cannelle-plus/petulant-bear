@@ -72,6 +72,6 @@ let authRoutes getRoom save =
     [
         POST >>= choose [ 
             path Navigation.detail >>=  mapJson (getRoomDetail getRoom );
-            path Navigation.postMessage >>=  apply  save PostMessage
+            path Navigation.postMessage >>=  withBear >>= withCommand<Contracts.PostMessage> >>= processing  save PostMessage
         ]
     ]    
