@@ -94,7 +94,7 @@
     <Compile Include="types.fs" />
     <Compile Include="perRequest.fs" />
     <Compile Include="aggregateCoordinator.fs" />
-    <Compile Include="getEventStoreRepo.fs" />
+    <Compile Include="eventSourceRepo.fs" />
     <Compile Include="servingFiles.fs" />
     <Compile Include="games.fs" />
     <Compile Include="afterGames.fs" />

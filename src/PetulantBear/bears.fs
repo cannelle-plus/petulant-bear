@@ -20,8 +20,7 @@ module Navigation =
     let detail = "/api/bears/detail"
     let signinBear = "/api/bears/signinBear"
     let signin = "/api/bears/signin"
-    let changeUserName = "/api/bears/changeUserName"
-    let changeAvatarId = "/api/bears/changeAvatarId"
+    
     
 
 module Contracts = 
