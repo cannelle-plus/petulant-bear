@@ -663,6 +663,26 @@ function toBEARDATE(MSDate) {
                   $("#changeAvatarIdResult").html(err);
               });
         });
+        $("#changeBearEmail").on('submit', function (e) {
+            doNothing(e);
+            loader.show();
+
+            var changeEmailCmd = createCommand(guid(), 1, {
+                bearEmail: $('#changeBearEmail').val()
+            });
+            return $.ajax({
+                type: "POST",
+                url: "api/bear/changeEmail",
+                dataType: "json",
+                data: JSON.stringify(changeEmailCmd)
+            })
+              .done(function (data) {               
+                  loader.hide();
+              })
+              .fail(function (err) {
+                  $("#changeEmailResult").html(err);
+              });
+        });
 
 
         //Onload

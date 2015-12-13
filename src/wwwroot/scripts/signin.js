@@ -23,10 +23,11 @@ Date.prototype.toMSJSON = function () {
             });
         }
 
-        var signin = function (bearId, bearUsername, bearAvatarId) {
+        var signin = function (bearId, bearUsername, bearEmail, bearAvatarId) {
             var signinCmd = createCommand(bearId, 1, {
                 "bearAvatarId": bearAvatarId,
-                "bearUsername": bearUsername
+                "bearUsername": bearUsername,
+                "bearEmail": bearEmail
             });            
             return $.ajax({
                 type: "POST",
@@ -37,11 +38,12 @@ Date.prototype.toMSJSON = function () {
         };
 
         //New******************
-        var signinBear = function (bearId, bearUsername, bearPassword, bearAvatarId) {
+        var signinBear = function (bearId, bearUsername, bearEmail, bearPassword, bearAvatarId) {
             var signinCmd = createCommand(bearId, 1, {
                 "bearPassword": bearPassword,
                 "bearAvatarId": bearAvatarId,
-                "bearUsername": bearUsername
+                "bearUsername": bearUsername,
+                "bearEmail": bearEmail
             });
             return $.ajax({
                 type: "POST",
@@ -58,7 +60,8 @@ Date.prototype.toMSJSON = function () {
             var bearId = guid(); //fake bear id used only to provide an id to the commmand
             var bearUsername = $('#bearUsername').val();
             var bearAvatarId = $('input[name=bearAvatarId]:checked').val();
-            signin(bearId, bearUsername, bearAvatarId).done(function (data) {
+            var bearEmail = $('#bearEmail').val();
+            signin(bearId, bearUsername, bearEmail, bearAvatarId).done(function (data) {
                document.location.replace(data.msg);
             }).fail(function (err) {
                 $("#signinResult").html(err);
@@ -73,10 +76,11 @@ Date.prototype.toMSJSON = function () {
             var bearUsername = $('#bearUsernameUp').val();
             var bearPassword = $('#bearPasswordUp').val();
             var bearAvatarId = $('input[name=bearAvatarIdUp]:checked').val();
+            var bearEmail = $('#bearEmailUp').val();
             if(bearPassword !== $('#confirmBearPasswordUp').val()) {
                 $('p.error').html('Les passwords sont différents !').show();
             } else {
-                signinBear(bearId, bearUsername, bearPassword, bearAvatarId).done(function (data) {
+                signinBear(bearId, bearUsername, bearEmail, bearPassword, bearAvatarId).done(function (data) {
                    document.location.replace(data.msg);
                 }).fail(function (err) {
                     $("#signinResult").html(err);

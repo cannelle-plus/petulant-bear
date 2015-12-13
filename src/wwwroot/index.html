@@ -70,7 +70,7 @@
       <form id="changeBearName" action="#" method="post" enctype="application/x-www-form-urlencoded">
         <input type="text" id="bearUsername" name="bearUsername" placeholder="Nom de Bear *" required>
         <div class="clearfix">
-          <button type="submit" id="bearsSignInBtn" name="envoyer" class="button">Modifier</button>
+          <button type="submit" name="envoyer" class="button">Modifier</button>
         </div>
       </form>
       <br />
@@ -92,7 +92,14 @@
           <li class="avatar-14"><input type="radio" name="bearAvatarId" value="14" class="avatar-14" /></li>
         </ul>
         <div class="clearfix">
-          <button type="submit" id="bearsSignInBtn" name="envoyer" class="button">Modifier</button>
+          <button type="submit" name="envoyer" class="button">Modifier</button>
+        </div>
+      </form>
+      <br />
+      <form id="changeBearEmail" action="#" method="post" enctype="application/x-www-form-urlencoded">
+        <input type="email" id="bearEmail" name="bearEmail" placeholder="Email *" required>
+        <div class="clearfix">
+          <button type="submit" name="envoyer" class="button">Modifier</button>
         </div>
       </form>
     </section>
