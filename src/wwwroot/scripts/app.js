@@ -594,6 +594,7 @@ function toBEARDATE(MSDate) {
                       
               //-- Set profile screen
               $('#profile #bearUsername').val(data.bearUsername);
+              $('#profile #bearEmail').val(data.bearEmail);
               $('#profile .avatars li:eq(' + (data.bearAvatarId - 1) + ')').addClass('checked');
               $('#profile .avatars li:eq(' + (data.bearAvatarId - 1) + ') input').attr('checked', 'checked');
               $('.avatars input').on('click', function(){
