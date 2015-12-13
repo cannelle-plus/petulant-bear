@@ -223,6 +223,7 @@ function toBEARDATE(MSDate) {
             })
               .done(function (data) {
                   if (data !== null && data !== undefined) {
+                      $('#chat').data('id', data.roomId)
                       var msg = [];
                       msg.push("<dl class='chat'>");
                       //msg.push("<TD>" + data.roomId + "</TD>");
