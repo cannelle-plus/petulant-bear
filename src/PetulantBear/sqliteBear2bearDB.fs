@@ -25,9 +25,8 @@ let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].Connec
 //let isMonoRuntime = Type.GetType("Mono.Runtime") != null
 //let connection = if (isMonoRuntime) then new SqliteConnection(dbConnection)  else new SQLiteConnection(dbConnection)
 
-let scheduleToDB connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (cmd:ScheduleGame) =
-    let sql = "Insert into GamesList (id,name,ownerId,ownerBearName,startDate,location,maxPlayers) VALUES (@id, @name,@ownerId,@ownerUserName, @begins, @location, @maxPlayers); Insert into GamesBears (gameId,bearId)  VALUES (@id,@ownerId); Insert into Rooms (roomId,name)  VALUES (@id,'salle de ' + @name);"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+let scheduleToDB (sqlCmd:SQLiteCommand) (((id,version,bear):Guid*Nullable<int>*BearSession):Guid*Nullable<int>*BearSession)  (cmd:ScheduleGame) =
+    sqlCmd.CommandText <- "Insert into GamesList (id,name,ownerId,ownerBearName,startDate,location,maxPlayers) VALUES (@id, @name,@ownerId,@ownerUserName, @begins, @location, @maxPlayers); Insert into GamesBears (gameId,bearId)  VALUES (@id,@ownerId); Insert into Rooms (roomId,name)  VALUES (@id,'salle de ' + @name);"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -39,126 +38,92 @@ let scheduleToDB connection (((id,version,bear):Guid*int*BearSession):Guid*int*B
     add("@begins", cmd.startDate.ToString("yyyy-MM-ddTHH:mm:ssZ"))
     add("@location", cmd.location.ToString())
     add("@maxPlayers", cmd.maxPlayers.ToString())
-    sqlCmd
 
-let joinToDB connection ((id,version,bear):Guid*int*BearSession)  =
-    let sql = "delete from GamesBears  where gameId=@id and bearId=@bearId; Insert into GamesBears (gameId,bearId)  VALUES (@id,@bearId)"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
 
-    let add (name:string, value: string) = 
-        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
-
-    add("@id", id.ToString())
-    add("@bearId", bear.bearId.ToString())
-    sqlCmd    
-
-let cancelToDB connection ((id,version,bear):Guid*int*BearSession)  =
-    let sql = "update GamesList set currentState=0 where id=@id"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
-
-    let add (name:string, value: string) = 
-        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
-
-    add("@id", id.ToString())
-    sqlCmd    
-
-let abandonToDB connection ((id,version,bear):Guid*int*BearSession)  =
-    let sql = "delete from GamesBears  where gameId=@id and bearId=@bearId"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+let joinToDB (sqlCmd:SQLiteCommand) ((id,version,bear):Guid*Nullable<int>*BearSession)  =
+    sqlCmd.CommandText <- "delete from GamesBears  where gameId=@id and bearId=@bearId; Insert into GamesBears (gameId,bearId)  VALUES (@id,@bearId)"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
 
     add("@id", id.ToString())
     add("@bearId", bear.bearId.ToString())
-    sqlCmd    
 
-let changeName connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (cmd:Games.Contracts.ChangeName) =
-    let sql = "Update  GamesList set name= @name where id=@id"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+let cancelToDB (sqlCmd:SQLiteCommand) ((id,version,bear):Guid*Nullable<int>*BearSession)  =
+    sqlCmd.CommandText <- "update GamesList set currentState=0 where id=@id"
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@id", id.ToString())
+
+
+let abandonToDB (sqlCmd:SQLiteCommand) ((id,version,bear):Guid*Nullable<int>*BearSession)  =
+    sqlCmd.CommandText <- "delete from GamesBears  where gameId=@id and bearId=@bearId"
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@id", id.ToString())
+    add("@bearId", bear.bearId.ToString())
+    
+
+let changeName (sqlCmd:SQLiteCommand) (((id,version,bear):Guid*Nullable<int>*BearSession):Guid*Nullable<int>*BearSession)  (cmd:Games.Contracts.ChangeName) =
+    sqlCmd.CommandText <- "Update  GamesList set name= @name where id=@id"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
 
     add("@id", id.ToString())
     add("@name", cmd.name)
-    sqlCmd
+    
 
-let changeLocation connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (cmd:Games.Contracts.ChangeLocation) =
-    let sql = "Update  GamesList set location= @location where id=@id"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+let changeLocation (sqlCmd:SQLiteCommand) (((id,version,bear):Guid*Nullable<int>*BearSession):Guid*Nullable<int>*BearSession)  (cmd:Games.Contracts.ChangeLocation) =
+    sqlCmd.CommandText <- "Update  GamesList set location= @location where id=@id"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
 
     add("@id", id.ToString())
     add("@location", cmd.location)
-    sqlCmd
 
-let changeStartDate connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (cmd:Games.Contracts.ChangeStartDate) =
-    let sql = "Update  GamesList set startDate= @startDate where id=@id"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+let changeStartDate (sqlCmd:SQLiteCommand) (((id,version,bear):Guid*Nullable<int>*BearSession):Guid*Nullable<int>*BearSession)  (cmd:Games.Contracts.ChangeStartDate) =
+    sqlCmd.CommandText <- "Update  GamesList set startDate= @startDate where id=@id"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
 
     add("@id", id.ToString())
     add("@startDate", cmd.startDate.ToString("yyyy-MM-ddTHH:mm:ssZ"))
-    sqlCmd
 
-let changeMaxPlayer connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (cmd:Games.Contracts.ChangeMaxPlayer) =
-    let sql = "Update  GamesList set maxPlayers= @maxPlayers where id=@id"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+let changeMaxPlayer (sqlCmd:SQLiteCommand) (((id,version,bear):Guid*Nullable<int>*BearSession):Guid*Nullable<int>*BearSession)  (cmd:Games.Contracts.ChangeMaxPlayer) =
+    sqlCmd.CommandText <- "Update  GamesList set maxPlayers= @maxPlayers where id=@id"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
 
     add("@id", id.ToString())
     add("@maxPlayers", cmd.maxPlayers.ToString())
-    sqlCmd
 
-let kickPlayer connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (cmd:Games.Contracts.KickPlayer) =
-    let sql = "delete from GamesBears  where gameId=@id and bearId=@bearId"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+
+let kickPlayer (sqlCmd:SQLiteCommand) (((id,version,bear):Guid*Nullable<int>*BearSession):Guid*Nullable<int>*BearSession)  (cmd:Games.Contracts.KickPlayer) =
+    sqlCmd.CommandText <- "delete from GamesBears  where gameId=@id and bearId=@bearId"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
 
     add("@id", id.ToString())
     add("@bearId", cmd.kickedBearId.ToString())
-    sqlCmd
 
 
 
-let retrieveGamesBears connection gameId bearId =
-     //retrieving information for the game if existing
-    let sqlGamesBears = "select gb.bearId, gb.gameId, gb.mark, gb.comment from GamesBears as gb  where  gb.gameId=@gameId and gb.bearId=@bearId  "
-    let sqlCmdGamesBears = new SQLiteCommand(sqlGamesBears, connection) 
-
-    let add (name:string, value: string) = 
-        sqlCmdGamesBears.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
-
-    add("@gameId", gameId)
-    add("@bearId", bearId)
-
-    let readerGamesBears = sqlCmdGamesBears.ExecuteReader() 
-
-    let mutable mark = ""
-    let mutable comment = ""
-    
-    if readerGamesBears.Read() then
-        mark <- readerGamesBears.["mark"].ToString()
-        comment <- readerGamesBears.["comment"].ToString()
-
-    mark,comment
 
 
-let markBearToDB connection ((id,version,bear):Guid*int*BearSession) (cmd:MarkBear)=
+let markBearToDB (sqlCmd:SQLiteCommand) ((id,version,bear):Guid*Nullable<int>*BearSession) (cmd:MarkBear)=
 
-    let (mark,comment) = retrieveGamesBears connection (id.ToString()) (bear.bearId.ToString())
-
-    let sql = "Update GamesBears  set mark=@mark where BearId=@bearId and gameId=@gameId;"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+    sqlCmd.CommandText <- "Update GamesBears  set mark=@mark where BearId=@bearId and gameId=@gameId;"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -167,15 +132,12 @@ let markBearToDB connection ((id,version,bear):Guid*int*BearSession) (cmd:MarkBe
     add("@bearId", cmd.bearId.ToString())
     add("@mark", cmd.mark.ToString())
     
-    sqlCmd
+    
 
 
-let commentBearToDB connection ((id,version,bear):Guid*int*BearSession)  (cmd:CommentBear) =
+let commentBearToDB (sqlCmd:SQLiteCommand) ((id,version,bear):Guid*Nullable<int>*BearSession)  (cmd:CommentBear) =
 
-    let (mark,comment) = retrieveGamesBears connection (id.ToString()) (bear.bearId.ToString())
-
-    let sql = "Update GamesBears  set comment=@comment where BearId=@bearId and gameId=@gameId;"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+    sqlCmd.CommandText <- "Update GamesBears  set comment=@comment where BearId=@bearId and gameId=@gameId;"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -183,7 +145,7 @@ let commentBearToDB connection ((id,version,bear):Guid*int*BearSession)  (cmd:Co
     add("@gameId", id.ToString())
     add("@bearId", cmd.bearId.ToString())
     add("@comment", cmd.comment)
-    sqlCmd
+    
 
 
 let getGame bearId (filter:GamesFilter) = 
@@ -196,7 +158,7 @@ let getGame bearId (filter:GamesFilter) =
                                                  GamesBears BearsSelection ON BearsSelection.bearId = b.bearId INNER JOIN
                                                  GamesList ON GamesList.id = BearsSelection.gameId
                         WHERE        BearsSelection.gameId =@gameId  "
-    let sqlCmdPlayers = new SQLiteCommand(sqlPlayers, connection) 
+    use sqlCmdPlayers = new SQLiteCommand(sqlPlayers, connection) 
 
     let add (name:string, value: string) = 
         sqlCmdPlayers.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -204,7 +166,7 @@ let getGame bearId (filter:GamesFilter) =
     add("@gameId", filter.id.ToString())
 
 
-    let readerPlayers = sqlCmdPlayers.ExecuteReader() 
+    use readerPlayers = sqlCmdPlayers.ExecuteReader() 
     let bearPlayersList = new System.Collections.Generic.List<BearPlayer>()
     let playerCount = ref 0
 
@@ -224,19 +186,23 @@ let getGame bearId (filter:GamesFilter) =
 
     
     let sqlGame = "Select gl.id, 
+    gl.version,
     gl.name,
     gl.ownerId,
     gl.ownerBearName,
     gl.startDate,
     gl.location, 
     gl.currentState,
+    Rooms.roomId,
+    Rooms.version as roomVersion,
      COUNT(BearsInGamesToCount.bearId) AS nbPlayers,
      gl.maxPlayers
       from GamesList as gl 
+    inner join Rooms on gl.id= Rooms.roomId
     LEFT OUTER  JOIN GamesBears         as BearsInGamesToCount on gl.id = BearsInGamesToCount.gameId  
     GROUP BY gl.id, gl.name,gl.ownerId,gl.ownerBearName,gl.startDate,gl.location,gl.currentState,gl.maxPlayers 
     HAVING gl.id = @gameId "
-    let sqlCmdGame = new SQLiteCommand(sqlGame, connection) 
+    use sqlCmdGame = new SQLiteCommand(sqlGame, connection) 
 
     let add (name:string, value: string) = 
         sqlCmdGame.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -251,6 +217,7 @@ let getGame bearId (filter:GamesFilter) =
                             | bearId -> true
                             | _ -> false
         let isPartOfGame = bearPlayersList.Any( fun b -> b.bearId =bearId)
+        let couldParse,version = Int32.TryParse(readerGame.["version"].ToString())
 
         let gameDetail:GameDetail = {
             id=Guid.Parse(readerGame.["id"].ToString());
@@ -266,21 +233,32 @@ let getGame bearId (filter:GamesFilter) =
             isCancellable = isOwner;
             isOwner = isOwner;
             isAbandonnable = isPartOfGame;
+            version = if couldParse then Nullable(version) else Nullable<int>()
         }
+        
+        readerGame.Dispose()
+        sqlCmdGame.Dispose()
+        connection.Dispose()
+        GC.Collect()
         Some(gameDetail)
-    else None        
+    else
+        readerGame.Dispose()
+        sqlCmdGame.Dispose()
+        connection.Dispose()
+        GC.Collect() 
+        None        
 
 let getGames bearId filter =
     use connection = new SQLiteConnection(dbConnection)
     connection.Open()
 
-    let sql = "SELECT        main.id, main.name, main.ownerId, main.ownerBearName, main.startDate, main.location, main.currentState, main.nbPlayers, main.maxPlayers, players.bearnames, 
+    let sql = "SELECT        main.id, main.version, main.name, main.ownerId, main.ownerBearName, main.startDate, main.location, main.currentState, main.nbPlayers, main.maxPlayers, players.bearnames, 
                          CASE WHEN main.ownerId = @bearId THEN 'true' ELSE 'false' END AS isCancellable,
                          CASE WHEN main.ownerId = @bearId THEN 'true' ELSE 'false' END AS isOwner,
                          CASE WHEN bearInGame.IsPartOfGame =0 or bearInGame.IsPartOfGame is null THEN 'true' ELSE 'false' END AS  isJoinable,
                                          CASE WHEN bearInGame.IsPartOfGame =1 THEN 'true' ELSE 'false' END AS  isAbandonnable
                 FROM            (SELECT        gl.id, gl.name, gl.ownerId, gl.ownerBearName, gl.startDate, gl.location, gl.currentState, COUNT(GamesBearsToCount.bearId) AS nbPlayers, 
-                                                                    gl.maxPlayers
+                                                                    gl.maxPlayers, gl.version
                                           FROM            GamesList gl LEFT OUTER JOIN
                                                                     GamesBears GamesBearsToCount ON gl.id = GamesBearsToCount.gameId
                                           GROUP BY gl.id, gl.name, gl.ownerId, gl.ownerBearName, gl.startDate, gl.location, gl.currentState, gl.maxPlayers
@@ -298,7 +276,7 @@ let getGames bearId filter =
                 WHERE main.startDate>=@fromDate and main.startDate<=@toDate
                 order by main.startDate Desc"
 
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+    use sqlCmd = new SQLiteCommand(sql, connection) 
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -313,6 +291,7 @@ let getGames bearId filter =
     while reader.Read() do
         let gameId = Guid.Parse(reader.["id"].ToString())
         let ownerId = reader.["ownerId"].ToString()
+        let couldParse,version = Int32.TryParse(reader.["version"].ToString())
         gamesList.Add(
             {
                 id=gameId;
@@ -328,28 +307,34 @@ let getGames bearId filter =
                 isCancellable = bool.Parse(reader.["isCancellable"].ToString());
                 isOwner =bool.Parse(reader.["isOwner"].ToString());
                 isAbandonnable = bool.Parse(reader.["isAbandonnable"].ToString());
+                version = if couldParse then Nullable(version) else Nullable<int>()
             }
         )
+    
+    reader.Dispose()
+    sqlCmd.Dispose()
+    connection.Dispose()
+    GC.Collect()
     Some(gamesList)
 
 
-let mapGameCmds connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (command:PetulantBear.Games.Commands) =    
+let mapGameCmds (sqlCmd:SQLiteCommand) (((id,version,bear):Guid*Nullable<int>*BearSession):Guid*Nullable<int>*BearSession)  (command:PetulantBear.Games.Commands) =    
     match command with 
-    | Schedule(cmd) -> scheduleToDB connection ((id,version,bear):Guid*int*BearSession) cmd
-    | Join -> joinToDB connection ((id,version,bear):Guid*int*BearSession) 
-    | Cancel -> cancelToDB connection ((id,version,bear):Guid*int*BearSession) 
-    | Abandon -> abandonToDB connection ((id,version,bear):Guid*int*BearSession) 
-    | ChangeName(cmd) -> changeName connection ((id,version,bear):Guid*int*BearSession) cmd
-    | ChangeStartDate(cmd) -> changeStartDate connection ((id,version,bear):Guid*int*BearSession) cmd
-    | ChangeLocation(cmd) -> changeLocation connection ((id,version,bear):Guid*int*BearSession) cmd
-    | KickPlayer(cmd) -> kickPlayer connection ((id,version,bear):Guid*int*BearSession) cmd
-    | ChangeMaxPlayer(cmd) -> changeMaxPlayer connection ((id,version,bear):Guid*int*BearSession) cmd
+    | Schedule(cmd) -> scheduleToDB sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) cmd
+    | Join(cmd) -> joinToDB sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) 
+    | Cancel(cmd) -> cancelToDB sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) 
+    | Abandon(cmd) -> abandonToDB sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) 
+    | ChangeName(cmd) -> changeName sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) cmd
+    | ChangeStartDate(cmd) -> changeStartDate sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) cmd
+    | ChangeLocation(cmd) -> changeLocation sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) cmd
+    | KickPlayer(cmd) -> kickPlayer sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) cmd
+    | ChangeMaxPlayer(cmd) -> changeMaxPlayer sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) cmd
     
 
-let mapAfterGamesCmds connection (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  (command:AfterGames.Commands) =    
+let mapAfterGamesCmds (sqlCmd:SQLiteCommand) (((id,version,bear):Guid*Nullable<int>*BearSession):Guid*Nullable<int>*BearSession)  (command:AfterGames.Commands) =    
     match command with 
-    | MarkBear(m) -> markBearToDB connection ((id,version,bear):Guid*int*BearSession) m
-    | CommentBear(c) -> commentBearToDB connection ((id,version,bear):Guid*int*BearSession) c
+    | MarkBear(m) -> markBearToDB sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) m
+    | CommentBear(c) -> commentBearToDB sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) c
     
 
 
@@ -360,8 +345,8 @@ let signinToDB (id,version,bearId) ((socialId,cmd):string*SignIn) =
     connection.Open()
 
 
-    let sql = "Insert into Bears VALUES (@bearId, @bearUsername, @bearAvatarId); Insert into Users (socialId,bearId) VALUES (@socialId,@bearId)"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+    let sql = "Insert into Bears (bearId,bearUsername ,bearAvatarId  ) VALUES (@bearId, @bearUsername, @bearAvatarId); Insert into Users (socialId,bearId) VALUES (@socialId,@bearId)"
+    use sqlCmd = new SQLiteCommand(sql, connection) 
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -373,6 +358,10 @@ let signinToDB (id,version,bearId) ((socialId,cmd):string*SignIn) =
 
     sqlCmd.ExecuteNonQuery() |> ignore
 
+    sqlCmd.Dispose()
+    connection.Dispose()
+    GC.Collect()
+
     Success(socialId,cmd)
 
 let signinBearToDB bearId socialId (cmd:SignInBear) =
@@ -380,8 +369,8 @@ let signinBearToDB bearId socialId (cmd:SignInBear) =
     connection.Open()
 
 
-    let sql = "Insert into Bears VALUES (@bearId, @bearUsername, @bearAvatarId); Insert into Users (socialId,bearId) VALUES (@socialId,@bearId); Insert into Authentication (authId, username, password) VALUES (@socialId,@bearUsername,@bearPassword)"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+    let sql = "Insert into Bears (bearId,bearUsername ,bearAvatarId  ) VALUES (@bearId, @bearUsername, @bearAvatarId); Insert into Users (socialId,bearId) VALUES (@socialId,@bearId); Insert into Authentication (authId, username, password) VALUES (@socialId,@bearUsername,@bearPassword)"
+    use sqlCmd = new SQLiteCommand(sql, connection) 
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -394,6 +383,10 @@ let signinBearToDB bearId socialId (cmd:SignInBear) =
     
 
     sqlCmd.ExecuteNonQuery() |> ignore
+    
+    sqlCmd.Dispose()
+    connection.Dispose()
+    GC.Collect()
 
     Success(socialId)
 
@@ -404,7 +397,7 @@ let getBears (filter:BearsFilter) =
     connection.Open()
 
     let sqlBear = "select b.bearId,b.bearUsername,b.bearAvatarId,u.socialId from Bears as b inner join Users as u on b.bearId = u.bearId"
-    let sqlCmdBear = new SQLiteCommand(sqlBear, connection) 
+    use sqlCmdBear = new SQLiteCommand(sqlBear, connection) 
 
     //let add (name:string, value: string) = 
     //    sqlCmdBear.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -423,6 +416,10 @@ let getBears (filter:BearsFilter) =
                 bearAvatarId = Int32.Parse(reader.["bearAvatarId"].ToString());
             }
         )
+    reader.Dispose()
+    sqlCmdBear.Dispose()
+    connection.Dispose()
+    GC.Collect()
     Some(bearList)
 
 let getBear (bearId:Guid) =
@@ -430,7 +427,7 @@ let getBear (bearId:Guid) =
     connection.Open()
 
     let sqlBear = "select b.bearId,b.bearUsername,b.bearAvatarId,u.socialId from Bears as b inner join Users as u on b.bearId = u.bearId where b.bearId= @bearId"
-    let sqlCmdBear = new SQLiteCommand(sqlBear, connection) 
+    use sqlCmdBear = new SQLiteCommand(sqlBear, connection) 
 
     let add (name:string, value: string) = 
         sqlCmdBear.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -447,8 +444,17 @@ let getBear (bearId:Guid) =
                 socialId = reader.["socialId"].ToString();
                 bearAvatarId = Int32.Parse(reader.["bearAvatarId"].ToString());
             }
+        reader.Dispose()
+        sqlCmdBear.Dispose()
+        connection.Dispose()
+        GC.Collect()
         Some(bearFound)
-    else None
+    else
+        reader.Dispose()
+        sqlCmdBear.Dispose()
+        connection.Dispose()
+        GC.Collect() 
+        None
 
 
 
@@ -457,7 +463,7 @@ let getBearFromSocialId (socialId:string) =
     connection.Open()
 
     let sqlBear = "select b.bearId,b.bearUsername,b.bearAvatarId,u.socialId from Bears as b inner join Users as u on b.bearId = u.bearId where u.socialId= @socialId"
-    let sqlCmdBear = new SQLiteCommand(sqlBear, connection) 
+    use sqlCmdBear = new SQLiteCommand(sqlBear, connection) 
 
     let add (name:string, value: string) = 
         sqlCmdBear.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -473,8 +479,17 @@ let getBearFromSocialId (socialId:string) =
                 socialId = reader.["socialId"].ToString();
                 username = reader.["bearUsername"].ToString();
             }
+        reader.Dispose()
+        sqlCmdBear.Dispose()
+        connection.Dispose()
+        GC.Collect()
         Some(bearFound)
-    else None
+    else
+        reader.Dispose()
+        sqlCmdBear.Dispose()
+        connection.Dispose()
+        GC.Collect() 
+        None
 
 
 let login username password =
@@ -486,7 +501,7 @@ let login username password =
                                          Users ON Authentication.authId = Users.socialId INNER JOIN
                                          Bears ON Users.bearId = Bears.bearId
                 WHERE        (Authentication.username = @username) AND (Authentication.password = @password)"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+    use sqlCmd = new SQLiteCommand(sql, connection) 
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -497,19 +512,28 @@ let login username password =
     use reader = sqlCmd.ExecuteReader() 
 
     if (reader.Read()) then
-        reader.["bearId"].ToString()
+        let bearId= reader.["bearId"].ToString()
+        reader.Dispose()
+        sqlCmd.Dispose()
+        connection.Dispose()
+        GC.Collect()
+        bearId
         |> Guid.Parse
         |> getBear
 
     else 
+        reader.Dispose()
+        sqlCmd.Dispose()
+        connection.Dispose()
+        GC.Collect()
         None        
 
-let getRoomDetail (filter :RoomFilter) =
+let getRoomDetail (filter :RoomFilter):RoomDetail option =
     use connection = new SQLiteConnection(dbConnection)
     connection.Open()
 
-    let sqlMessages = "  select rm.roomId, rm.message, b.bearId,b.bearUsername,b.bearAvatarId,u.socialId         from RoomMessages as rm         inner join  Bears as b on rm.bearId = b.bearId        inner join Users as u on b.bearId = u.bearId          where rm.roomId= @roomId"
-    let sqlCmdMessages = new SQLiteCommand(sqlMessages, connection) 
+    let sqlMessages = "  select rm.roomId, rm.message,rm.typeMessage, b.bearId,b.bearUsername,b.bearAvatarId,u.socialId         from RoomMessages as rm         inner join  Bears as b on rm.bearId = b.bearId        inner join Users as u on b.bearId = u.bearId          where rm.roomId= @roomId"
+    use sqlCmdMessages = new SQLiteCommand(sqlMessages, connection) 
 
     let add (name:string, value: string) = 
         sqlCmdMessages.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -520,6 +544,7 @@ let getRoomDetail (filter :RoomFilter) =
     let messageList = new System.Collections.Generic.List<RoomMessageDetail>()
 
     while (readerMessages.Read()) do
+        let tm= readerMessages.["typeMessage"].ToString()
         messageList.Add( 
             {
                 roomId=Guid.Parse(readerMessages.["roomId"].ToString());
@@ -530,11 +555,12 @@ let getRoomDetail (filter :RoomFilter) =
                         bearAvatarId = Int32.Parse(readerMessages.["bearAvatarId"].ToString());
                 }
                 message = readerMessages.["message"].ToString();
+                typeMessage = if tm="" then "text" else tm;
             }
         )
 
-    let sqlRoom = "select r.roomId, r.name from Rooms as r where r.roomId = @roomId"
-    let sqlCmdRoom = new SQLiteCommand(sqlRoom, connection) 
+    let sqlRoom = "select r.roomId, r.name, r.version from Rooms as r where r.roomId = @roomId"
+    use sqlCmdRoom = new SQLiteCommand(sqlRoom, connection) 
 
     let add (name:string, value: string) = 
         sqlCmdRoom.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -543,22 +569,35 @@ let getRoomDetail (filter :RoomFilter) =
 
     use readerRoom = sqlCmdRoom.ExecuteReader() 
 
-
     if (readerRoom.Read()) then
+        let couldParse,version = Int32.TryParse(readerRoom.["version"].ToString())
         let roomFound  = {
             roomId=Guid.Parse(readerRoom.["roomId"].ToString());
             name= readerRoom.["name"].ToString();
+            version = if couldParse then Nullable(version) else Nullable<int>()
             messages = messageList;
         }
+        readerRoom.Dispose()
+        sqlCmdRoom.Dispose()
+        readerMessages.Dispose()
+        sqlCmdMessages.Dispose()
+        connection.Dispose()
+        GC.Collect()
         Some(roomFound)
-    else None
+    else
+        readerRoom.Dispose()
+        sqlCmdRoom.Dispose()
+        readerMessages.Dispose()
+        sqlCmdMessages.Dispose()
+        connection.Dispose()
+        GC.Collect() 
+        None
 
 
     
 
-let postMessage connection ((id,version,bear):Guid*int*BearSession)  (cmd:PostMessage) =
-    let sql = "Insert into RoomMessages (roomId,bearId,message) VALUES (@roomId,@bearId, @message);"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+let postMessage (sqlCmd:SQLiteCommand) ((id,version,bear):Guid*Nullable<int>*BearSession)  (cmd:PostMessage) =
+    sqlCmd.CommandText <-  "Insert into RoomMessages (roomId,bearId,message) VALUES (@roomId,@bearId, @message);"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -566,17 +605,15 @@ let postMessage connection ((id,version,bear):Guid*int*BearSession)  (cmd:PostMe
     add("@roomId", id.ToString())
     add("@bearId", bear.bearId.ToString())
     add("@message", cmd.message)
-    
-    sqlCmd
 
-let mapRoomCmds connection (id,version,bearId)  (command:PetulantBear.Rooms.Commands) =    
+
+let mapRoomCmds (sqlCmd:SQLiteCommand) (id,version,bearId)  (command:PetulantBear.Rooms.Commands) =    
     match command with 
-    | PostMessage(cmd) -> postMessage connection (id,version,bearId) cmd
+    | PostMessage(cmd) -> postMessage sqlCmd (id,version,bearId) cmd
 
 
-let changeAvatarId connection ((id,version,bear):Guid*int*BearSession)  (cmd:ChangeAvatarId) =
-    let sql = "Update Bears set bearAvatarId =@bearAvatarId where  bearId=@bearId"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+let changeAvatarId (sqlCmd:SQLiteCommand) ((id,version,bear):Guid*Nullable<int>*BearSession)  (cmd:ChangeAvatarId) =
+    sqlCmd.CommandText <- "Update Bears set bearAvatarId =@bearAvatarId where  bearId=@bearId"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -584,11 +621,9 @@ let changeAvatarId connection ((id,version,bear):Guid*int*BearSession)  (cmd:Cha
     add("@bearId", bear.bearId.ToString())
     add("@bearAvatarId", cmd.bearAvatarId.ToString())
     
-    sqlCmd
     
-let changePassword connection ((id,version,bear):Guid*int*BearSession)  (cmd:ChangePassword) =
-    let sql = "Update Authentication set password =@bearPassword where  username=@bearUsername"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+let changePassword (sqlCmd:SQLiteCommand) ((id,version,bear):Guid*Nullable<int>*BearSession)  (cmd:ChangePassword) =
+    sqlCmd.CommandText <- "Update Authentication set password =@bearPassword where  username=@bearUsername"
 
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
@@ -596,12 +631,10 @@ let changePassword connection ((id,version,bear):Guid*int*BearSession)  (cmd:Cha
     add("@bearUsername", bear.username)
     add("@bearPassword", cmd.bearPassword)
     
-    sqlCmd
 
-let changeUserName connection ((id,version,bear):Guid*int*BearSession)  (cmd:ChangeUserName) =
-    let sql = "Update Bears set bearUsername =@bearUsername where  bearId=@bearId;Update Authentication set username =@bearUsername where  username=@oldBearUsername"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
-
+let changeUserName (sqlCmd:SQLiteCommand) ((id,version,bear):Guid*Nullable<int>*BearSession)  (cmd:ChangeUserName) =
+    sqlCmd.CommandText <- "Update Bears set bearUsername =@bearUsername where  bearId=@bearId;Update Authentication set username =@bearUsername where  username=@oldBearUsername"
+    
     let add (name:string, value: string) = 
         sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
 
@@ -609,24 +642,28 @@ let changeUserName connection ((id,version,bear):Guid*int*BearSession)  (cmd:Cha
     add("@bearUsername", cmd.bearUsername)
     add("@oldBearUsername", bear.username)
     
-    sqlCmd
+    
 
-let mapCurrentBearCmds connection (id,version,bearId)  (command:PetulantBear.CurrentBear.Commands) =    
+let mapCurrentBearCmds sqlCmd (id,version,bearId)  (command:PetulantBear.CurrentBear.Commands) =    
     match command with 
-    | ChangeAvatarId(cmd) -> changeAvatarId connection (id,version,bearId) cmd
-    | ChangePassword(cmd) -> changePassword connection (id,version,bearId) cmd
-    | ChangeUserName(cmd) -> changeUserName connection (id,version,bearId) cmd
+    | ChangeAvatarId(cmd) -> changeAvatarId sqlCmd (id,version,bearId) cmd
+    | ChangePassword(cmd) -> changePassword sqlCmd (id,version,bearId) cmd
+    | ChangeUserName(cmd) -> changeUserName sqlCmd (id,version,bearId) cmd
 
 
 
-let saveToDB map (((id,version,bear):Guid*int*BearSession):Guid*int*BearSession)  command =
+let saveToDB map (((id,version,bear):Guid*Nullable<int>*BearSession):Guid*Nullable<int>*BearSession)  command =
     use connection = new SQLiteConnection(dbConnection)
     connection.Open()
+    use sqlCmd = new SQLiteCommand( connection) 
 
-    let sqlCmd :SQLiteCommand = map connection ((id,version,bear):Guid*int*BearSession) command
+    map sqlCmd ((id,version,bear):Guid*Nullable<int>*BearSession) command
 
     sqlCmd.ExecuteNonQuery() |> ignore
 
+    sqlCmd.Dispose()
+    connection.Dispose()
+    GC.Collect()
     command
 
 
@@ -636,9 +673,13 @@ let resetDB ctx =
     use connection = new SQLiteConnection(dbConnection)
     connection.Open()
 
-    let sql = "Delete from  Users;Delete from  Bears;Delete from  GamesList;Delete from  GamesBears;Delete from  Rooms;Delete from  RoomMessages;Delete from  Rooms;Delete from  Authentication;"
-    let sqlCmd = new SQLiteCommand(sql, connection) 
+    let sql = "Delete from  Users;Delete from  Bears;Delete from  GamesList;Delete from  GamesBears;Delete from  Rooms;Delete from  RoomMessages;Delete from  Rooms;Delete from  Authentication;Delete from commandProcessed; delete from projections;"
+    use sqlCmd = new SQLiteCommand(sql, connection) 
 
     sqlCmd.ExecuteNonQuery() |> ignore
+
+    sqlCmd.Dispose()
+    connection.Dispose()
+    GC.Collect()
     Suave.Http.Successful.OK "db deleted <a href='/logout'>log out </a>" ctx
     

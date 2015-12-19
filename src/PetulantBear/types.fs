@@ -39,8 +39,10 @@ type Session =
 type Command<'a> = {
     [<field: DataMember(Name = "id")>]
     id : Guid;
+    [<field: DataMember(Name = "idCommand")>]
+    idCommand : Guid;
     [<field: DataMember(Name = "version")>]
-    version : int;
+    version : Nullable<int>;
     [<field: DataMember(Name = "payLoad")>]
     payLoad : 'a; 
 }
@@ -50,29 +52,43 @@ type Request = {
     [<field: DataMember(Name = "id")>]
     id : Guid;
     [<field: DataMember(Name = "version")>]
-    version : int;
+    version : Nullable<int>;
 }
+
+//[<DataContract>]
+//type Event<'a> = {
+//    [<field: DataMember(Name = "id")>]
+//    id : Guid;
+//    [<field: DataMember(Name = "version")>]
+//    version : int;
+//    [<field: DataMember(Name = "payLoad")>]
+//    payLoad : 'a; 
+//}
 
 [<DataContract>]
-type Event<'a> = {
-    [<field: DataMember(Name = "id")>]
-    id : Guid;
+type Enveloppe = {
+    [<field: DataMember(Name = "messageId")>]
+    messageId : Guid;
+    [<field: DataMember(Name = "correlationId")>]
+    correlationId : Guid;
+    [<field: DataMember(Name = "aggregateId")>]
+    aggregateId: Guid;
     [<field: DataMember(Name = "version")>]
     version : int;
-    [<field: DataMember(Name = "payLoad")>]
-    payLoad : 'a; 
+    [<field: DataMember(Name = "bear")>]
+    bear : BearSession;
 }
 
-type LoggedInContext = {
-    httpContext : HttpContext;
-    bear : BearSession
-}
-
-type Bear2BearContext<'T> = {
-    httpContext : HttpContext;
-    command :Command<'T>;
-    bear : BearSession
-}
+let createEnveloppe c a b v = 
+    (fun i -> 
+        { 
+            messageId = Guid.NewGuid();
+            correlationId = c;
+            aggregateId = a;
+            version = v+i;
+            bear = b;
+        }
+    )
 
 
 
@@ -110,6 +126,8 @@ let tryCatch f x =
         | ex -> Failure(ex.Message)    
     | Failure(msg) -> x
 
+
+
 let ApplyCmdToActor buildGameActor (actorsDic :Dictionary<Guid, IActorRef>) (cmd:Command<'a>) =
     if not <| actorsDic.ContainsKey(cmd.id) then
         actorsDic.Add(cmd.id, buildGameActor cmd.id)
@@ -129,13 +147,13 @@ let fromJson<'a> byteArray=
     | _ -> reraise()
 
 
-                
 
-let toJson<'a> (obj:'a) = 
+
+let toJson obj = 
     JsonConvert.SerializeObject(obj)
     |> System.Text.Encoding.UTF8.GetBytes
 
-let toJsonString<'a> (obj:'a) = 
+let toJsonString obj = 
     JsonConvert.SerializeObject(obj)
 
 let deserializingRawForm<'T> req fSuccess =
@@ -152,7 +170,8 @@ let deserializingRawForm<'T> req fSuccess =
 
 let deserializingCmd<'T> req fSuccess =
     match fromJson<Command<'T>> req.rawForm with
-        | Serialized(cmd) -> fSuccess cmd
+        | Serialized(cmd) -> 
+            fSuccess cmd
         | DeserializingException(rawText,ex) ->
             let logger = Logary.Logging.getLoggerByName "Logary.Targets.ElmahIO"
             
@@ -248,15 +267,15 @@ let apply<'TContract,'TCommand> save (mapCmd:'TContract->'TCommand) =
     )
 
 
-let toJsonFromOptions<'T> = function 
-| Some(a) -> toJson<'T>(a) 
+let toJsonFromOptions = function 
+| Some(a) -> toJson(a) 
 | None ->  toJson("")
 
-let mapJson<'a,'b> f = 
+let mapJson<'a,'b> (f:'a->'b option) = 
     Types.request(fun r ->
         deserializingRawForm<'a> r (fun cmd ->
             f cmd
-            |> toJsonFromOptions<'b>
+            |> toJsonFromOptions
             |> Successful.ok
             >>= Writers.setMimeType "application/json"
         )
@@ -319,20 +338,73 @@ let withCommand<'T> =
                 RequestErrors.BAD_REQUEST "body not understood"
     )
 
+open EventStore.ClientAPI
+
+type Projection ={
+    resetProjection : unit -> unit
+    eventAppeared : EventStoreCatchUpSubscription->ResolvedEvent->unit
+    catchup : EventStoreCatchUpSubscription -> unit
+    onError : EventStoreCatchUpSubscription -> SubscriptionDropReason -> Exception ->unit
+}
+
+type IEventStoreRepository =
+    abstract member connect: unit->unit 
+    abstract member isCommandProcessed : Guid -> bool
+    abstract member saveCommandProcessedAsync : Command<'a> -> Async<unit>
+    abstract member saveEvtsAsync<'T> : string -> (int ->Enveloppe) -> 'T list -> Async<unit>
+    abstract member hydrateAggAsync<'TAgg,'TEvents> : string -> ('TAgg -> 'TEvents -> 'TAgg) -> 'TAgg -> Guid -> Async<'TAgg*int>
+
+
+type IEventStoreProjection =
+    abstract member SubscribeToStreamFrom: string -> Nullable<int> -> bool -> Projection -> EventStoreStreamCatchUpSubscription
+
+let processingCommand<'TAgg, 'TContract,'TCommand, 'TEvents>   (repo:IEventStoreRepository) streamName apply initialState (exec:'TAgg -> 'TCommand -> Choice<'TEvents list,string list>)  (mapCmd:'TContract->'TCommand) =
+    fun x -> async {
+        
+        let cmd = x.userState.["cmd"] :?> Command<'TContract>
+        let bear = x.userState.["bear"] :?> BearSession
+        let idAggregate = cmd.id
+        
+        // if there is no version it means the aggregate does not support event sourcing
+        if (not <| repo.isCommandProcessed cmd.idCommand) && cmd.version.HasValue then
+            let! state,v = repo.hydrateAggAsync<'TAgg,'TEvents> streamName  apply initialState idAggregate
+
+            match cmd.payLoad |> mapCmd |> exec state  with
+            | Choice1Of2(evts) ->
+                let newState = List.fold apply state evts
+                let enveloppe = createEnveloppe  cmd.idCommand cmd.id bear v
+                do! repo.saveEvtsAsync<'TEvents> streamName enveloppe evts
+                do! repo.saveCommandProcessedAsync cmd
+                return Some(x)
+            | Choice2Of2(errors) ->
+                 // do comething here like log errors and return errors codes to warn the user
+                return Some(x)
+        else
+            //what to say to user if command is already processed ? support event sourcing? log something?
+            return Some(x)
+    }
+
 let processing<'TContract,'TCommand> save (mapCmd:'TContract->'TCommand) =
     context (fun x ->
         try
             let cmd = x.userState.["cmd"] :?> Command<'TContract>
             let bear = x.userState.["bear"] :?> BearSession
 
-            cmd.payLoad
-            |> mapCmd
-            |> Success
-            |> tryCatch (save (cmd.id,cmd.version,bear)) 
-            |> toMessage
-            |> toJson
-            |> Successful.ok 
-            >>= Writers.setMimeType "application/json"
+            if not <| cmd.version.HasValue then
+                cmd.payLoad
+                |> mapCmd
+                |> Success
+                |> tryCatch (save (cmd.id,cmd.version,bear)) 
+                |> toMessage
+                |> toJson
+                |> Successful.ok 
+                >>= Writers.setMimeType "application/json"
+            else
+                Success(cmd)
+                |> toMessage
+                |> toJson
+                |> Successful.ok 
+                >>= Writers.setMimeType "application/json"
         with
         | ex -> 
             Failure(ex.Message) 

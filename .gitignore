@@ -17,6 +17,9 @@ x64/
 build/
 [Bb]in/
 [Oo]bj/
+[Dd]eploy/
+
+
 
 # Enable "build/" folder in the NuGet Packages folder since NuGet packages use it for MSBuild targets
 !packages/*/build/
@@ -161,7 +164,7 @@ $RECYCLE.BIN/
 .DS_Store
 
 # ===================================================
-# Exclude F# project specific directories and files 
+# Exclude F# project specific directories and files
 # ===================================================
 
 # NuGet Packages Directory
@@ -188,5 +191,6 @@ paket-files
 docs/content/license.md
 docs/content/release-notes.md
 72r4
-deploy/petulant.LocalBuild.build.zip
+
 src/db/Bear2Bear.db
+db/ESData/

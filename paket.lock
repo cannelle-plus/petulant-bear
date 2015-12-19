@@ -17,8 +17,12 @@ NUGET
       elmah.io.client
     EntityFramework (6.1.3) - framework: net40, net45, net451, >= net46
     EventStore.Client (3.3.1)
+    EventStore.Client.Embedded (3.3.1)
+      EventStore.Client (3.3.1)
     Facebook (7.0.6)
     FAKE (4.7.3)
+    FifteenBelow.Json (0.2.0.12)
+      Newtonsoft.Json (>= 6.0.8)
     FsCheck (2.2.0)
       FSharp.Core (>= 3.1.2.5 < 3.1.3)
     FSharp.Actor-logary (3.4.2)
@@ -89,7 +93,7 @@ NUGET
 GITHUB
   remote: fsharp/FAKE
   specs:
-    modules/Octokit/Octokit.fsx (917a86046700e4eaaa2aa09de7895e048eaaa1b1)
+    modules/Octokit/Octokit.fsx (25ca24118d3b0f7b51d5c72e6895b27329683b59)
       Octokit
 HTTP
   remote: https://www.sqlite.org

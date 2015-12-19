@@ -19,14 +19,15 @@ Date.prototype.addHours = function (h) {
         var createCommand = function (id, version, payLoad) {
             return {
                 id: id,
+                idCommand : guid(),
                 version: version,
                 payLoad: payLoad
             };
         }
 
 
-        var schedule = function (id) {
-            var scheduleCmd = createCommand(id, 1, {
+        var schedule = function (id, version) {
+            var scheduleCmd = createCommand(id, 0, {
                 "location": "playSoccer",
                 "maxPlayers": 8,
                 "name": "test",
@@ -43,8 +44,8 @@ Date.prototype.addHours = function (h) {
               });
         }
 
-        var cancel = function (id) {
-            var cancelCmd = createCommand(id, 1, {});
+        var cancel = function (id, version) {
+            var cancelCmd = createCommand(id, version, {});
             return $.ajax({
                 type: "POST",
                 url: "api/games/cancel",
@@ -57,8 +58,8 @@ Date.prototype.addHours = function (h) {
         }
 
 
-        var join = function (id) {
-            var joinCmd = createCommand(id, 1, {});
+        var join = function (id, version) {
+            var joinCmd = createCommand(id, version, {});
             return $.ajax({
                 type: "POST",
                 url: "api/games/join",
@@ -70,8 +71,8 @@ Date.prototype.addHours = function (h) {
               });
         }
 
-        var changeName = function (id) {
-            var changeNameCmd = createCommand(id, 1, {
+        var changeName = function (id, version) {
+            var changeNameCmd = createCommand(id, version, {
                 name: "new Name" + guid()
             });
             return $.ajax({
@@ -84,9 +85,9 @@ Date.prototype.addHours = function (h) {
                   $("#changeNameResult").html(err);
               });
         }
-        var changeStartDate = function (id) {
+        var changeStartDate = function (id, version) {
             var newStartDate = (new Date()).addHours(10);
-            var changeStartDateCmd = createCommand(id, 1, {
+            var changeStartDateCmd = createCommand(id, version, {
                 startDate: newStartDate.toJSON()
             });
             return $.ajax({
@@ -99,8 +100,8 @@ Date.prototype.addHours = function (h) {
                     $("#changeStartDateResult").html(err);
                 });
         }
-        var changeLocation = function (id) {
-            var changeLocationCmd = createCommand(id, 1, {
+        var changeLocation = function (id, version) {
+            var changeLocationCmd = createCommand(id, version, {
                 location: "new location" + guid()
             });
             return $.ajax({
@@ -114,8 +115,8 @@ Date.prototype.addHours = function (h) {
                 });
 
         };
-        var changeMaxPlayer = function (id) {
-            var changeMaxPlayerCmd = createCommand(id, 1, {
+        var changeMaxPlayer = function (id, version) {
+            var changeMaxPlayerCmd = createCommand(id, version, {
                 maxPlayers: 7
             });
             return $.ajax({
@@ -129,8 +130,8 @@ Date.prototype.addHours = function (h) {
                 });
 
         };
-        var abandon = function (id) {
-            var abandonCmd = createCommand(id, 1, {});
+        var abandon = function (id, version) {
+            var abandonCmd = createCommand(id, version, {});
             return $.ajax({
                 type: "POST",
                 url: "api/games/abandon",
@@ -142,8 +143,8 @@ Date.prototype.addHours = function (h) {
               });
         };
 
-        var kickPlayer = function (gameId, bearId) {
-            var kickPlayerCmd = createCommand(gameId, 1, {
+        var kickPlayer = function (gameId,version, bearId) {
+            var kickPlayerCmd = createCommand(gameId, version, {
                 "kickedBearId": bearId
             });
             return $.ajax({
@@ -158,8 +159,8 @@ Date.prototype.addHours = function (h) {
         };
 
         //afterGame
-        var markBear = function (gameId, bearId, mark) {
-            var markBearCmd = createCommand(gameId, 1, {
+        var markBear = function (gameId,version, bearId, mark) {
+            var markBearCmd = createCommand(gameId, version, {
                 "bearId": bearId,
                 "mark": mark
             });
@@ -174,8 +175,8 @@ Date.prototype.addHours = function (h) {
               });
         }
 
-        var commentBear = function (gameId, bearId, comment) {
-            var commentBearCmd = createCommand(gameId, 1, {
+        var commentBear = function (gameId,version, bearId, comment) {
+            var commentBearCmd = createCommand(gameId, version, {
                 "bearId": bearId,
                 "comment": comment
             });
@@ -193,8 +194,8 @@ Date.prototype.addHours = function (h) {
         
         
 
-        var signalSent = function (transmitterId, receiverId, signalStrength, receptionDate) {
-            var signalsSent = createCommand(transmitterId, 1, {
+        var signalSent = function (transmitterId, version, receiverId, signalStrength, receptionDate) {
+            var signalsSent = createCommand(transmitterId, version, {
                 signals: [{
                     "transmitterId": transmitterId,
                     "receiverId": receiverId,
@@ -213,8 +214,8 @@ Date.prototype.addHours = function (h) {
               });
         }
 
-        var startCalibration = function (transmitterId, receiverId, distance) {
-            var startCalibrationCmd = createCommand(transmitterId, 1, {
+        var startCalibration = function (transmitterId, version,receiverId, distance) {
+            var startCalibrationCmd = createCommand(transmitterId, version, {
                 "transmitterId": transmitterId,
                 "receiverId": receiverId,
                 "distance": distance
@@ -230,8 +231,8 @@ Date.prototype.addHours = function (h) {
               });
         }
 
-        var stopCalibration = function (transmitterId, receiverId, distance) {
-            var stopCalibrationCmd = createCommand(transmitterId, 1, {
+        var stopCalibration = function (transmitterId,version, receiverId, distance) {
+            var stopCalibrationCmd = createCommand(transmitterId, version, {
                 "transmitterId": transmitterId,
                 "receiverId": receiverId,
                 "distance": distance
@@ -247,8 +248,8 @@ Date.prototype.addHours = function (h) {
               });
         }
 
-        var postMessageToRoom = function (roomId, message) {
-            var postMessageCmd = createCommand(roomId, 1, {
+        var postMessageToRoom = function (roomId, version, message) {
+            var postMessageCmd = createCommand(roomId, version, {
                 "message": message
             });
             return $.ajax({
@@ -278,7 +279,7 @@ Date.prototype.addHours = function (h) {
         };
 
         var changeUserName = function (username) {
-            var changeUsernameCmd = createCommand(guid(), 1, {
+            var changeUsernameCmd = createCommand(guid(), null, {
                 bearUsername: username
             });
             return $.ajax({
@@ -293,7 +294,7 @@ Date.prototype.addHours = function (h) {
         };
 
         var changeAvatarId = function (avatarId) {
-            var changeAvatarIdCmd = createCommand(guid(), 1, {
+            var changeAvatarIdCmd = createCommand(guid(), null, {
                 bearAvatarId: avatarId
             });
             return $.ajax({
@@ -319,6 +320,7 @@ Date.prototype.addHours = function (h) {
               .done(function (data) {
                   if (data !== null && data !== undefined) {
                       var msg = [];
+                      msg.push("postMessage <input id='msgRoom' type=text > <a id='postMessageToRoomBtn' href='#'  data-id='" + data.roomId + "' data-version='" + data.version + "' > postMessageToRoom </a><div id='postMessageToRoomResult'></div><br>");
                       msg.push("<TABLE  border=\"1\">");
                       msg.push("<TR>");
                       msg.push("<TH>roomId</TH>");
@@ -334,6 +336,7 @@ Date.prototype.addHours = function (h) {
                       msg.push("<TH>roomId</TH>");
                       msg.push("<TH>bear</TH>");
                       msg.push("<TH>message</TH>");
+                      msg.push("<TH>type message</TH>");
                       msg.push("</TR>");
                       for (var i = 0; i < data.messages.length; i++) {
                           msg.push("<TR>");
@@ -355,6 +358,7 @@ Date.prototype.addHours = function (h) {
                           msg.push("</TABLE>");
                           msg.push("</TD>");
                           msg.push("<TD>" + data.messages[i].message + "</TD>");
+                          msg.push("<TD>" + data.messages[i].typeMessage + "</TD>");
                           msg.push("</TR>");
                       };
                       msg.push("</TABLE>");
@@ -368,13 +372,20 @@ Date.prototype.addHours = function (h) {
                   else {
                       $("#roomDetail").html("room not found");
                   }
+
+                  $("#postMessageToRoomBtn").click(function (e) {
+                      var roomId = $(e.target).data("id");
+                      var roomVersion = $(e.target).data("version")
+                      var message = $("#msgRoom").val();
+                      postMessageToRoom(roomId, roomVersion, message);
+                  });
               })
               .fail(function (err) {
                   $("#roomDetail").html(err);
               });
         };
 
-        var getGame = function (gameId) {
+        var getGame = function (gameId, gameVersion) {
             $.ajax({
                 type: "POST",
                 url: "api/games/detail",
@@ -404,9 +415,9 @@ Date.prototype.addHours = function (h) {
                         msgPlayers.push("<TD>" + data.players[i].bearAvatarId + "</TD>");
                         msgPlayers.push("<TD>" + data.players[i].mark + "</TD>");
                         msgPlayers.push("<TD>" + data.players[i].comment + "</TD>");
-                        msgPlayers.push("<TD><div href='#' class='kickPlayerBtn' data-id='" + data.players[i].bearId + "'>kickPlayer</div><div id='kickPlayerResult'></div></TD>");
-                        msgPlayers.push("<TD><div href='#' class='markBearBtn' data-id='" + data.players[i].bearId + "'>mark</div><div id='markBearResult'></div></TD>");
-                        msgPlayers.push("<TD><div href='#' class='commentBearBtn' data-id='" + data.players[i].bearId + "'>comment</div><div id='commentBearResult'></div></TD>");
+                        msgPlayers.push("<TD><div href='#' class='kickPlayerBtn' data-id='" + data.players[i].bearId + "' >kickPlayer</div><div id='kickPlayerResult'></div></TD>");
+                        //msgPlayers.push("<TD><div href='#' class='markBearBtn' data-id='" + data.players[i].bearId + "' data-version='" + data.players[i].version + "'>mark</div><div id='markBearResult'></div></TD>");
+                        //msgPlayers.push("<TD><div href='#' class='commentBearBtn' data-id='" + data.players[i].bearId + "'>comment</div><div id='commentBearResult'></div></TD>");
                         msgPlayers.push("</TR>");
                     }
                     msgPlayers.push("</TABLE>");
@@ -437,8 +448,8 @@ Date.prototype.addHours = function (h) {
 
                     //room of the game
                     msg.push("<p>");
-                    msg.push("rooms detail 'api/rooms/detail' <a href='#' id='RoomBtn' data-id='" + data.id + "'>reload</a><br>");
-                    msg.push("postMessage <input id='msgRoom' type=text > <a id='postMessageToRoomBtn' href='#'  data-id='" + data.id + "'> postMessageToRoom </a><div id='postMessageToRoomResult'></div><br>");
+                    msg.push("rooms detail 'api/rooms/detail' <a href='#' id='RoomBtn' data-id='" + data.id + "' >reload</a><br>");
+                    
                     msg.push("<div id='roomDetail'></div>");
                     msg.push("</p>");
                     $("#gameDetail").html(msg.join(''));
@@ -450,31 +461,27 @@ Date.prototype.addHours = function (h) {
                     getDetailRoom($(e.target).data("id"));
                 });
 
-                $("#postMessageToRoomBtn").click(function (e) {
-                    var roomId = $(e.target).data("id");
-                    var message = $("#msgRoom").val();
-                    postMessageToRoom(roomId, message);
-                });
+                
 
-                $(".markBearBtn").click(function (e) {
-                    var bearId = $(e.target).data("id");
-                    var mark = 4;
-                    markBear(gameId, bearId, mark).done(function (data) {
-                        $("#markBearResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
-                    });
-                });
+                //$(".markBearBtn").click(function (e) {
+                //    var bearId = $(e.target).data("id");
+                //    var mark = 4;
+                //    markBear(gameId, bearId, mark).done(function (data) {
+                //        $("#markBearResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+                //    });
+                //});
 
-                $(".commentBearBtn").click(function (e) {
-                    var bearId = $(e.target).data("id");
-                    var comment = "someComment" + guid();
-                    commentBear(gameId, bearId, comment).done(function (data) {
-                        $("#commentBearResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
-                    });
-                })
+                //$(".commentBearBtn").click(function (e) {
+                //    var bearId = $(e.target).data("id");
+                //    var comment = "someComment" + guid();
+                //    commentBear(gameId, bearId, comment).done(function (data) {
+                //        $("#commentBearResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+                //    });
+                //})
 
                 $(".kickPlayerBtn").click(function (e) {
                     var bearId = $(e.target).data("id");
-                    kickPlayer(gameId, bearId).done(function (data) {
+                    kickPlayer(gameId, gameVersion, bearId).done(function (data) {
                         $("#kickPlayerResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
                     });
                 })
@@ -514,27 +521,27 @@ Date.prototype.addHours = function (h) {
                   for (var i = 0; i < data.length; i++) {
                       msg.push("<TR>");
                       msg.push("<TD>" + data[i].id + "</TD>");
-                      msg.push("<TD>" + data[i].name + "<div href='#' class='changeName' ><img data-id='" + data[i].id + "' width=16 height=16 src ='img/edit.png' /></div><div id='changeNameResult'></div></TD>");
-                      msg.push("<TD>" + data[i].location + "<div href='#' class='changeLocation' ><img data-id='" + data[i].id + "' width=16 height=16 src ='img/edit.png' /></div><div id='changeLocationResult'></div></TD>");
-                      msg.push("<TD>" + data[i].startDate + "<div href='#' class='changeStartDate' ><img data-id='" + data[i].id + "' width=16 height=16 src ='img/edit.png' /></div><div id='changeStartDateResult'></div></TD>");
+                      msg.push("<TD>" + data[i].name + "<div href='#' class='changeName' ><img data-id='" + data[i].id + "' data-version='" + data[i].version + "' width=16 height=16 src ='img/edit.png' /></div><div id='changeNameResult'></div></TD>");
+                      msg.push("<TD>" + data[i].location + "<div href='#' class='changeLocation' ><img data-id='" + data[i].id + "' data-version='" + data[i].version + "' width=16 height=16 src ='img/edit.png' /></div><div id='changeLocationResult'></div></TD>");
+                      msg.push("<TD>" + data[i].startDate + "<div href='#' class='changeStartDate' ><img data-id='" + data[i].id + "' data-version='" + data[i].version + "' width=16 height=16 src ='img/edit.png' /></div><div id='changeStartDateResult'></div></TD>");
                       msg.push("<TD>" + data[i].players + "</TD>");
                       msg.push("<TD>" + data[i].nbPlayers + "</TD>");
-                      msg.push("<TD>" + data[i].maxPlayers + "<div href='#' class='changeMaxPlayer' ><img data-id='" + data[i].id + "' width=16 height=16 src ='img/edit.png' /></div><div id='changeMaxPlayerResult'></div></TD>");
+                      msg.push("<TD>" + data[i].maxPlayers + "<div href='#' class='changeMaxPlayer' ><img data-id='" + data[i].id + "' data-version='" + data[i].version + "' width=16 height=16 src ='img/edit.png' /></div><div id='changeMaxPlayerResult'></div></TD>");
                       changeMaxPlayer
-                      msg.push("<TD><div href='#' class='gameDetailBtn' data-id='" + data[i].id + "'>detail</div></TD>");
+                      msg.push("<TD><div href='#' class='gameDetailBtn' data-id='" + data[i].id + "' data-version='" + data[i].version + "'>detail</div></TD>");
 
                       if (data[i].isCancellable)
-                          msg.push("<TD><div href='#' class='cancelBtn' data-id='" + data[i].id + "'>cancel</div><div id='cancelResult'></div></TD>");
+                          msg.push("<TD><div href='#' class='cancelBtn' data-id='" + data[i].id + "' data-version='" + data[i].version + "'>cancel</div><div id='cancelResult'></div></TD>");
                       else
                           msg.push("<TD>&nbsp;</TD>");
 
                       if (data[i].isJoinable)
-                          msg.push("<TD><div href='#' class='joinBtn' data-id='" + data[i].id + "'>join</div><div id='joinResult'></div></TD>");
+                          msg.push("<TD><div href='#' class='joinBtn' data-id='" + data[i].id + "' data-version='" + data[i].version + "'>join</div><div id='joinResult'></div></TD>");
                       else
                           msg.push("<TD>&nbsp;</TD>");
 
                       if (data[i].isAbandonnable)
-                          msg.push("<TD><div href='#' class='abandonBtn' data-id='" + data[i].id + "'>abandon</div><div id='abandonResult'></div></TD>");
+                          msg.push("<TD><div href='#' class='abandonBtn' data-id='" + data[i].id + "' data-version='" + data[i].version + "'>abandon</div><div id='abandonResult'></div></TD>");
                       else
                           msg.push("<TD>&nbsp;</TD>");
 
@@ -544,13 +551,14 @@ Date.prototype.addHours = function (h) {
                   $("#gamesList").html(msg.join(''));
 
                   $(".gameDetailBtn").click(function (e) {
-                      getGame($(e.target).data("id"));
+                      getGame($(e.target).data("id"), $(e.target).data("version"));
                   });
 
                   var gameAction = function (f, resultDiv) {
                       return function (e) {
                           var gameId = $(e.target).data("id");
-                          f(gameId).done(function (data) {
+                          var version = $(e.target).data("version");
+                          f(gameId, version).done(function (data) {
                               $("#" + resultDiv).html("received at " + Date.now() + ", " + JSON.stringify(data));
                           });
                       }
@@ -663,7 +671,8 @@ Date.prototype.addHours = function (h) {
         $("#gameScheduleBtn").click(function () {
             var gameBearId = $("#gameBearId").val();
             var gameId = guid();
-            schedule(gameId, gameBearId).done(function (data) {
+            var version = 0;
+            schedule(gameId, version).done(function (data) {
                 $("#scheduleResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
             });
         });

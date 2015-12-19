@@ -37,6 +37,8 @@ module Contracts =
       bear : BearDetail;  
       [<field: DataMember(Name = "message")>]
       message : string;
+      [<field: DataMember(Name = "typeMessage")>]
+      typeMessage : string;
       }
 
     [<DataContract>]
@@ -48,6 +50,8 @@ module Contracts =
       name : string;
       [<field: DataMember(Name = "messages")>]
       messages : System.Collections.Generic.List<RoomMessageDetail>;
+      [<field: DataMember(Name = "version")>]
+      version : Nullable<int>;
       }    
 
     [<DataContract>]
@@ -59,19 +63,41 @@ module Contracts =
       message : string;
       }
 
+    type MessagePosted =
+      {
+          [<field: DataMember(Name = "message")>]
+          message : string;
+      }
 
 
 type Commands = 
     | PostMessage of Contracts.PostMessage
 
+type Events =
+    | MessagePosted of Contracts.MessagePosted
+
+type State = {
+    NbMessages : int
+}
+with static member Initial = { NbMessages = 0}
+
+let exec state = function
+    | PostMessage(cmd) -> Choice1Of2([MessagePosted({ message=cmd.message})])
+    
+
+let applyEvts state = function
+    | MessagePosted(evt) -> state
+
 let getRoomDetail getroomDB (filter: Contracts.RoomFilter) = getroomDB filter
 
 
 let routes = []
-let authRoutes getRoom save = 
+let authRoutes repo getRoom save = 
+    let executeCmd map = 
+        processingCommand repo "room" applyEvts State.Initial exec map
     [
         POST >>= choose [ 
             path Navigation.detail >>=  mapJson (getRoomDetail getRoom );
-            path Navigation.postMessage >>=  withBear >>= withCommand<Contracts.PostMessage> >>= processing  save PostMessage
+            path Navigation.postMessage >>=  withBear >>= withCommand<Contracts.PostMessage>  >>= executeCmd  PostMessage  >>= processing save PostMessage
         ]
     ]    

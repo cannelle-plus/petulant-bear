@@ -1,49 +1,4 @@
 ﻿module PetulantBear.EventSourceRepo
-//
-//open System
-//open EventStore.Core
-//open EventStore.Core.Messages
-//open EventStore.Core.Bus
-//open EventStore.ClientAPI
-//open EventStore.ClientAPI.Embedded
-//open EventStore.ClientAPI.Common.Log
-//
-//open EventStore.ClientAPI
-//
-//let IPAddress = "127.0.0.1"
-//
-///// Execute f in a context where you can bind to the event store
-//let withEmbeddedEs f =
-//    
-//    let node = EmbeddedVNodeBuilder.AsSingleNode()
-//                                   .OnDefaultEndpoints()
-//                                   .RunInMemory()
-//                                   .RunProjections(ProjectionsMode.All)
-//                                   .WithWorkerThreads(16)
-//                                   .Build()
-//    try
-//        printfn "starting embedded EventStore"
-//        node.Start()
-//        f()
-//    finally
-//        printfn "stopping embedded EventStore"
-//        use stopped = new AutoResetEvent(false)
-//        node.MainBus.Subscribe(
-//        new AdHocHandler<SystemMessage.BecomeShutdown>(
-//        fun m -> stopped.Set() |> ignore))
-//        node.Stop() |> ignore
-//        if not (stopped.WaitOne(20000)) then
-//        Tests.failtest "couldn't stop ES within 20000 ms"
-//        else
-//        printfn "stopped embedded EventStore"
-
-//let  saveEvents  name id version evt = 
-    //let endPoint = new IPEndPoint(IPAddress,1113)
-    
-//    EventStore.ClientAPI.Conn.connect <| (EventStore.ClientAPI.EventStoreConnection.Create "tcp://admin:changeit@mydomain:1113"):>EventStore.ClientAPI.Connection
-
-    
-//    ()
 
 open System
 open System.Threading
@@ -51,74 +6,128 @@ open System.Text
 open System.Threading.Tasks
 
 open Newtonsoft.Json
-
-type Enveloppe = {
-  version : int
-}
-
-
 open EventStore.ClientAPI
 open EventStore.ClientAPI.Common.Log
 
+open System.Data.SQLite
 
+type Repository(dbConnection:string, connectionString) =
+    let defaultUserCredentials = new SystemData.UserCredentials("admin","changeit")
+    let settingsBuilder = ConnectionSettings.Create()
+                                     .SetDefaultUserCredentials(defaultUserCredentials)
+                                     .FailOnNoServerResponse()
+                                     .KeepReconnecting()
 
-type Repository(connectionString) =
+    let createNameAgg streamName id = sprintf "%s-%s" streamName (id.ToString())
+    let conn = EventStore.ClientAPI.EventStoreConnection.Create(settingsBuilder.Build(),new Uri(connectionString),"Bear2BearESConnection")
     
-    let connectionSettings =  EventStore.ClientAPI.ConnectionString.GetConnectionSettings(sprintf "ConnectTo=%s" <|connectionString)
-    let conn = EventStore.ClientAPI.EventStoreConnection.Create(connectionSettings,new Uri(connectionString),"Bear2BearESConnection")
-    
+    interface IEventStoreRepository with 
 
-    member this.Connect()=
-        conn.ConnectAsync().RunSynchronously()
+        member this.connect()=
+            conn.ConnectAsync().Wait()
+
+        member this.isCommandProcessed idCommand =
+            use connection = new SQLiteConnection(dbConnection)
+            connection.Open()
+
+            let sql = " select count(*) from commandProcessed where commandId=@cmdId"
+            use sqlCmd = new SQLiteCommand(sql, connection) 
+
+            let add (name:string, value: string) = 
+                sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+            add("@cmdId", idCommand.ToString())
+
+            use reader = sqlCmd.ExecuteReader() 
+
+            if reader.Read() then
+                let exists = Int32.Parse(reader.[0].ToString())
+                
+                reader.Dispose()
+                sqlCmd.Dispose()
+                connection.Dispose()
+                GC.Collect()
+                if exists>0 then true else false
+            else   
+                reader.Dispose() 
+                sqlCmd.Dispose()
+                connection.Dispose()
+                GC.Collect() 
+                false
+
+        member this.saveCommandProcessedAsync (cmd:Command<_>) = async {
+            use connection = new SQLiteConnection(dbConnection)
+            connection.Open()
+
+            let sql = " insert into  commandProcessed (commandId) values(@cmdId);"
+            use sqlCmd = new SQLiteCommand(sql, connection) 
+
+            let add (name:string, value: string) = 
+                sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+            add("@cmdId", cmd.idCommand.ToString())
+
+            sqlCmd.ExecuteNonQuery()  |> ignore
+
+            sqlCmd.Dispose()
+            connection.Dispose()
+            GC.Collect()
+        }
         
-    member this.SaveEvtsAsync<'T>  streamName  (id, v, evts) =  async {
-            let typeEvts = (typedefof<'T>).ToString() 
-            let enveloppeMetadata = toJson<Enveloppe>({ version= v })
+        member this.saveEvtsAsync  name  enveloppe evts =  async {
+                
+                let envInitial = enveloppe 0;
 
-            let events = evts
-                            |> List.mapi (fun index e ->
-                                        let data=  toJson<'T> e 
-                                        let enveloppeMetadata = toJson<Enveloppe>({ version= v })
-                                        new EventData(id,typeEvts,true, data,enveloppeMetadata)
-                                        )
-
-
-            let expectedVersion = v
-            let n = sprintf "%s - %s" streamName (id.ToString())
+                let events = evts
+                                |> List.mapi (fun index e ->
+                                            let typeEvts = e.GetType().Name
+                                            let data=  toJson e 
+                                            let enveloppeMetadata = toJson<Enveloppe>(enveloppe(index))
+                                            new EventData(envInitial.aggregateId,typeEvts,true, data,enveloppeMetadata)
+                                            )
 
 
-            printfn "uncommitted events have been produced according to version %i" expectedVersion
-            let! writeResult = conn.AppendToStreamAsync(n,expectedVersion,events) |> Async.AwaitTask
-
-            printfn "events appended to %s, next expected version : %i"  n writeResult.NextExpectedVersion
-
-        }
-
-    member this.hydrateAggAsync<'T>  streamName applyTo initialState  id =
-
-        let rec applyRemainingEvents evts =
-            match evts with
-            | [] -> initialState
-            | head :: tail ->  applyTo (applyRemainingEvents tail) head
+                let expectedVersion = envInitial.version
+                let streamName = createNameAgg name (envInitial.aggregateId.ToString())
 
 
-        async {
+                printfn "uncommitted events have been produced according to version %i" expectedVersion
+                let! writeResult = conn.AppendToStreamAsync(streamName,expectedVersion,events) |> Async.AwaitTask
 
-        printfn "reading stream events..."
-        let n = sprintf "%s - %s" streamName (id.ToString())
-        let! slice = conn.ReadStreamEventsForwardAsync(n,0,99,false) |> Async.AwaitTask
+                printfn "events appended to %s, next expected version : %i"  streamName writeResult.NextExpectedVersion
 
-        let evts =
-            slice.Events
-            |> Seq.map (fun (e:ResolvedEvent) -> fromJson<'T> e.Event.Data) //'
-            |> Seq.toList
-        printfn "%i events read" evts.Length
-        evts |> List.iteri (fun i e-> printfn "applying event %i" i)
-        let aggregate = evts |> applyRemainingEvents
+            }
 
-        return aggregate
-        }
+        member this.hydrateAggAsync<'TAgg,'TEvent>  streamName (applyTo:'TAgg -> 'TEvent ->'TAgg) (initialState:'TAgg)  (id:Guid) =
+
+            let rec applyRemainingEvents evts =
+                match evts with
+                | [] ->  initialState
+                | head :: tail ->  applyTo (applyRemainingEvents tail) head
 
 
+            async {
 
-let create cs = new Repository(cs)
+                printfn "reading stream events..."
+                let n = createNameAgg streamName id
+                let! slice = conn.ReadStreamEventsForwardAsync(n,0,99,false) |> Async.AwaitTask
+
+                let evts =
+                    slice.Events
+                    |> Seq.map (fun (e:ResolvedEvent) -> JsonConvert.DeserializeObject<'TEvent>(System.Text.Encoding.UTF8.GetString(e.Event.Data)))
+                    |> Seq.toList
+                printfn "%i events read" evts.Length
+                evts |> List.iteri (fun i e-> printfn "applying event %i" i)
+                let (aggregate:'TAgg) = evts |> applyRemainingEvents 
+
+                return aggregate,evts.Length-1
+            }
+            
+    interface IEventStoreProjection with 
+        member this.SubscribeToStreamFrom name (lastCheckPoint:Nullable<int>) (resolveLinkTo:bool) (projection:Projection) =
+            let evtAppeared = Action<EventStoreCatchUpSubscription,ResolvedEvent> projection.eventAppeared
+            let catchUp = Action<EventStoreCatchUpSubscription> projection.catchup
+            let onError = Action<EventStoreCatchUpSubscription, SubscriptionDropReason, Exception> projection.onError
+            conn.SubscribeToStreamFrom(name, lastCheckPoint, resolveLinkTo, evtAppeared, catchUp, onError, defaultUserCredentials, 500) 
+
+let create dbConnection cs = (new Repository(dbConnection,cs))

@@ -21,14 +21,15 @@ open PetulantBear
 
 
 open System
+open System.Net
 open System.Collections.Generic
 open System.Text.RegularExpressions
 
 
-let events = new List<Event<Games.Events>>()
-let saveEvents streamName (id, expectedVersion, evt) =
-    
-    events.Add({ id= id; version=expectedVersion;payLoad= evt })
+//let events = new List<Event<Games.Events>>()
+//let saveEvents streamName (id, expectedVersion, evt) =
+//    
+//    events.Add({ id= id; version=expectedVersion;payLoad= evt })
 
 
 //    serverKey             = Utils.Crypto.generateKey HttpRuntime.ServerKeyLength
@@ -52,6 +53,34 @@ open Logary.Targets
 open Logary.Metrics
 open NodaTime
 
+open EventStore.ClientAPI.Embedded
+open System.Threading
+open EventStore.Core.Bus
+open EventStore.Core.Messages
+
+type EmbeddedEventStore() =
+    let node = EmbeddedVNodeBuilder.AsSingleNode()
+                                   .OnDefaultEndpoints()
+                                  .WithExternalTcpOn(new Net.IPEndPoint(Net.IPAddress.Parse("127.0.0.1"),1789))
+                                  .WithInternalTcpOn(new Net.IPEndPoint(Net.IPAddress.Parse("127.0.0.1"),1790))
+                                  .WithExternalHttpOn(new Net.IPEndPoint(Net.IPAddress.Parse("127.0.0.1"),1791))
+                                  .WithInternalHttpOn(new Net.IPEndPoint(Net.IPAddress.Parse("127.0.0.1"),1792))
+                                  .RunInMemory()
+                                  .RunProjections(ProjectionsMode.All)
+                                  .WithWorkerThreads(16)
+                                  .Build()
+
+    member this.start() =
+        printfn "starting embedded EventStore"
+        node.Start()
+
+    member this.stop() =
+        let stopped = new AutoResetEvent(false)
+        node.MainBus.Subscribe( new AdHocHandler<SystemMessage.BecomeShutdown>(fun m -> stopped.Set() |> ignore))
+        node.Stop() |> ignore
+        if not (stopped.WaitOne(20000)) then  printfn "couldn't stop ES within 20000 ms"
+        else printfn "stopped embedded EventStore"
+
 
 [<EntryPoint>]
 let main args =
@@ -60,6 +89,9 @@ let main args =
     let ipAddress = ConfigurationManager.AppSettings.["IPAddress"]
     let port = Int32.Parse( ConfigurationManager.AppSettings.["Port"])
     let urlSite = ConfigurationManager.AppSettings.["urlSite"]
+    let eventStoreConnectionString = ConfigurationManager.AppSettings.["eventStoreConnectionString"]
+    let couldParseIsEmbedded,isEmbedded = bool.TryParse(ConfigurationManager.AppSettings.["isEmbedded"])
+    let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].ConnectionString
 
 
     let confElmah :Logary.Targets.ElmahIO.ElmahIOConf =
@@ -83,8 +115,12 @@ let main args =
     
     
     let section = ConfigurationManager.GetSection("akka"):?> AkkaConfigurationSection
-//    let saveEvts  = EventSourceRepo.SaveEvtsAsync
     
+    let repo = (EventSourceRepo.create dbConnection eventStoreConnectionString)
+    (repo:>IEventStoreRepository).connect()
+
+    
+
     let system = System.create "System" ( section.AkkaConfig)
     let config = 
         { defaultConfig with 
@@ -93,6 +129,33 @@ let main args =
             homeFolder = Some(rootPath)
         }
 
-    (PetulantBear.Application.app rootPath urlSite system saveEvents Users.authenticateWithLogin)
-    |> startWebServer config
+    let startPetulant = 
+        let httpendPoint = new IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 2113);
+        let catchupProjection = PetulantBear.Projections.CatchUp.create (repo:>IEventStoreProjection)  dbConnection httpendPoint
+
+        let projections = [
+                (PetulantBear.Projections.Games.name,PetulantBear.Projections.Games.projection)
+                (PetulantBear.Projections.Room.name,PetulantBear.Projections.Room.projection)
+                (PetulantBear.Projections.Cleavage.name,PetulantBear.Projections.Cleavage.projection)
+            ]
+        
+        let subsciptions =
+            projections
+            |> List.fold (fun agg (name,projection) -> 
+                    catchupProjection.createProjectionAsync(name) |> Async.RunSynchronously        
+                    let s = catchupProjection.startProjection(name,projection)
+                    s::agg
+                ) []
+        //subscription.Stop()
+        (PetulantBear.Application.app rootPath urlSite system repo Users.authenticateWithLogin)
+        |> startWebServer config
+    
+    if isEmbedded or not <| couldParseIsEmbedded then
+        let embeddedEventStore = new EmbeddedEventStore()
+        embeddedEventStore.start()
+
+        startPetulant
+
+        embeddedEventStore.stop()
+    else startPetulant
     0

@@ -87,6 +87,18 @@
     <Content Include="net46\web.config.install.xdt">
       <Paket>True</Paket>
     </Content>
+    <Content Include="projections\bearProjection.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="projections\gameRoomProjection.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="projections\gameListProjection.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="projections\cleavageProjection.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Compile Include="Logary.Targets.ElmahIO.fs" />
     <Compile Include="staticTexts.fs" />
     <Compile Include="validator.fs" />
@@ -98,6 +110,7 @@
     <Compile Include="servingFiles.fs" />
     <Compile Include="games.fs" />
     <Compile Include="afterGames.fs" />
+    <Compile Include="cleavage.fs" />
     <Compile Include="home.fs" />
     <Compile Include="bears.fs" />
     <Compile Include="currentBear.fs" />
@@ -105,6 +118,11 @@
     <Compile Include="users.fs" />
     <Compile Include="sqliteBear2bearDB.fs" />
     <Compile Include="App.fs" />
+    <Compile Include="projectionsCommon.fs" />
+    <Compile Include="gamesProjection.fs" />
+    <Compile Include="cleavageProjection.fs" />
+    <Compile Include="roomProjection.fs" />
+    <Compile Include="catchUpProjections.fs" />
     <Compile Include="Program.fs" />
     <None Include="paket.references" />
     <None Include="paket.template" />
@@ -226,6 +244,17 @@
     </When>
   </Choose>
   <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.0' Or $(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1')">
+      <ItemGroup>
+        <Reference Include="EventStore.ClientAPI.Embedded">
+          <HintPath>..\..\packages\EventStore.Client.Embedded\lib\net40\EventStore.ClientAPI.Embedded.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETCore'">
       <ItemGroup>
         <Reference Include="Facebook">
@@ -293,6 +322,17 @@
       <ItemGroup>
         <Reference Include="Facebook">
           <HintPath>..\..\packages\Facebook\lib\portable-win81+wpa81\Facebook.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.0' Or $(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1')">
+      <ItemGroup>
+        <Reference Include="FifteenBelow.Json">
+          <HintPath>..\..\packages\FifteenBelow.Json\lib\net40\FifteenBelow.Json.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -927,5 +967,6 @@
       </ItemGroup>
     </When>
   </Choose>
+  <Import Project="..\..\packages\EventStore.Client.Embedded\build\EventStore.Client.Embedded.targets" Condition="Exists('..\..\packages\EventStore.Client.Embedded\build\EventStore.Client.Embedded.targets')" Label="Paket" />
   <Import Project="..\..\packages\System.Data.SQLite.Core\build\$(__paket__System_Data_SQLite_Core_targets).targets" Condition="Exists('..\..\packages\System.Data.SQLite.Core\build\$(__paket__System_Data_SQLite_Core_targets).targets')" Label="Paket" />
 </Project>

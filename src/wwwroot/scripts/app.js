@@ -1,6 +1,6 @@
 
 Date.prototype.addHours = function (h) {
-    this.setTime(this.getTime() + (h * 60 * 60 * 1000));
+    this.setTime(this.getTime() + (h * 60 * 60 * 2000));
     return this;
 }
 
@@ -30,15 +30,16 @@ function toBEARDATE(MSDate) {
         var createCommand = function (id, version, payLoad) {
             return {
                 id: id,
+                idCommand: guid(),
                 version: version,
                 payLoad: payLoad
             };
         }
 
         
-        var schedule = function (id) {
+        var schedule = function (id,version) {
             var startDate = (new Date($('#gameDate').val() + ' ' + $('#gameHour').val())).addHours(1)
-            var scheduleCmd = createCommand(id, 1, {
+            var scheduleCmd = createCommand(id, version, {
                 "location": $('#gameLocation').val(),
                 "maxPlayers": $('#nbPlayersRequired').val(),
                 "name": $('#gameName').val(),
@@ -56,8 +57,8 @@ function toBEARDATE(MSDate) {
               });
         }
 
-        var cancel = function (id) {
-            var cancelCmd = createCommand(id, 1, { });
+        var cancel = function (id, version) {
+            var cancelCmd = createCommand(id, version, {});
             loader.show();
             return $.ajax({
                 type: "POST",
@@ -71,8 +72,8 @@ function toBEARDATE(MSDate) {
         }
 
 
-        var join = function (id) {
-            var joinCmd = createCommand(id, 1, {});
+        var join = function (id, version) {
+            var joinCmd = createCommand(id, version, {});
             loader.show();
             return $.ajax({
                 type: "POST",
@@ -85,8 +86,8 @@ function toBEARDATE(MSDate) {
               });
         }
 
-        var abandon = function (id) {
-            var abandonCmd = createCommand(id, 1, { });
+        var abandon = function (id, version) {
+            var abandonCmd = createCommand(id, version, {});
             loader.show();
             return $.ajax({
                 type: "POST",
@@ -100,8 +101,8 @@ function toBEARDATE(MSDate) {
         }
 
         //afterGame
-        var markBear = function (gameId, bearId,  mark) {
-            var markBearCmd = createCommand(gameId, 1, {
+        var markBear = function (gameId, version, bearId,  mark) {
+            var markBearCmd = createCommand(gameId, version, {
                 "bearId" : bearId,
                 "mark": mark
             });
@@ -117,8 +118,8 @@ function toBEARDATE(MSDate) {
               });
         }
 
-        var commentBear = function (gameId, bearId,  comment) {
-            var commentBearCmd = createCommand(gameId, 1, {
+        var commentBear = function (gameId,version, bearId,  comment) {
+            var commentBearCmd = createCommand(gameId, version, {
                 "bearId" : bearId,
                 "comment": comment
             });
@@ -134,8 +135,8 @@ function toBEARDATE(MSDate) {
               });
         }
 
-        var signalSent = function (transmitterId, receiverId, signalStrength, receptionDate) {
-            var signalsSent = createCommand(transmitterId, 1, {
+        var signalSent = function (transmitterId, version, receiverId, signalStrength, receptionDate) {
+            var signalsSent = createCommand(transmitterId, version, {
                 signals: [{
                     "transmitterId": transmitterId,
                     "receiverId": receiverId,
@@ -154,8 +155,8 @@ function toBEARDATE(MSDate) {
               });
         }
 
-        var startCalibration = function (transmitterId, receiverId, distance) {
-            var startCalibrationCmd = createCommand(transmitterId, 1, {
+        var startCalibration = function (transmitterId,version,  receiverId, distance) {
+            var startCalibrationCmd = createCommand(transmitterId, version, {
                 "transmitterId": transmitterId,
                 "receiverId": receiverId,
                 "distance": distance
@@ -171,7 +172,7 @@ function toBEARDATE(MSDate) {
               });
         }
 
-        var stopCalibration = function (transmitterId, receiverId, distance) {
+        var stopCalibration = function (transmitterId,version, receiverId, distance) {
             var stopCalibrationCmd = createCommand(transmitterId, 1, {
                 "transmitterId": transmitterId,
                 "receiverId": receiverId,
@@ -189,8 +190,8 @@ function toBEARDATE(MSDate) {
               });
         }
 
-        var postMessageToRoom = function (roomId,  message, gameId) {
-            var postMessageCmd = createCommand(roomId, 1, {
+        var postMessageToRoom = function (roomId, version, message, gameId) {
+            var postMessageCmd = createCommand(roomId, version, {
                 "message": message
             });
             if(message !== "") {
@@ -202,8 +203,10 @@ function toBEARDATE(MSDate) {
                 data: JSON.stringify(postMessageCmd)
               })
               .done(function(data){                                
-                getDetailRoom(roomId);
-                loader.hide();
+                  setTimeout(function () {
+                      getDetailRoom(roomId);
+                      loader.hide();
+                  }, 2000);
               })
               .fail(function (err) {
                   $("#postMessageToRoomResult").html(err);
@@ -224,6 +227,7 @@ function toBEARDATE(MSDate) {
               .done(function (data) {
                   if (data !== null && data !== undefined) {
                       $('#chat').data('id', data.roomId)
+                      $('#chat').data('version', data.version)
                       var msg = [];
                       msg.push("<dl class='chat'>");
                       //msg.push("<TD>" + data.roomId + "</TD>");
@@ -233,7 +237,7 @@ function toBEARDATE(MSDate) {
                           msg.push("<dt style='background-image:url(images/avatar-0" + data.messages[i].bear.bearAvatarId + ".png);'>" + data.messages[i].bear.bearUsername + "</dt>");
                           //msg.push("<TD>" + data.messages[i].bear.socialId + "</TD>");
                           //msg.push("<TD>" + data.messages[i].bear.bearAvatarId + "</TD>");
-                          msg.push("<dd>" + data.messages[i].message + "</dd>");
+                          msg.push("<dd class='" + data.messages[i].typeMessage + "'>" + data.messages[i].message + "</dd>");
                       };
 
                       msg.push("</dl>");
@@ -267,7 +271,7 @@ function toBEARDATE(MSDate) {
                     var msgPlayers = [];
 
                     //msgPlayers.push('');
-                    msg.push('<ul class="game-detail"><li data-id="' + data.id + '">');
+                    msg.push('<ul class="game-detail"><li data-id="' + data.id + '" data-version="' + data.version + '">');
                     msg.push('<p class="infos">');
                     msg.push('<strong>' + data.name + '</strong>');
                     msg.push(data.location + '<br />');
@@ -310,15 +314,15 @@ function toBEARDATE(MSDate) {
                     msg.push('</ul></li><br />');
 
                     if (data.isJoinable)
-                      msg.push('<li class="detailAction infos"><a href="#" class="actionJoin button button-small" data-id="' + data.id + '">Rejoindre</a></li>');
+                        msg.push('<li class="detailAction infos"><a href="#" class="actionJoin button button-small" data-id="' + data.id + '" data-version="' + data.version + '">Rejoindre</a></li>');
                     else if (data.isAbandonnable)
-                      msg.push('<li class="detailAction infos"><a href="#" class="actionAbandonGame button button-small" data-id="' + data.id + '">Quitter</a></li>');
+                        msg.push('<li class="detailAction infos"><a href="#" class="actionAbandonGame button button-small" data-id="' + data.id + '" data-version="' + data.version + '">Quitter</a></li>');
                     
                     msg.push('</ul>');
 
 
                     //room of the game
-                    msg.push("<a href='#' class='roomDetailButton' data-target='room' data-id='" + data.id + "'><img src='images/chat-icon.png' width='20' height='20' /> Chat</a>")
+                    msg.push("<a href='#' class='roomDetailButton' data-target='room' data-id='" + data.roomId + "' data-id='" + data.roomVersion + "'><img src='images/chat-icon.png' width='20' height='20' /> Chat</a>")
                     msg.push("<div class='roomDetail' data-target='room'></div>");
                     $("#gameDetailled").html(msg.join(''));
                     $("#chat .infos strong").html(data.name);
@@ -333,37 +337,42 @@ function toBEARDATE(MSDate) {
                 $("#chat").on('submit', function (e) {
                     doNothing(e);
                     var roomId = $(e.target).data("id");
+                    var roomVersion = $(e.target).data("version");
                     var message = $("#msgRoom").val();
                     $("#msgRoom").val('');
                     if(message !== '')
-                      postMessageToRoom(roomId,  message, data.id);    
+                        postMessageToRoom(roomId,roomVersion,  message, data.id);    
                 });
 
                 $('body').on('click', '.roomDetailButton', function() {
-                  $('#chat').data('id', $(this).data('id'));
+                    $('#chat').data('id', $(this).data('id'));
                 });
 
-                $(".markBearBtn").click(function (e) {
-                    var bearId = $(e.target).data("id");
-                    var mark = 4;
-                    markBear(gameId, bearId, mark);
-                });
+                //$(".markBearBtn").click(function (e) {
+                //    var bearId = $(e.target).data("id");
+                //    var bearId = $(e.target).data("id");
+                //    var mark = 4;
+                //    markBear(gameId, bearId, mark);
+                //});
 
-                $(".commentBearBtn").click(function (e) {
-                    var bearId = $(e.target).data("id");
-                    var comment = "someComment" + guid();
-                    commentBear(gameId, bearId,comment);
-                });
+                //$(".commentBearBtn").click(function (e) {
+                //    var bearId = $(e.target).data("id");
+                //    var comment = "someComment" + guid();
+                //    commentBear(gameId, bearId,comment);
+                //});
 
                 var gameAction = function (f, resultDiv) {
                     return function (e) {
                         doNothing(e);
                         var gameId = $(e.target).data("id");
+                        var version = $(e.target).data("version");
                         $(e.target).closest('.action').hide();
-                        f(gameId).done(function (data) {
+                        f(gameId, version).done(function (data) {
                             $("#" + resultDiv).html("received at " + Date.now() + ", " + JSON.stringify(data));
-                            getGames();
-                            getGame($(e.target).data("id"));
+                            setTimeout(function () {
+                                getGames();
+                                getGame($(e.target).data("id"));
+                            },2000);
                         });
                     }
                 }
@@ -419,16 +428,16 @@ function toBEARDATE(MSDate) {
 
 
                         if (data[i].isJoinable)
-                            msg.push('<button type="button" class="actionJoin" data-id="' + data[i].id + '">Rejoindre</button>');
+                            msg.push('<button type="button" class="actionJoin" data-id="' + data[i].id + '" data-version="' + data[i].version + '">Rejoindre</button>');
                         else
                             msg.push('&nbsp;');
 
                         if (data[i].isAbandonnable)
-                            msg.push('<button type="button" class="actionAbandonGame" data-id="' + data[i].id + '">Quitter</button>');
+                            msg.push('<button type="button" class="actionAbandonGame" data-id="' + data[i].id + '" data-version="' + data[i].version + '">Quitter</button>');
                         else
                             msg.push('&nbsp;');
                         if (data[i].isCancellable)
-                            msg.push('<button type="button" class="actionCancelGame" data-id="' + data[i].id + '">Supprimer</button>');
+                            msg.push('<button type="button" class="actionCancelGame" data-id="' + data[i].id + '" data-version="' + data[i].version + '">Supprimer</button>');
                         else
                             msg.push('&nbsp;');
                         
@@ -458,10 +467,14 @@ function toBEARDATE(MSDate) {
                       return function (e) {
                           doNothing(e);
                           var gameId = $(e.target).data("id");
+                          var version = $(e.target).data("version");
                           $(e.target).closest('.action').hide();
-                          f(gameId).done(function (data) {
-                              $("#" + resultDiv).html("received at " + Date.now() + ", " + JSON.stringify(data));
-                              getGames();
+                          f(gameId, version).done(function (data) {
+                              setTimeout(function () {
+                                  $("#" + resultDiv).html("received at " + Date.now() + ", " + JSON.stringify(data));
+                                  getGames();
+                              },2000)
+                              
                           });
                       }
                   }
@@ -469,18 +482,18 @@ function toBEARDATE(MSDate) {
                   $(".actionJoin").click(gameAction(join, "joinResult"));
                   $(".actionCancelGame").click(gameAction(cancel, "cancelResult"));
                   $(".actionAbandonGame").click(gameAction(abandon, "abandonResult"));
-                  $(".markBtn").click(function (e) {
-                      var gameId = $(e.target).data("id");
-                      markBear(gameId,7).done(function (data) {
-                          $("#markResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
-                      })
-                  });
-                  $(".commentBtn").click(function (e) {
-                        var gameId = $(e.target).data("id");
-                        commentBear(gameId,"some comment" +guid()).done(function (data) {
-                            $("#commentResult" ).html("received at " + Date.now() + ", " + JSON.stringify(data));
-                        });
-                  });
+                  //$(".markBtn").click(function (e) {
+                  //    var gameId = $(e.target).data("id");
+                  //    markBear(gameId,7).done(function (data) {
+                  //        $("#markResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+                  //    })
+                  //});
+                  //$(".commentBtn").click(function (e) {
+                  //      var gameId = $(e.target).data("id");
+                  //      commentBear(gameId,"some comment" +guid()).done(function (data) {
+                  //          $("#commentResult" ).html("received at " + Date.now() + ", " + JSON.stringify(data));
+                  //      });
+                  //});
                   $('.more a').on('click', function(e){
                     doNothing(e);
                     $(this).closest('li').find('.action').show();
@@ -613,11 +626,14 @@ function toBEARDATE(MSDate) {
             doNothing(e);
             var gameBearId = $("#gameBearId").val();
             var gameId = guid();
+            var version = 0;
             $("#gameBearId").val('');
-            schedule(gameId, gameBearId).done(function (data) {
-                getGames();
-                showSection('games');   
-                history.pushState(null, null, '#_games'); 
+            schedule(gameId,version, gameBearId).done(function (data) {
+                setTimeout(function () {
+                    getGames();
+                    showSection('games');
+                    history.pushState(null, null, '#_games');
+                },2000);
             });
         });
 
@@ -625,8 +641,8 @@ function toBEARDATE(MSDate) {
         $("#changeBearName").on('submit', function (e) {
             doNothing(e);
             loader.show();
-
-            var changeUsernameCmd = createCommand(guid(), 1, {
+            var version = null; // to allow crud operation
+            var changeUsernameCmd = createCommand(guid(), version, {
                 bearUsername: $('#bearUsername').val()
             });
             return $.ajax({
@@ -646,8 +662,8 @@ function toBEARDATE(MSDate) {
         $("#changeBearAvatar").on('submit', function (e) {
             doNothing(e);
             loader.show();
-
-            var changeAvatarIdCmd = createCommand(guid(), 1, {
+            var version = null; // to allow crud operation
+            var changeAvatarIdCmd = createCommand(guid(), version, {
                 bearAvatarId: $('#changeBearAvatar input[name=bearAvatarId]:checked').val()
             });
             return $.ajax({
@@ -667,8 +683,8 @@ function toBEARDATE(MSDate) {
         $("#changeBearEmail").on('submit', function (e) {
             doNothing(e);
             loader.show();
-
-            var changeEmailCmd = createCommand(guid(), 1, {
+            var version = null; // to allow crud operation
+            var changeEmailCmd = createCommand(guid(), version, {
                 bearEmail: $('#changeBearEmail').val()
             });
             return $.ajax({

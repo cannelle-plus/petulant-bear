@@ -13,3 +13,5 @@ elmah.io.core
 NodaTime
 Logary.Adapters.Suave
 EventStore.Client
+EventStore.Client.Embedded
+

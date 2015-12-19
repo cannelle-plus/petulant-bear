@@ -22,8 +22,8 @@ let main args =
 //          getting_the_application_page(rootPath);
 //          bears_api(rootPath);
           //games tests
-          gamesDomainTests
-          gamesActorBasedTests;
+//          gamesDomainTests
+//          gamesActorBasedTests;
 //          games_api(rootPath);
         ]
         |> List.map run
