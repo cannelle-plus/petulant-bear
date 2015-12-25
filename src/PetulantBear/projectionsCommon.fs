@@ -6,7 +6,7 @@ open System
 open System.Text
 open System.Runtime.Serialization
 open System.Data.SQLite
-open System.Configuration   
+
 
 open EventStore.ClientAPI  
 open Newtonsoft.Json
@@ -27,17 +27,7 @@ type JsonEvent<'T>=
         events : 'T []
     }
 
-let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].ConnectionString
 
-let UseConnectionToDB f =
-    use connection = new System.Data.SQLite.SQLiteConnection(dbConnection)
-    connection.Open()
-
-    let result = f connection
-
-    connection.Dispose()
-    GC.Collect()
-    result
 
 
 
@@ -79,9 +69,8 @@ let isEventProcessed name eventId =
         if (reader.Read()) && Int32.Parse(reader.[0].ToString()) >0 then true
         else false
     )
-   
     
-   
+
    
 let withEvent name f escus (resolvedEvent:ResolvedEvent)  =
     let json = System.Text.Encoding.UTF8.GetString( resolvedEvent.Event.Data);
@@ -94,8 +83,11 @@ let withEvent name f escus (resolvedEvent:ResolvedEvent)  =
         f meta jsonEvent 
         updateProjection name meta.messageId
 
-let logProjection name streamId eventId m evt =
-    sprintf "Projection : %s  --> stream : %A, evtAppeared id:%A metaData = %A , data:%A" name streamId eventId m evt
+let logProjection name  (resolvedEvent:ResolvedEvent) m evt =
+    let streamId = resolvedEvent.OriginalEvent.EventStreamId 
+    let eventId = resolvedEvent.Event.EventId
+    let eventType  = resolvedEvent.Event.EventType
+    sprintf "Projection : %s  --> stream : %A, evtAppeared type:%A id:%A metaData = %A , data:%A" name streamId eventType eventId m evt
     |> Logary.LogLine.error 
     |> Logary.Logging.getCurrentLogger().Log
     

@@ -136,7 +136,7 @@ let main args =
         let projections = [
                 (PetulantBear.Projections.Games.name,PetulantBear.Projections.Games.projection)
                 (PetulantBear.Projections.Room.name,PetulantBear.Projections.Room.projection)
-                (PetulantBear.Projections.Cleavage.name,PetulantBear.Projections.Cleavage.projection)
+                (PetulantBear.Projections.Cleaveage.name,PetulantBear.Projections.Cleaveage.projection)
             ]
         
         let subsciptions =

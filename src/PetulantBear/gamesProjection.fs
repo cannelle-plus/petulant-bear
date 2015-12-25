@@ -173,39 +173,39 @@ let evtAppeared  escus (resolvedEvent:ResolvedEvent)=
         match  jsonEvent.case with
         | "Scheduled" -> 
             let e = deserializeEvt<GameScheduled> resolvedEvent
-            logProjection name resolvedEvent.OriginalEvent.EventStreamId resolvedEvent.Event.EventId  m e
+            logProjection name resolvedEvent m e
             saveScheduledGame m e
         | "Abandonned" -> 
             let e = deserializeEvt<GameAbandonned> resolvedEvent
-            logProjection name resolvedEvent.OriginalEvent.EventStreamId resolvedEvent.Event.EventId  m e
+            logProjection name  resolvedEvent m e
             saveAbandonned m 
         | "Joined" -> 
             let e = deserializeEvt<GameJoined> resolvedEvent
-            logProjection name resolvedEvent.OriginalEvent.EventStreamId resolvedEvent.Event.EventId  m e
+            logProjection name resolvedEvent m e
             saveJoined m
         | "Cancelled" -> 
             let e = deserializeEvt<GameCancelled> resolvedEvent
-            logProjection name resolvedEvent.OriginalEvent.EventStreamId resolvedEvent.Event.EventId  m e
+            logProjection name resolvedEvent m e
             saveCancelled m
         | "PlayerKicked" -> 
             let e = deserializeEvt<PlayerKicked> resolvedEvent
-            logProjection name resolvedEvent.OriginalEvent.EventStreamId resolvedEvent.Event.EventId  m e
+            logProjection name resolvedEvent m e
             savePlayerKicked m e
         | "NameChanged" -> 
             let e = deserializeEvt<NameChanged> resolvedEvent
-            logProjection name resolvedEvent.OriginalEvent.EventStreamId resolvedEvent.Event.EventId  m e
+            logProjection name resolvedEvent m e
             saveNameChanged m e
          | "StartDateChanged" -> 
             let e = deserializeEvt<StartDateChanged> resolvedEvent
-            logProjection name resolvedEvent.OriginalEvent.EventStreamId resolvedEvent.Event.EventId  m e
+            logProjection name resolvedEvent m e
             saveStartDateChanged m e
          | "LocationChanged" -> 
             let e = deserializeEvt<LocationChanged> resolvedEvent
-            logProjection name resolvedEvent.OriginalEvent.EventStreamId resolvedEvent.Event.EventId  m e
+            logProjection name resolvedEvent m e
             saveLocationChanged m e
          | "MaxPlayerChanged" -> 
             let e = deserializeEvt<MaxPlayerChanged> resolvedEvent
-            logProjection name resolvedEvent.OriginalEvent.EventStreamId resolvedEvent.Event.EventId  m e
+            logProjection name resolvedEvent m e
             saveMaxPlayerChanged m e
         | unknown -> 
             sprintf "unknown event %s" unknown

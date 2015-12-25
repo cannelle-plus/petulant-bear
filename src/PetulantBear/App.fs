@@ -41,6 +41,7 @@ let app root urlSite (system:ActorSystem) repo auth =
     let (routes, authRoutes) = 
         (Users.routes urlSite getBearFromSocialId login,Users.authRoutes)
         |> addRoutes Games.routes (Games.authRoutes system repo getGames getGame (saveToDB mapGameCmds))
+        |> addRoutes Cleaveage.routes (Cleaveage.authRoutes system repo getCleaveages )
         |> addRoutes CurrentBear.routes (CurrentBear.authRoutes getBear system repo getGames getGame (saveToDB mapCurrentBearCmds))
         |> addRoutes AfterGames.routes (AfterGames.authRoutes system repo (saveToDB mapAfterGamesCmds))
         |> addRoutes (Bears.routes signinToDB signinBearToDB) (Bears.authRoutes getBears getBear)

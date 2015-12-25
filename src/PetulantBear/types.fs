@@ -2,8 +2,10 @@
 module types
 
 open System
+open System.Configuration   
 open System.Collections.Generic
 open System.Runtime.Serialization
+open System.Data.SQLite
 open Akka.Actor
 
 open Suave // always open suave
@@ -18,6 +20,18 @@ open Suave.State.CookieStateStore
 
 
 open Newtonsoft.Json
+
+let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].ConnectionString
+
+let UseConnectionToDB f =
+    use connection = new System.Data.SQLite.SQLiteConnection(dbConnection)
+    connection.Open()
+
+    let result = f connection
+
+    connection.Dispose()
+    GC.Collect()
+    result
 
 
 type BearSession = {
@@ -296,6 +310,7 @@ let getInSession f =
         match s with 
         | NoSession -> Http.RequestErrors.BAD_REQUEST "no session found" 
         | NewBear nb -> Http.RequestErrors.BAD_REQUEST "new bear found" 
+    
         | Bear b -> f b.bearId
     )
     
@@ -313,7 +328,14 @@ let withBear  =
                 | _ , _,_ -> Http.RequestErrors.BAD_REQUEST "no session found" 
         )
 
-    
+let logErrorWithBear x bear name  =
+    let logger = Logary.Logging.getLoggerByName "Logary.Targets.ElmahIO"
+            
+    Logary.LogLine.warn name
+    |> Logary.LogLine.setData "bear" bear
+    |> Logary.LogLine.setData "url" x.request.url
+    |> Logary.LogLine.setData "headers" x.request.headers
+    |> logger.Log
 
 let withCommand<'T> = 
     context (fun x ->
@@ -360,29 +382,43 @@ type IEventStoreProjection =
 
 let processingCommand<'TAgg, 'TContract,'TCommand, 'TEvents>   (repo:IEventStoreRepository) streamName apply initialState (exec:'TAgg -> 'TCommand -> Choice<'TEvents list,string list>)  (mapCmd:'TContract->'TCommand) =
     fun x -> async {
-        
-        let cmd = x.userState.["cmd"] :?> Command<'TContract>
-        let bear = x.userState.["bear"] :?> BearSession
-        let idAggregate = cmd.id
-        
-        // if there is no version it means the aggregate does not support event sourcing
-        if (not <| repo.isCommandProcessed cmd.idCommand) && cmd.version.HasValue then
-            let! state,v = repo.hydrateAggAsync<'TAgg,'TEvents> streamName  apply initialState idAggregate
-
-            match cmd.payLoad |> mapCmd |> exec state  with
-            | Choice1Of2(evts) ->
-                let newState = List.fold apply state evts
-                let enveloppe = createEnveloppe  cmd.idCommand cmd.id bear v
-                do! repo.saveEvtsAsync<'TEvents> streamName enveloppe evts
-                do! repo.saveCommandProcessedAsync cmd
-                return Some(x)
-            | Choice2Of2(errors) ->
-                 // do comething here like log errors and return errors codes to warn the user
-                return Some(x)
-        else
-            //what to say to user if command is already processed ? support event sourcing? log something?
+        // cehck global context first
+        if not <| x.userState.ContainsKey "cmd" || not <| x.userState.ContainsKey "bear" then 
             return Some(x)
+        else
+            let cmd = x.userState.["cmd"] :?> Command<'TContract>
+            let bear = x.userState.["bear"] :?> BearSession
+            let idAggregate = cmd.id
+        
+            // if there is no version it means the aggregate does not support event sourcing
+            if (not <| repo.isCommandProcessed cmd.idCommand) && cmd.version.HasValue then
+                let! state,v = repo.hydrateAggAsync<'TAgg,'TEvents> streamName  apply initialState idAggregate
+
+                match cmd.payLoad |> mapCmd |> exec state  with
+                | Choice1Of2(evts) ->
+                    let newState = List.fold apply state evts
+                    let enveloppe = createEnveloppe  cmd.idCommand cmd.id bear v
+                    do! repo.saveEvtsAsync<'TEvents> streamName enveloppe evts
+                    do! repo.saveCommandProcessedAsync cmd
+
+                    return! (Success("toto")
+                        |> toMessage
+                        |> toJson
+                        |> Successful.ok 
+                        >>= Writers.setMimeType "application/json") x
+                | Choice2Of2(errors) ->
+                    // do comething here like log errors and return errors codes to warn the user
+                    let msg = errors |> List.fold (fun agg err -> sprintf "%s;%s" err agg ) ""
+                    logErrorWithBear x bear msg
+                    return! RequestErrors.BAD_REQUEST msg x
+            else
+                let msg = "command already processed"
+                logErrorWithBear x bear msg
+                return! RequestErrors.BAD_REQUEST msg x
     }
+
+
+    
 
 let processing<'TContract,'TCommand> save (mapCmd:'TContract->'TCommand) =
     context (fun x ->
@@ -413,4 +449,5 @@ let processing<'TContract,'TCommand> save (mapCmd:'TContract->'TCommand) =
             |> Successful.ok 
             >>= Writers.setMimeType "application/json"
     )
+    
     

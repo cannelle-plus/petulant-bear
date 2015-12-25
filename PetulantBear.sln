@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{63297B98-5CED-492C-A5B7-A5B4F73CF142}"
 	ProjectSection(SolutionItems) = preProject
@@ -48,6 +48,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{69C50619-E4A1-4E0F-9E7A-D919665CFDD8}"
 	ProjectSection(SolutionItems) = preProject
 		src\devroot\scripts\app.js = src\devroot\scripts\app.js
+		src\devroot\scripts\bears.js = src\devroot\scripts\bears.js
+		src\devroot\scripts\cleaveage.js = src\devroot\scripts\cleaveage.js
+		src\devroot\scripts\commonLibrary.js = src\devroot\scripts\commonLibrary.js
+		src\devroot\scripts\games.js = src\devroot\scripts\games.js
 		src\devroot\scripts\home.js = src\devroot\scripts\home.js
 		src\devroot\scripts\jquery-2.1.4.js = src\devroot\scripts\jquery-2.1.4.js
 		src\devroot\scripts\signin.js = src\devroot\scripts\signin.js
@@ -77,6 +81,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "css", "css", "{FE7E1B9D-419
 		src\wwwroot\css\template.css = src\wwwroot\css\template.css
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "db", "db", "{1B147559-FBFF-4470-BABB-EA5CA459251D}"
+	ProjectSection(SolutionItems) = preProject
+		src\db\build.sh = src\db\build.sh
+		src\db\buildDB.bat = src\db\buildDB.bat
+		src\db\buildDBWithTestSample.bat = src\db\buildDBWithTestSample.bat
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{FF70A170-7729-4A52-A541-7AA4316D6F2F}"
+	ProjectSection(SolutionItems) = preProject
+		src\db\scripts\0.0.1.0.sql = src\db\scripts\0.0.1.0.sql
+		src\db\scripts\0.0.2.0.sql = src\db\scripts\0.0.2.0.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,6 +119,7 @@ Global
 		{69C50619-E4A1-4E0F-9E7A-D919665CFDD8} = {3701EAA8-B6E0-4053-9922-DC07571EF39F}
 		{121CBE16-6D50-46AF-93D7-C3D0A3699812} = {1DC437A4-03E4-465D-85A6-A579A45DBD6C}
 		{FE7E1B9D-4197-4328-BD43-BB853D79297B} = {1DC437A4-03E4-465D-85A6-A579A45DBD6C}
+		{FF70A170-7729-4A52-A541-7AA4316D6F2F} = {1B147559-FBFF-4470-BABB-EA5CA459251D}
 	EndGlobalSection
 	GlobalSection(PerforceSourceControlProviderSolutionProperties) = preSolution
 		SolutionIsControlled = True

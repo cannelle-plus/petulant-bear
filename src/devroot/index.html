@@ -1,39 +1,45 @@
 <html>
-  <head>
+<head>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <link rel="stylesheet" type="text/css" href="css/app.css">
-  </head>
+</head>
 
-  <body>
+<body>
     <a href='/logout'>log out </a>&nbsp;<a href='/resetDB'>reset db  </a><br />
     <div>
-      <h1>B</h1>
-      <p>
-          current bear is "api/bear/detail" <div id="currentBearDetail"></div> <br>
-          change password <a id="bearChangePasswordBtn" href="#"> change password </a><div id="changePasswordResult"></div><br>
-          change username <a id="bearChangeUsernameBtn" href="#"> change username </a><div id="changeUsernameResult"></div><br>
-          change avatarId <a id="bearChangeAvatarIdBtn" href="#"> change avatarId </a><div id="changeAvatarIdResult"></div><br>
-      </p>
+        <h1>B</h1>
+        <p>
+            current bear is "api/bear/detail" <div id="currentBearDetail"></div> <br>
+            change password <a id="bearChangePasswordBtn" href="#"> change password </a><div id="changePasswordResult"></div><br>
+            change username <a id="bearChangeUsernameBtn" href="#"> change username </a><div id="changeUsernameResult"></div><br>
+            change avatarId <a id="bearChangeAvatarIdBtn" href="#"> change avatarId </a><div id="changeAvatarIdResult"></div><br>
+        </p>
 
-      <H1>Bs</H1>
-      <p>
-          bears list "api/bears/list" <a id="bearsListBtn" href="#"> reload </a> <br>
-          <div id="bearsList"></div>
-          <div id="bearDetail"></div>
-      </p>
+        <H1>Bs</H1>
+        <p>
+            bears list "api/bears/list" <a id="bearsListBtn" href="#"> reload </a> <br>
+            <div id="bearsList"></div>
+            <div id="bearDetail"></div>
+        </p>
 
-      <H1>G</H1>
-      <p>
-        games list "api/games/list"<a id="gamesListBtn" href="#"> reload </a> <br>
-        schedule game  "api/games/schedule" <a id="gameScheduleBtn" href="#"> schedule </a><div id="scheduleResult"></div><br>
-        <div id="gamesList"></div>
-        <div id="gameDetail"></div>
-      </p>
+        <H1>G</H1>
+        <p>
+            games list "api/games/list"<a id="gamesListBtn" href="#"> reload </a> <br>
+            schedule game  "api/games/schedule" <a id="gameScheduleBtn" href="#"> schedule </a><div id="scheduleResult"></div><br>
+            <div id="gamesList"></div>
+            <div id="gameDetail"></div>
+        </p>
 
     </div>
-    <script src="scripts/jquery-2.1.4.js" ></script>
-    <script src="scripts/app.js" ></script>
-  </body>
+    <script src="scripts/jquery-2.1.4.js"></script>
+    <script src="scripts/commonLibrary.js"></script>
+    <script src="scripts/bears.js"></script>
+    <script src="scripts/cleaveage.js"></script>
+    <script src="scripts/games.js"></script>
+    <script src="scripts/app.js"></script>
+
+
+</body>
 </html>

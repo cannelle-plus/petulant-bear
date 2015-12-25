@@ -96,7 +96,7 @@
     <Content Include="projections\gameListProjection.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="projections\cleavageProjection.js">
+    <Content Include="projections\cleaveageProjection.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Compile Include="Logary.Targets.ElmahIO.fs" />
@@ -110,7 +110,7 @@
     <Compile Include="servingFiles.fs" />
     <Compile Include="games.fs" />
     <Compile Include="afterGames.fs" />
-    <Compile Include="cleavage.fs" />
+    <Compile Include="cleaveage.fs" />
     <Compile Include="home.fs" />
     <Compile Include="bears.fs" />
     <Compile Include="currentBear.fs" />
@@ -120,7 +120,7 @@
     <Compile Include="App.fs" />
     <Compile Include="projectionsCommon.fs" />
     <Compile Include="gamesProjection.fs" />
-    <Compile Include="cleavageProjection.fs" />
+    <Compile Include="cleaveageProjection.fs" />
     <Compile Include="roomProjection.fs" />
     <Compile Include="catchUpProjections.fs" />
     <Compile Include="Program.fs" />
@@ -322,17 +322,6 @@
       <ItemGroup>
         <Reference Include="Facebook">
           <HintPath>..\..\packages\Facebook\lib\portable-win81+wpa81\Facebook.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.0' Or $(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1')">
-      <ItemGroup>
-        <Reference Include="FifteenBelow.Json">
-          <HintPath>..\..\packages\FifteenBelow.Json\lib\net40\FifteenBelow.Json.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>

@@ -4,6 +4,7 @@ open System
 //open Mono.Data.Sqlite
 open System.Data.SQLite
 open System.Configuration   
+open System.Collections.Generic
 open PetulantBear.AfterGames
 open PetulantBear.Games
 open PetulantBear.Bears
@@ -248,6 +249,94 @@ let getGame bearId (filter:GamesFilter) =
         GC.Collect() 
         None        
 
+        
+let getCleaveages bearId (filter:PetulantBear.Cleaveage.Contracts.CleaveageFilter) =  
+    let cleavages = UseConnectionToDB (fun connection -> 
+        let sqlPlayers = "SELECT        teamPlayers.teamId, Bears.bearId, Bears.bearUsername, Bears.bearAvatarId
+                                FROM            teamPlayers INNER JOIN
+                                                         Bears ON teamPlayers.bearId = Bears.bearId
+                                INNER JOIN team on teamPlayers.teamId = team.teamId
+                                INNER JOIN cleaveage on team.cleaveageId = cleaveage.cleaveageId
+                                WHERE        (cleaveage.gameId = @gameId )"
+        
+        use sqlCmdPlayers = new SQLiteCommand(sqlPlayers, connection) 
+
+        let add (name:string, value: string) = 
+            sqlCmdPlayers.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+    
+        add("@gameId", filter.gameId.ToString())
+        
+        let dictPlayers = new Dictionary<Guid,List<PetulantBear.Cleaveage.Contracts.CleaveagePlayer>>()
+        use readerPlayers = sqlCmdPlayers.ExecuteReader() 
+    
+        while readerPlayers.Read() do
+            let teamId = Guid.Parse(readerPlayers.["teamId"].ToString())
+            if not <| dictPlayers.ContainsKey teamId then
+                dictPlayers.Add(teamId, new List<PetulantBear.Cleaveage.Contracts.CleaveagePlayer>())
+            let player:PetulantBear.Cleaveage.Contracts.CleaveagePlayer = {
+                bearId =Guid.Parse(readerPlayers.["bearId"].ToString());
+                bearUsername = readerPlayers.["bearUsername"].ToString();
+                bearAvatarId = Int32.Parse(readerPlayers.["bearAvatarId"].ToString());
+            }
+            dictPlayers.[teamId].Add(player)
+
+
+        
+        let sql= "SELECT        cleaveage.cleaveageId, cleaveage.gameId, cleaveage.isOpenned, cleaveage.version, team.teamId, team.name as teamName
+                    FROM            cleaveage INNER JOIN team ON cleaveage.cleaveageId = team.cleaveageId 
+                    WHERE        (cleaveage.gameId = @gameId )"
+
+        use sqlCmd = new SQLiteCommand(sql, connection) 
+
+        let add (name:string, value: string) = 
+            sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+    
+        add("@gameId", filter.gameId.ToString())
+
+        use reader = sqlCmd.ExecuteReader() 
+
+        let dictCleaveages = new Dictionary<Guid,PetulantBear.Cleaveage.Contracts.CleaveageDetail>()
+       
+    
+        let blankTeam :PetulantBear.Cleaveage.Contracts.TeamDetail = {
+            teamId = Guid.Empty;
+            name = "";
+            players = new List<PetulantBear.Cleaveage.Contracts.CleaveagePlayer>()
+        }
+
+
+        while reader.Read() do
+            let cleaveageId = Guid.Parse(reader.["cleaveageId"].ToString())
+            let gameId= Guid.Parse(reader.["gameId"].ToString())
+            let isOpenned= if reader.["isOpenned"].ToString() = "0" then false else true
+            let version = Int32.Parse(reader.["version"].ToString())
+            let teamId = Guid.Parse(reader.["teamId"].ToString())
+            let team:PetulantBear.Cleaveage.Contracts.TeamDetail  = {
+                teamId = teamId;
+                name = reader.["teamName"].ToString();
+                players = if dictPlayers.ContainsKey teamId then dictPlayers.[teamId] else new List<PetulantBear.Cleaveage.Contracts.CleaveagePlayer>()
+            }
+        
+            if not <| dictCleaveages.ContainsKey cleaveageId then
+                let newCleaveage : PetulantBear.Cleaveage.Contracts.CleaveageDetail= {
+                    cleaveageId = cleaveageId;
+                    gameId = gameId;
+                    isOpenned= isOpenned;
+                    version=version;
+                    teamA = team;
+                    teamB = blankTeam;
+                }
+                dictCleaveages.Add(cleaveageId , newCleaveage)
+            else
+                dictCleaveages.[cleaveageId] <- { dictCleaveages.[cleaveageId] with teamB= team }
+            
+        dictCleaveages.Values.ToList()
+            
+      
+    )
+    Some(cleavages)
+
+        
 let getGames bearId filter =
     use connection = new SQLiteConnection(dbConnection)
     connection.Open()

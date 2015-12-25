@@ -28,3 +28,4 @@ nuget EventStore.Client.Embedded
 github fsharp/FAKE modules/Octokit/Octokit.fsx
 
 http "https://www.sqlite.org/2015/sqlite-shell-win32-x86-3081101.zip"
+http "http://download.geteventstore.com/binaries/EventStore-OSS-Win-v3.4.0.zip"
