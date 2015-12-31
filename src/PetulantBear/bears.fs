@@ -67,6 +67,8 @@ module Contracts =
       socialId : string;
       [<field: DataMember(Name = "bearAvatarId")>]
       bearAvatarId : int; 
+      [<field: DataMember(Name = "bearEmail")>]
+      bearEmail : string;
       }
 
     [<DataContract>]

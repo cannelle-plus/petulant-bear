@@ -114,7 +114,7 @@ let sessionState f =
   context( fun r ->
     match HttpContext.state r with
     | None ->  RequestErrors.BAD_REQUEST "damn it"
-    | Some store -> f store )    
+    | Some store -> f store )
 
 let oAuth (provider:oAuthProvider) (getBearFromSocialId: string -> BearSession option)=
     statefulForSession

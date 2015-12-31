@@ -16,6 +16,10 @@
         linkTo('gameRoomProjection', e);
         return s;
     },
+    'Closed': function (s, e) {
+        linkTo('gameRoomProjection', e);
+        return s;
+    },
     'MessagePosted': function (s, e) {
         linkTo('gameRoomProjection', e);
         return s;

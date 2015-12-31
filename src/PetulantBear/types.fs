@@ -21,18 +21,6 @@ open Suave.State.CookieStateStore
 
 open Newtonsoft.Json
 
-let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].ConnectionString
-
-let UseConnectionToDB f =
-    use connection = new System.Data.SQLite.SQLiteConnection(dbConnection)
-    connection.Open()
-
-    let result = f connection
-
-    connection.Dispose()
-    GC.Collect()
-    result
-
 
 type BearSession = {
     bearId : Guid;
@@ -363,25 +351,28 @@ let withCommand<'T> =
 open EventStore.ClientAPI
 
 type Projection ={
-    resetProjection : unit -> unit
-    eventAppeared : EventStoreCatchUpSubscription->ResolvedEvent->unit
+    resetProjection : SQLiteConnection -> unit
+    eventAppeared : SQLiteConnection -> EventStoreCatchUpSubscription->ResolvedEvent->unit
     catchup : EventStoreCatchUpSubscription -> unit
     onError : EventStoreCatchUpSubscription -> SubscriptionDropReason -> Exception ->unit
 }
 
+
 type IEventStoreRepository =
-    abstract member connect: unit->unit 
-    abstract member isCommandProcessed : Guid -> bool
-    abstract member saveCommandProcessedAsync : Command<'a> -> Async<unit>
-    abstract member saveEvtsAsync<'T> : string -> (int ->Enveloppe) -> 'T list -> Async<unit>
-    abstract member hydrateAggAsync<'TAgg,'TEvents> : string -> ('TAgg -> 'TEvents -> 'TAgg) -> 'TAgg -> Guid -> Async<'TAgg*int>
+    abstract member Connect: unit->unit 
+    abstract member IsCommandProcessed : Guid -> bool
+    abstract member SaveCommandProcessedAsync : Command<'a> -> Async<unit>
+    abstract member SaveEvtsAsync<'T> : string -> (int ->Enveloppe) -> 'T list -> Async<unit>
+    abstract member HydrateAggAsync<'TAgg,'TEvents> : string -> ('TAgg -> 'TEvents -> 'TAgg) -> 'TAgg -> Guid -> Async<'TAgg*int>
 
 
 type IEventStoreProjection =
-    abstract member SubscribeToStreamFrom: string -> Nullable<int> -> bool -> Projection -> EventStoreStreamCatchUpSubscription
+    inherit IDisposable
+    abstract member SubscribeToLiveStream:  string ->  bool -> ( EventStoreSubscription ->ResolvedEvent->unit) -> (EventStoreSubscription -> SubscriptionDropReason -> exn -> unit) ->unit
+    abstract member SubscribeToStreamFrom:  string -> Nullable<int> -> bool -> Projection -> unit
 
-let processingCommand<'TAgg, 'TContract,'TCommand, 'TEvents>   (repo:IEventStoreRepository) streamName apply initialState (exec:'TAgg -> 'TCommand -> Choice<'TEvents list,string list>)  (mapCmd:'TContract->'TCommand) =
-    fun x -> async {
+let processingCommand<'TAgg, 'TContract,'TCommand, 'TEvents>   (repo:IEventStoreRepository) streamName apply initialState (exec:'TAgg -> 'TCommand -> Choice<'TEvents list,string list>)  (mapCmd:'TContract->'TCommand) x =
+     async {
         // cehck global context first
         if not <| x.userState.ContainsKey "cmd" || not <| x.userState.ContainsKey "bear" then 
             return Some(x)
@@ -391,15 +382,15 @@ let processingCommand<'TAgg, 'TContract,'TCommand, 'TEvents>   (repo:IEventStore
             let idAggregate = cmd.id
         
             // if there is no version it means the aggregate does not support event sourcing
-            if (not <| repo.isCommandProcessed cmd.idCommand) && cmd.version.HasValue then
-                let! state,v = repo.hydrateAggAsync<'TAgg,'TEvents> streamName  apply initialState idAggregate
+            if (not <| repo.IsCommandProcessed cmd.idCommand) && cmd.version.HasValue then
+                let! state,v = repo.HydrateAggAsync<'TAgg,'TEvents> streamName  apply initialState idAggregate
 
                 match cmd.payLoad |> mapCmd |> exec state  with
                 | Choice1Of2(evts) ->
                     let newState = List.fold apply state evts
                     let enveloppe = createEnveloppe  cmd.idCommand cmd.id bear v
-                    do! repo.saveEvtsAsync<'TEvents> streamName enveloppe evts
-                    do! repo.saveCommandProcessedAsync cmd
+                    do! repo.SaveEvtsAsync<'TEvents> streamName enveloppe evts
+                    do! repo.SaveCommandProcessedAsync cmd
 
                     return! (Success("toto")
                         |> toMessage
@@ -418,11 +409,8 @@ let processingCommand<'TAgg, 'TContract,'TCommand, 'TEvents>   (repo:IEventStore
     }
 
 
-    
-
-let processing<'TContract,'TCommand> save (mapCmd:'TContract->'TCommand) =
-    context (fun x ->
-        try
+let processingHttpContext<'TContract,'TCommand> save (mapCmd:'TContract->'TCommand) x =
+    try
             let cmd = x.userState.["cmd"] :?> Command<'TContract>
             let bear = x.userState.["bear"] :?> BearSession
 
@@ -448,6 +436,8 @@ let processing<'TContract,'TCommand> save (mapCmd:'TContract->'TCommand) =
             |> toJson
             |> Successful.ok 
             >>= Writers.setMimeType "application/json"
-    )
-    
+
+let processing<'TContract,'TCommand> save (mapCmd:'TContract->'TCommand) = 
+    processingHttpContext save mapCmd
+    |> context
     

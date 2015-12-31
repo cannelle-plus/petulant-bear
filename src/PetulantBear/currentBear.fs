@@ -23,6 +23,7 @@ module Navigation =
     let changeUserName = "/api/bear/changeUserName"
     let changeAvatarId = "/api/bear/changeAvatarId"
     let changePassword = "/api/bear/changePassword"
+    let changeEmail = "/api/bear/changeEmail"
 
 module Contracts = 
 
@@ -42,6 +43,13 @@ module Contracts =
       }
 
     [<DataContract>]
+    type ChangeEmail =
+      { 
+      [<field: DataMember(Name = "bearEmail")>]
+      bearEmail: string;
+      }
+
+    [<DataContract>]
     type ChangePassword =
       { 
       [<field: DataMember(Name = "bearPassword")>]
@@ -49,6 +57,7 @@ module Contracts =
       }
 
 type Commands = 
+    | ChangeEmail of Contracts.ChangeEmail
     | ChangeAvatarId of Contracts.ChangeAvatarId
     | ChangePassword of Contracts.ChangePassword
     | ChangeUserName of Contracts.ChangeUserName
@@ -59,6 +68,7 @@ let routes = []
 let authRoutes  findBear (system:ActorSystem) saveEvents getGameList getGame  saveToDB   =
     [
         path Navigation.changeAvatarId >>=  withBear >>= withCommand<Contracts.ChangeAvatarId> >>= processing saveToDB ChangeAvatarId
+        path Navigation.changeEmail >>=  withBear >>= withCommand<Contracts.ChangeEmail> >>= processing saveToDB ChangeEmail
         path Navigation.changeUserName >>= withBear >>= withCommand<Contracts.ChangeUserName> >>= processing saveToDB ChangeUserName
          >>= context (fun x ->
             let cmd = x.userState.["cmd"] :?> Command<Contracts.ChangeUserName> 

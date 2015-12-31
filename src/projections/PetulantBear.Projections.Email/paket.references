@@ -1,0 +1,12 @@
+FSharp.Core
+FSharp.Data
+FSharp.Formatting
+FsPickler
+elmah.corelibrary
+elmah.io.core
+NodaTime
+Logary.Adapters.Suave
+EventStore.Client
+EventStore.Client.Embedded
+Quartz
+System.Data.SQLite

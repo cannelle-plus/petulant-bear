@@ -24,9 +24,13 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>.\bin\Debug\PetulantBear.xml</DocumentationFile>
-    <OtherFlags>--warnon:1182</OtherFlags>
+    <OtherFlags>
+    </OtherFlags>
     <Prefer32Bit>true</Prefer32Bit>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <NoWarn>
+    </NoWarn>
+    <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -99,6 +103,21 @@
     <Content Include="projections\cleaveageProjection.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="projections\emailGamesProjections.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="projections\petulantBearProjection.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="projections\finishedGameProjection.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="templates\scheduledGameSubject.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="templates\scheduledGameBody.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Compile Include="Logary.Targets.ElmahIO.fs" />
     <Compile Include="staticTexts.fs" />
     <Compile Include="validator.fs" />
@@ -109,28 +128,32 @@
     <Compile Include="eventSourceRepo.fs" />
     <Compile Include="servingFiles.fs" />
     <Compile Include="games.fs" />
-    <Compile Include="afterGames.fs" />
+    <Compile Include="gamesSaga.fs" />
+    <Compile Include="finishedGames.fs" />
     <Compile Include="cleaveage.fs" />
     <Compile Include="home.fs" />
     <Compile Include="bears.fs" />
     <Compile Include="currentBear.fs" />
     <Compile Include="rooms.fs" />
     <Compile Include="users.fs" />
+    <Compile Include="webSocket.fs" />
     <Compile Include="sqliteBear2bearDB.fs" />
     <Compile Include="App.fs" />
     <Compile Include="projectionsCommon.fs" />
-    <Compile Include="gamesProjection.fs" />
     <Compile Include="cleaveageProjection.fs" />
     <Compile Include="roomProjection.fs" />
+    <Compile Include="gamesProjection.fs" />
+    <Compile Include="notificationGamesProjections.fs" />
+    <Compile Include="finishedGameProjection.fs" />
     <Compile Include="catchUpProjections.fs" />
-    <Compile Include="Program.fs" />
+    <Compile Include="LiveProjections.fs" />
     <None Include="paket.references" />
     <None Include="paket.template" />
     <Content Include="app.config" />
     <Content Include="app.config.prod" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FSharp.Data.TypeProviders" />
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />

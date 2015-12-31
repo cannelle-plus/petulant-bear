@@ -23,6 +23,7 @@ nuget Logary.Adapters.Suave
 nuget elmah.io
 nuget EventStore.Client
 nuget EventStore.Client.Embedded
+nuget Quartz
 
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx

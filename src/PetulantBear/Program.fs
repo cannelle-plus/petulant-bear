@@ -24,6 +24,7 @@ open System
 open System.Net
 open System.Collections.Generic
 open System.Text.RegularExpressions
+open System.Data.SQLite
 
 
 //let events = new List<Event<Games.Events>>()
@@ -82,44 +83,45 @@ type EmbeddedEventStore() =
         else printfn "stopped embedded EventStore"
 
 
+let rootPath = ConfigurationManager.AppSettings.["rootPath"]
+let ipAddress = ConfigurationManager.AppSettings.["IPAddress"]
+let port = Int32.Parse( ConfigurationManager.AppSettings.["Port"])
+let urlSite = ConfigurationManager.AppSettings.["urlSite"]
+let eventStoreConnectionString = ConfigurationManager.AppSettings.["eventStoreConnectionString"]
+let couldParseIsEmbedded,isEmbedded = bool.TryParse(ConfigurationManager.AppSettings.["isEmbedded"])
+let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].ConnectionString
+
+let confElmah :Logary.Targets.ElmahIO.ElmahIOConf =
+    match Guid.TryParse(ConfigurationManager.AppSettings.Get("elmah.io")) with
+    | true, logId ->{ logId = logId; }
+    | false, _->{ logId = Guid.Empty; }
+     
+
 [<EntryPoint>]
 let main args =
-
-    let rootPath = ConfigurationManager.AppSettings.["rootPath"]
-    let ipAddress = ConfigurationManager.AppSettings.["IPAddress"]
-    let port = Int32.Parse( ConfigurationManager.AppSettings.["Port"])
-    let urlSite = ConfigurationManager.AppSettings.["urlSite"]
-    let eventStoreConnectionString = ConfigurationManager.AppSettings.["eventStoreConnectionString"]
-    let couldParseIsEmbedded,isEmbedded = bool.TryParse(ConfigurationManager.AppSettings.["isEmbedded"])
-    let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].ConnectionString
-
-
-    let confElmah :Logary.Targets.ElmahIO.ElmahIOConf =
-        match Guid.TryParse(ConfigurationManager.AppSettings.Get("elmah.io")) with
-        | true, logId ->{ logId = logId; }
-        | false, _->{ logId = Guid.Empty; }
-     
+    
+    use connection = new SQLiteConnection(dbConnection)
+    connection.Open()
     
     use logary =
-      withLogary' "bear2bear.web" (
-        withTargets [
-          Console.create Console.empty "console"
-          Logary.Targets.ElmahIO.create  confElmah "elmah"
+        withLogary' "bear2bear.web" (
+            withTargets [
+                Console.create Console.empty "console"
+                Logary.Targets.ElmahIO.create  confElmah "elmah"
 
-        ] >>
-          withRules [
-            Rule.create (Regex(".*", RegexOptions.Compiled)) "console" (fun _ -> true) (fun _ -> true) Info
-            Rule.create (Regex(".*", RegexOptions.Compiled)) "elmah" (fun _ -> true) (fun _ -> true) Error
-          ]
+            ] >>
+                withRules [
+                    Rule.create (Regex(".*", RegexOptions.Compiled)) "console" (fun _ -> true) (fun _ -> true) Info
+                    Rule.create (Regex(".*", RegexOptions.Compiled)) "elmah" (fun _ -> true) (fun _ -> true) Error
+                ]
         )
-    
+
     
     let section = ConfigurationManager.GetSection("akka"):?> AkkaConfigurationSection
     
-    let repo = (EventSourceRepo.create dbConnection eventStoreConnectionString)
-    (repo:>IEventStoreRepository).connect()
+    let repo = (EventSourceRepo.create connection eventStoreConnectionString)
+    (repo:>IEventStoreRepository).Connect()
 
-    
 
     let system = System.create "System" ( section.AkkaConfig)
     let config = 
@@ -129,28 +131,38 @@ let main args =
             homeFolder = Some(rootPath)
         }
 
+
+
     let startPetulant = 
         let httpendPoint = new IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 2113);
-        let catchupProjection = PetulantBear.Projections.CatchUp.create (repo:>IEventStoreProjection)  dbConnection httpendPoint
-
-        let projections = [
-                (PetulantBear.Projections.Games.name,PetulantBear.Projections.Games.projection)
-                (PetulantBear.Projections.Room.name,PetulantBear.Projections.Room.projection)
-                (PetulantBear.Projections.Cleaveage.name,PetulantBear.Projections.Cleaveage.projection)
-            ]
+        let ctx = Projections.CatchUp.create (repo:>IEventStoreProjection)  connection httpendPoint
+        let wsSubscribe,wsUnsubscribe = PetulantBear.Projections.Live.create (repo:> IEventStoreProjection) connection httpendPoint
+       
         
-        let subsciptions =
-            projections
-            |> List.fold (fun agg (name,projection) -> 
-                    catchupProjection.createProjectionAsync(name) |> Async.RunSynchronously        
-                    let s = catchupProjection.startProjection(name,projection)
-                    s::agg
-                ) []
+        [
+            (PetulantBear.Projections.Games.name,PetulantBear.Projections.Games.projection)
+            (PetulantBear.Projections.Room.name,PetulantBear.Projections.Room.projection)
+            (PetulantBear.Projections.Cleaveage.name,PetulantBear.Projections.Cleaveage.projection)
+            (PetulantBear.Projections.NotificationGames.name,PetulantBear.Projections.NotificationGames.projection)
+            (PetulantBear.Projections.FinishedGame.name,PetulantBear.Projections.FinishedGame.projection)
+        ]
+        |> List.iter (fun (name,projection) -> 
+                Projections.CatchUp.createProjectionAsync ctx name |> Async.RunSynchronously
+                Projections.CatchUp.startProjection ctx name projection
+            ) 
+
+        //create the subscription to live events
+        Projections.CatchUp.createProjectionAsync ctx "petulantBearProjection" |> Async.RunSynchronously
+
         //subscription.Stop()
-        (PetulantBear.Application.app rootPath urlSite system repo Users.authenticateWithLogin)
+        (PetulantBear.Application.app rootPath urlSite connection system repo Users.authenticateWithLogin (wsSubscribe,wsUnsubscribe))
         |> startWebServer config
-    
-    if isEmbedded or not <| couldParseIsEmbedded then
+
+        //close the eventStore repo and its subscriptions
+        (repo:>IEventStoreProjection).Dispose()
+        
+
+    if isEmbedded || not <| couldParseIsEmbedded then
         let embeddedEventStore = new EmbeddedEventStore()
         embeddedEventStore.start()
 
@@ -158,4 +170,7 @@ let main args =
 
         embeddedEventStore.stop()
     else startPetulant
+
+    connection.Dispose()
+    GC.Collect()
     0

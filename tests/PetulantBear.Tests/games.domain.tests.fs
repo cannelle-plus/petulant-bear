@@ -94,7 +94,7 @@ module PetulantBear.Tests.Games.Domain
 //
 //            test <@ exec State.Initial <| Schedule(cmd)
 //                    |> mapResultToOptionFailure
-//                    |> Option.exists ((=) [gamesText.gamesIn24Hours]) @>
+//                    |> Option.exists ((=) [GamesText.gamesIn24Hours]) @>
 //
 //        testCase "scheduling a game already scheduled is not allowed" <| fun _ ->
 //            
@@ -111,7 +111,7 @@ module PetulantBear.Tests.Games.Domain
 //
 //            test <@ exec { State.Initial with isScheduled=true} <| Schedule(cmd)
 //                    |> mapResultToOptionFailure
-//                    |> Option.exists ((=) [gamesText.gameAlreadyScheduled]) @>
+//                    |> Option.exists ((=) [GamesText.gameAlreadyScheduled]) @>
 //
 //            
 //    ]

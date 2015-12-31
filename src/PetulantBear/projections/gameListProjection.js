@@ -16,6 +16,10 @@
         linkTo('gameListProjection', e);
         return s;
     },
+    'Closed': function (s, e) {
+        linkTo('gameListProjection', e);
+        return s;
+    },
     'PlayerKicked': function (s, e) {
         linkTo('gameListProjection', e);
         return s;

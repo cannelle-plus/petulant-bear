@@ -93,8 +93,8 @@ let  handleRequest<'TAggCommand> system (aggCoordinator :IActorRef) getCmdFromJs
                 let responsePayLoad = 
 //                    result
 //                    |> toMessage
-                    { msg = "OK"  }  
-                    |> toJson<ResultResponse>
+                    { msg = "OK"  }
+                    |> toJson
                 return! Successful.ok responsePayLoad ctx
             | None  -> return! Suave.Http.RequestErrors.METHOD_NOT_ALLOWED "action not allowed" ctx
         } 

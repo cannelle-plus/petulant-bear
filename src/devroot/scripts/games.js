@@ -3,7 +3,7 @@
 this.PetulantBear = this.PetulantBear || {};
 
 //APP
-(function ($, bears, cleaveage) {
+(function ($, bears, cleaveage, room) {
 
     var self = this;
 
@@ -217,7 +217,7 @@ this.PetulantBear = this.PetulantBear || {};
             }
 
             $("#RoomBtn").click(function (e) {
-                getDetailRoom($(e.target).data("id"));
+                room.getDetailRoom($(e.target).data("id"));
             });
 
 
@@ -342,7 +342,7 @@ this.PetulantBear = this.PetulantBear || {};
 
 
 
-}).call(this.PetulantBear.Games || (this.PetulantBear.Games = {}), jQuery, this.PetulantBear.Bears, this.PetulantBear.Cleavage);
+}).call(this.PetulantBear.Games || (this.PetulantBear.Games = {}), jQuery, this.PetulantBear.Bears, this.PetulantBear.Cleavage, this.PetulantBear.Room);
 
 //this.PetulantBear.App = app.call({}, jQuery)
 

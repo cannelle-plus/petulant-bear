@@ -109,7 +109,7 @@ function toBEARDATE(MSDate) {
             loader.show();
             return $.ajax({
                 type: "POST",
-                url: "api/afterGames/markBear",
+                url: "api/finishedGames/markBear",
                 dataType: "json",
                 data: JSON.stringify(markBearCmd)
             })
@@ -126,7 +126,7 @@ function toBEARDATE(MSDate) {
             loader.show();
             return $.ajax({
                 type: "POST",
-                url: "api/afterGames/commentBear",
+                url: "api/finishedGames/commentBear",
                 dataType: "json",
                 data: JSON.stringify(commentBearCmd)
             })

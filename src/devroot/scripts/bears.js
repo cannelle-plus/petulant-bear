@@ -50,6 +50,21 @@ this.PetulantBear = this.PetulantBear || {};
           });
     };
 
+    this.changeEmail = function (email) {
+        var changeEmailCmd = createCommand(guid(), null, {
+            bearEmail: email
+        });
+        return $.ajax({
+            type: "POST",
+            url: "api/bear/changeEmail",
+            dataType: "json",
+            data: JSON.stringify(changeEmailCmd)
+        })
+          .fail(function (err) {
+              $("#changeEmailResult").html(err);
+          });
+    };
+
 
     this.getBear = function (id) {
         //extract the detail of the first bear
@@ -143,6 +158,14 @@ this.PetulantBear = this.PetulantBear || {};
         
 
         $("#bearsListBtn").click(self.getBears);
+
+        
+        $("#bearChangeEmailBtn").click(function () {
+            var newEmail = "artissae@hotmail.com";
+            self.changeEmail(newEmail).done(function (data) {
+                $("#changeEmailResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
+            });
+        });
 
         $("#bearChangePasswordBtn").click(function () {
             var newPassword = "newPassword" + guid();

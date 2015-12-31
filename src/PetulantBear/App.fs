@@ -13,6 +13,7 @@ open System.Net.Http
 open System.Net.Http.Headers
 open System.Text
 open System.Runtime.Serialization
+open System.Data.SQLite
 
 open Suave // always open suave
 open Suave.Http
@@ -25,7 +26,7 @@ open Suave.Web // for config
 open Akka.Actor
 
 open Suave.Cookie
-open PetulantBear.sqliteBear2bearDB
+open PetulantBear.SqliteBear2bearDB
 open PetulantBear
 
 
@@ -36,22 +37,23 @@ let addRoutes routes authRoutes existing =
 
 
      
-let app root urlSite (system:ActorSystem) repo auth = 
+let app root urlSite (connection:SQLiteConnection) (system:ActorSystem) repo auth (liveSubscribe,liveUnsubscribe) = 
     //list the available routes for each module
     let (routes, authRoutes) = 
-        (Users.routes urlSite getBearFromSocialId login,Users.authRoutes)
-        |> addRoutes Games.routes (Games.authRoutes system repo getGames getGame (saveToDB mapGameCmds))
-        |> addRoutes Cleaveage.routes (Cleaveage.authRoutes system repo getCleaveages )
-        |> addRoutes CurrentBear.routes (CurrentBear.authRoutes getBear system repo getGames getGame (saveToDB mapCurrentBearCmds))
-        |> addRoutes AfterGames.routes (AfterGames.authRoutes system repo (saveToDB mapAfterGamesCmds))
-        |> addRoutes (Bears.routes signinToDB signinBearToDB) (Bears.authRoutes getBears getBear)
-        |> addRoutes Rooms.routes (Rooms.authRoutes repo getRoomDetail (saveToDB mapRoomCmds))
+        (Users.routes urlSite (getBearFromSocialId connection) (login connection),Users.authRoutes)
+        |> addRoutes (WebSockets.routes (liveSubscribe,liveUnsubscribe)) WebSockets.authRoutes
+        |> addRoutes Games.routes (Games.authRoutes system repo (getGames connection) (getGame connection) (saveToDB connection mapGameCmds))
+        |> addRoutes Cleaveage.routes (Cleaveage.authRoutes system repo (getCleaveages connection) )
+        |> addRoutes CurrentBear.routes (CurrentBear.authRoutes (getBear connection) system repo (getGames connection) (getGame connection) (saveToDB connection mapCurrentBearCmds))
+        |> addRoutes FinishedGames.routes (FinishedGames.authRoutes system repo)
+        |> addRoutes (Bears.routes (signinToDB connection) (signinBearToDB connection)) (Bears.authRoutes (getBears connection) (getBear connection))
+        |> addRoutes Rooms.routes (Rooms.authRoutes repo (getRoomDetail connection) (saveToDB connection mapRoomCmds))
         |> addRoutes Home.routes Home.authRoutes
         
     
     authRoutes 
-    |> List.append [ path "/resetDB" >>=  PetulantBear.sqliteBear2bearDB.resetDB ]
-    |> List.map (fun route -> auth(route))  
+    |> List.append [ path "/resetDB" >>=  (PetulantBear.SqliteBear2bearDB.resetDB connection) ]
+    |> List.map (fun route -> auth(route))
     |> List.append routes
     |> choose
     

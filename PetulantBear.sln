@@ -54,7 +54,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{69C5
 		src\devroot\scripts\games.js = src\devroot\scripts\games.js
 		src\devroot\scripts\home.js = src\devroot\scripts\home.js
 		src\devroot\scripts\jquery-2.1.4.js = src\devroot\scripts\jquery-2.1.4.js
+		src\devroot\scripts\room.js = src\devroot\scripts\room.js
 		src\devroot\scripts\signin.js = src\devroot\scripts\signin.js
+		src\devroot\scripts\webSocket.js = src\devroot\scripts\webSocket.js
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wwwroot", "wwwroot", "{1DC437A4-03E4-465D-85A6-A579A45DBD6C}"
@@ -94,6 +96,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{FF70
 		src\db\scripts\0.0.2.0.sql = src\db\scripts\0.0.2.0.sql
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "projections", "projections", "{825BC262-9A84-4367-A754-165AB4996A9C}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PetulantBear.Projections.Email", "src\projections\PetulantBear.Projections.Email\PetulantBear.Projections.Email.fsproj", "{68C30859-7C13-4116-AC82-4F92B2BE37F4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,6 +114,10 @@ Global
 		{8F0FE6D0-0865-4A72-AA07-2E294A995B15}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F0FE6D0-0865-4A72-AA07-2E294A995B15}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F0FE6D0-0865-4A72-AA07-2E294A995B15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68C30859-7C13-4116-AC82-4F92B2BE37F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68C30859-7C13-4116-AC82-4F92B2BE37F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68C30859-7C13-4116-AC82-4F92B2BE37F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68C30859-7C13-4116-AC82-4F92B2BE37F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -120,6 +130,7 @@ Global
 		{121CBE16-6D50-46AF-93D7-C3D0A3699812} = {1DC437A4-03E4-465D-85A6-A579A45DBD6C}
 		{FE7E1B9D-4197-4328-BD43-BB853D79297B} = {1DC437A4-03E4-465D-85A6-A579A45DBD6C}
 		{FF70A170-7729-4A52-A541-7AA4316D6F2F} = {1B147559-FBFF-4470-BABB-EA5CA459251D}
+		{68C30859-7C13-4116-AC82-4F92B2BE37F4} = {825BC262-9A84-4367-A754-165AB4996A9C}
 	EndGlobalSection
 	GlobalSection(PerforceSourceControlProviderSolutionProperties) = preSolution
 		SolutionIsControlled = True

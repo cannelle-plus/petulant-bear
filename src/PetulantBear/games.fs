@@ -23,6 +23,7 @@ module Navigation =
     let schedule = "/api/games/schedule"
     let join = "/api/games/join"
     let cancel = "/api/games/cancel"
+    let close = "/api/games/close"
     let abandon = "/api/games/abandon"
     let changeName = "/api/games/changeName"
     let changeStartDate = "/api/games/changeStartDate"
@@ -127,10 +128,12 @@ module Contracts =
     type Join() = class end
     type Abandon() = class end
     type Cancel() = class end
+    type Close() = class end
 
     type GameAbandonned() = class end
     type GameJoined() = class end
     type GameCancelled() = class end
+    type GameClosed() = class end
 
     type GameScheduled =
       {
@@ -170,6 +173,7 @@ type Commands =
   | Schedule of Contracts.ScheduleGame
   | Abandon of Contracts.Abandon
   | Cancel of Contracts.Cancel
+  | Close of Contracts.Close
   | Join of Contracts.Join
   | ChangeName of Contracts.ChangeName
   | ChangeStartDate of Contracts.ChangeStartDate
@@ -183,6 +187,7 @@ type Events =
   | Scheduled of Contracts.GameScheduled
   | Abandonned  of Contracts.GameAbandonned
   | Cancelled  of Contracts.GameCancelled
+  | Closed  of Contracts.GameClosed
   | Joined  of Contracts.GameJoined
   | NameChanged of Contracts.NameChanged
   | StartDateChanged of Contracts.StartDateChanged
@@ -195,38 +200,49 @@ type State = {
     nbPlayer : int;
     maxPlayer : int;
     startDate : DateTime;
-    isScheduled : bool;
-    isCancelled : bool;
+    isOpenned : bool;
 }
-with static member Initial = { nbPlayer = 0; maxPlayer=0; isScheduled = false; startDate = DateTime.MaxValue; isCancelled= false}
+with static member Initial = { nbPlayer = 0; maxPlayer=0; startDate = DateTime.MaxValue; isOpenned= false}
 
 
 module private Assert =
 
+    let validAction = validator (fun s-> s.isOpenned ) [GamesText.gameClosedforModifications] 
+
     let validScheduleGame (command:Contracts.ScheduleGame) state =
-        validator (fun cmd -> true  ) [gamesText.locationUnknow] command
-        <* validator (fun (cmd:Contracts.ScheduleGame) -> cmd.startDate> (DateTime.Now.AddHours(float 24.0))) [gamesText.gamesIn24Hours] command
-        <* validator (fun g -> not g.isScheduled ) [gamesText.gameAlreadyScheduled] state
-    let validJoinGame state = validator (fun g -> g.startDate>DateTime.Now    ) ["err:the game has already started"] state
-    let validAbandonGame state = validator (fun g->  g.startDate>DateTime.Now ) ["err:the game has already started"] state
-    let validChangeStartDate (cmd:Contracts.ChangeStartDate) state = validator (fun g-> cmd.startDate>DateTime.Now) ["It is not possible to reschedule a game in the past"] state
+        validator (fun (cmd:Contracts.ScheduleGame) -> cmd.location <> ""  ) [GamesText.locationUnknow] command
+        <* validator (fun g -> not<| g.isOpenned ) [GamesText.gameAlreadyScheduled] state
+    
+    let validJoinGame state = 
+        validAction state
+        <* validator (fun g -> g.startDate>DateTime.Now    ) ["err:the game has already started"] state
+
+    let validAbandonGame state = 
+        validAction state
+        <* validator (fun g->  g.startDate>DateTime.Now ) ["err:the game has already started"] state
+
+    let validChangeStartDate (cmd:Contracts.ChangeStartDate) state = 
+        validAction state
+        <* validator (fun g-> cmd.startDate>DateTime.Now) ["It is not possible to reschedule a game in the past"] state
 
 let exec state = function
     | Schedule (cmd) -> Assert.validScheduleGame cmd state <?> [Scheduled({ name = cmd.name; startDate = cmd.startDate ; location = cmd.location; players = cmd.players;  nbPlayers = cmd.nbPlayers; maxPlayers = cmd.maxPlayers; });Joined(Contracts.GameJoined())]
     | Abandon(cmd)  -> Assert.validAbandonGame state <?> [Abandonned(Contracts.GameAbandonned())]
     | Cancel(cmd) -> Assert.validAbandonGame state <?> [Cancelled(Contracts.GameCancelled())]
+    | Close(cmd) -> Assert.validAction state <?> [Closed(Contracts.GameClosed())]
     | Join(cmd) -> Assert.validAbandonGame state <?> [Joined(Contracts.GameJoined())]
-    | ChangeName(cmd) -> Choice1Of2([NameChanged({ name=cmd.name})])
+    | ChangeName(cmd) -> Assert.validAction state <?> [NameChanged({ name=cmd.name})]
     | ChangeStartDate(cmd) -> Assert.validChangeStartDate cmd state <?> [StartDateChanged({ startDate= cmd.startDate})]
-    | ChangeLocation(cmd) -> Choice1Of2([LocationChanged({ location=cmd.location})])
-    | KickPlayer(cmd) -> Choice1Of2([PlayerKicked({ kickedBearId=cmd.kickedBearId})])
-    | ChangeMaxPlayer(cmd) -> Choice1Of2([MaxPlayerChanged({ maxPlayers=cmd.maxPlayers})])
+    | ChangeLocation(cmd) -> Assert.validAction state <?> [LocationChanged({ location=cmd.location})]
+    | KickPlayer(cmd) ->  Assert.validAction state <?> [PlayerKicked({ kickedBearId=cmd.kickedBearId})]
+    | ChangeMaxPlayer(cmd) -> Assert.validAction state <?> [MaxPlayerChanged({ maxPlayers=cmd.maxPlayers})]
 
 
 let applyEvts state = function
-    | Scheduled(evt) -> { state with isScheduled= true; startDate= evt.startDate}
+    | Scheduled(evt) -> { state with isOpenned= true; startDate= evt.startDate}
     | Abandonned(evt) -> { state with nbPlayer= state.nbPlayer-1 }
-    | Cancelled(evt) -> { state with isCancelled = true }
+    | Cancelled(evt) -> { state with isOpenned = false }
+    | Closed(evt) -> { state with isOpenned = false }
     | Joined(evt)  -> { state with nbPlayer= state.nbPlayer+1 }
     | PlayerKicked(evt) -> { state with nbPlayer= state.nbPlayer-1 }
     | _ -> state
@@ -276,16 +292,17 @@ let authRoutes (system:ActorSystem) repo getGameList getGame  saveToDB=
                 >>= withBear 
                 >>= withCommand<Contracts.ScheduleGame>
                 >>= executeCmd Schedule
-                >>= processing saveToDB Schedule
+                //>>= processing saveToDB Schedule
 
-            path Navigation.join >>=   withBear >>= withCommand<Contracts.Join>  >>= executeCmd Commands.Join >>= processing saveToDB Commands.Join
-            path Navigation.abandon >>=  withBear >>= withCommand<Contracts.Abandon> >>= executeCmd  Commands.Abandon  >>=  processing saveToDB Commands.Abandon
-            path Navigation.cancel >>=  withBear >>= withCommand<Contracts.Cancel> >>= executeCmd  Commands.Cancel >>=  processing saveToDB Commands.Cancel
-            path Navigation.changeName >>=  withBear >>= withCommand<Contracts.ChangeName> >>= executeCmd  ChangeName >>=  processing saveToDB ChangeName
-            path Navigation.changeStartDate >>=  withBear >>= withCommand<Contracts.ChangeStartDate> >>= executeCmd  ChangeStartDate >>=  processing saveToDB ChangeStartDate
-            path Navigation.changeLocation >>=  withBear >>= withCommand<Contracts.ChangeLocation> >>= executeCmd  ChangeLocation >>=  processing saveToDB ChangeLocation
-            path Navigation.kickPlayer >>=  withBear >>= withCommand<Contracts.KickPlayer> >>= executeCmd  KickPlayer >>=  processing saveToDB KickPlayer
-            path Navigation.changeMaxPlayer >>=  withBear >>= withCommand<Contracts.ChangeMaxPlayer>  >>= executeCmd  ChangeMaxPlayer >>=  processing saveToDB ChangeMaxPlayer
+            path Navigation.join >>=   withBear >>= withCommand<Contracts.Join>  >>= executeCmd Commands.Join //>>= processing saveToDB Commands.Join
+            path Navigation.abandon >>=  withBear >>= withCommand<Contracts.Abandon> >>= executeCmd  Commands.Abandon  //>>=  processing saveToDB Commands.Abandon
+            path Navigation.cancel >>=  withBear >>= withCommand<Contracts.Cancel> >>= executeCmd  Commands.Cancel //>>=  processing saveToDB Commands.Cancel
+            path Navigation.close >>=  withBear >>= withCommand<Contracts.Close> >>= executeCmd  Commands.Close 
+            path Navigation.changeName >>=  withBear >>= withCommand<Contracts.ChangeName> >>= executeCmd  ChangeName //>>=  processing saveToDB ChangeName
+            path Navigation.changeStartDate >>=  withBear >>= withCommand<Contracts.ChangeStartDate> >>= executeCmd  ChangeStartDate //>>=  processing saveToDB ChangeStartDate
+            path Navigation.changeLocation >>=  withBear >>= withCommand<Contracts.ChangeLocation> >>= executeCmd  ChangeLocation //>>=  processing saveToDB ChangeLocation
+            path Navigation.kickPlayer >>=  withBear >>= withCommand<Contracts.KickPlayer> >>= executeCmd  KickPlayer //>>=  processing saveToDB KickPlayer
+            path Navigation.changeMaxPlayer >>=  withBear >>= withCommand<Contracts.ChangeMaxPlayer>  >>= executeCmd  ChangeMaxPlayer //>>=  processing saveToDB ChangeMaxPlayer
 
         ]
     ]
