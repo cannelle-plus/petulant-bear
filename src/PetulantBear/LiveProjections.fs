@@ -22,7 +22,7 @@ type LiveEvent<'a> = {
 
 let liveProjection  (ctx:ProjectionsCtx) =
 
-    
+    let name = "petulantBearProjection"
     let runningSubscriptions = new Dictionary<Guid,(string -> bool)>()
 
     let subscribe idWebSocket push =
@@ -32,7 +32,7 @@ let liveProjection  (ctx:ProjectionsCtx) =
 
     let unsubscribe id = runningSubscriptions.Remove(id) |> ignore
 
-    let eventAppeared ess (re:ResolvedEvent)= 
+    let eventAppeared connection escus (re:ResolvedEvent)= 
         let json = System.Text.Encoding.UTF8.GetString( re.Event.Data);
         let jsonEvent = JsonConvert.DeserializeObject<JsonEvent<_>>(json)
 
@@ -50,20 +50,27 @@ let liveProjection  (ctx:ProjectionsCtx) =
             let k = entry.Key
             let f = entry.Value
             if not <| f ( toJsonString(evt)) then unsubscribe k
+
+    let catchup escus = 
+        sprintf "catchup!"
+        |> Logary.LogLine.error 
+        |> Logary.Logging.getCurrentLogger().Log
         
-    let subscriptionDropped  (ess:EventStoreSubscription) (sdr:SubscriptionDropReason) (exn:exn) = 
-        //what to do here ? Log?
-        sprintf "EventStoreSubscription %A:, SubscriptionDropReason: %A, exn %A" ess sdr exn
-        |> ctx.logger.Error
-        ()
-    
-    Logary.LogLine.error "subscribing to live projection"
-    |> Logary.Logging.getCurrentLogger().Log
+    let onError escus sdr e = 
+        sprintf "error!"
+        |> Logary.LogLine.error 
+        |> Logary.Logging.getCurrentLogger().Log
 
-    ctx.projectionRepo.SubscribeToLiveStream "petulantBearProjection" true eventAppeared subscriptionDropped
+    let projection = {
+        resetProjection = (fun connection -> ())
+        eventAppeared = eventAppeared
+        catchup = catchup
+        onError = onError 
+    }
 
-    subscribe,unsubscribe
-            
+    subscribe,unsubscribe,name,projection
+
+
 let create (projectionRepo:IEventStoreProjection ) (connection:SQLiteConnection) (httpEndPoint:IPEndPoint) = 
     let log = new EventStore.ClientAPI.Common.Log.ConsoleLogger()
     let defaultUserCredentials = new SystemData.UserCredentials("admin","changeit")

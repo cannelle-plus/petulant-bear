@@ -359,7 +359,7 @@ type Projection ={
 
 
 type IEventStoreRepository =
-    abstract member Connect: unit->unit 
+    abstract member Connect: unit-> IEventStoreConnection 
     abstract member IsCommandProcessed : Guid -> bool
     abstract member SaveCommandProcessedAsync : Command<'a> -> Async<unit>
     abstract member SaveEvtsAsync<'T> : string -> (int ->Enveloppe) -> 'T list -> Async<unit>
@@ -368,12 +368,11 @@ type IEventStoreRepository =
 
 type IEventStoreProjection =
     inherit IDisposable
-    abstract member SubscribeToLiveStream:  string ->  bool -> ( EventStoreSubscription ->ResolvedEvent->unit) -> (EventStoreSubscription -> SubscriptionDropReason -> exn -> unit) ->unit
     abstract member SubscribeToStreamFrom:  string -> Nullable<int> -> bool -> Projection -> unit
 
 let processingCommand<'TAgg, 'TContract,'TCommand, 'TEvents>   (repo:IEventStoreRepository) streamName apply initialState (exec:'TAgg -> 'TCommand -> Choice<'TEvents list,string list>)  (mapCmd:'TContract->'TCommand) x =
      async {
-        // cehck global context first
+        // check global context first
         if not <| x.userState.ContainsKey "cmd" || not <| x.userState.ContainsKey "bear" then 
             return Some(x)
         else

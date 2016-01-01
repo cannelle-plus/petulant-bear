@@ -1,6 +1,9 @@
 ﻿module Program
 
 open Suave // always open suave
+open Suave.Types
+open Suave.Cookie
+open Suave.Auth
 open Suave.Logging
 open Suave.Http
 open Suave.Http.Applicatives
@@ -11,27 +14,15 @@ open System.Configuration
 open Akka.Configuration.Hocon
 open Akka.FSharp
 
-//*********************
-open Suave
-open Suave.Types
-open Suave.Cookie
-open Suave.Auth
+open EventStore.ClientAPI
 
 open PetulantBear
-
 
 open System
 open System.Net
 open System.Collections.Generic
 open System.Text.RegularExpressions
 open System.Data.SQLite
-
-
-//let events = new List<Event<Games.Events>>()
-//let saveEvents streamName (id, expectedVersion, evt) =
-//    
-//    events.Add({ id= id; version=expectedVersion;payLoad= evt })
-
 
 //    serverKey             = Utils.Crypto.generateKey HttpRuntime.ServerKeyLength
 //    errorHandler          = defaultErrorHandler
@@ -45,8 +36,6 @@ open System.Data.SQLite
 //    logger                = logger
 //    cookieSerialiser = 
 
-
-
 open Suave.Logging
 open Logary
 open Logary.Configuration
@@ -58,6 +47,9 @@ open EventStore.ClientAPI.Embedded
 open System.Threading
 open EventStore.Core.Bus
 open EventStore.Core.Messages
+
+
+
 
 type EmbeddedEventStore() =
     let node = EmbeddedVNodeBuilder.AsSingleNode()
@@ -102,6 +94,9 @@ let main args =
     
     use connection = new SQLiteConnection(dbConnection)
     connection.Open()
+
+    let repo = EventSourceRepo.create connection eventStoreConnectionString
+    let conn =(repo:>IEventStoreRepository).Connect()
     
     use logary =
         withLogary' "bear2bear.web" (
@@ -119,8 +114,7 @@ let main args =
     
     let section = ConfigurationManager.GetSection("akka"):?> AkkaConfigurationSection
     
-    let repo = (EventSourceRepo.create connection eventStoreConnectionString)
-    (repo:>IEventStoreRepository).Connect()
+    
 
 
     let system = System.create "System" ( section.AkkaConfig)
@@ -133,44 +127,49 @@ let main args =
 
 
 
-    let startPetulant = 
-        let httpendPoint = new IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 2113);
-        let ctx = Projections.CatchUp.create (repo:>IEventStoreProjection)  connection httpendPoint
-        let wsSubscribe,wsUnsubscribe = PetulantBear.Projections.Live.create (repo:> IEventStoreProjection) connection httpendPoint
-       
+    
+    let httpendPoint = new IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 2113);
+    let ctx = Projections.CatchUp.create (repo:>IEventStoreProjection)  connection httpendPoint
+    
+    //create the subscription to live events
+    let wsSubscribe,wsUnsubscribe,nameLiveProjection,liveProjection = PetulantBear.Projections.Live.create (repo:> IEventStoreProjection) connection httpendPoint
         
-        [
-            (PetulantBear.Projections.Games.name,PetulantBear.Projections.Games.projection)
-            (PetulantBear.Projections.Room.name,PetulantBear.Projections.Room.projection)
-            (PetulantBear.Projections.Cleaveage.name,PetulantBear.Projections.Cleaveage.projection)
-            (PetulantBear.Projections.NotificationGames.name,PetulantBear.Projections.NotificationGames.projection)
-            (PetulantBear.Projections.FinishedGame.name,PetulantBear.Projections.FinishedGame.projection)
-        ]
-        |> List.iter (fun (name,projection) -> 
-                Projections.CatchUp.createProjectionAsync ctx name |> Async.RunSynchronously
-                Projections.CatchUp.startProjection ctx name projection
-            ) 
+    [
+        (nameLiveProjection,liveProjection)
+        (PetulantBear.Projections.Games.name,PetulantBear.Projections.Games.projection)
+        (PetulantBear.Projections.Room.name,PetulantBear.Projections.Room.projection)
+        (PetulantBear.Projections.Cleaveage.name,PetulantBear.Projections.Cleaveage.projection)
+        (PetulantBear.Projections.NotificationGames.name,PetulantBear.Projections.NotificationGames.projection)
+        (PetulantBear.Projections.FinishedGame.name,PetulantBear.Projections.FinishedGame.projection)
+    ]
+    |> List.iter (fun (name,projection) -> 
+            Projections.CatchUp.createProjectionAsync ctx name |> Async.RunSynchronously
+            Projections.CatchUp.startProjection ctx name projection
+        ) 
 
-        //create the subscription to live events
-        Projections.CatchUp.createProjectionAsync ctx "petulantBearProjection" |> Async.RunSynchronously
+    //subscription.Stop()
+    (PetulantBear.Application.app rootPath urlSite connection system repo Users.authenticateWithLogin (wsSubscribe,wsUnsubscribe))
+    |> startWebServer config
 
-        //subscription.Stop()
-        (PetulantBear.Application.app rootPath urlSite connection system repo Users.authenticateWithLogin (wsSubscribe,wsUnsubscribe))
-        |> startWebServer config
-
-        //close the eventStore repo and its subscriptions
-        (repo:>IEventStoreProjection).Dispose()
         
+    
 
-    if isEmbedded || not <| couldParseIsEmbedded then
-        let embeddedEventStore = new EmbeddedEventStore()
-        embeddedEventStore.start()
+//    if isEmbedded || not <| couldParseIsEmbedded then
+//        let embeddedEventStore = new EmbeddedEventStore()
+//        embeddedEventStore.start()
+//
+//        startPetulant
+//
+//        embeddedEventStore.stop()
+//    else startPetulant
 
-        startPetulant
+//    testES.sampleAppAsync repo |> Async.RunSynchronously |> ignore
 
-        embeddedEventStore.stop()
-    else startPetulant
+    //close the eventStore repo and its subscriptions
+    (repo:>IEventStoreProjection).Dispose()
 
     connection.Dispose()
     GC.Collect()
+
+    Console.ReadLine() |> ignore
     0
