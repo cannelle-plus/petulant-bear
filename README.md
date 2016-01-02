@@ -36,6 +36,16 @@ open windows explorer and under petulant bear root folder execute
 #### development
 once built, everything will be located under the bin folder, ready to be deployed for prod.
 
+#### batch
+
+There are 3 cmd that allows ou to start the bundle according to what you need to do (no need to configure anything):
+
+    $ startPetulant.bat // start the full bin version of petulant (used from bin folder : web server, wwwroot, db)
+    $ startPetulantFordevRoot.bat // start the bin version of petulant for accessing devroot folder of github repo (used from bin folder : web server,  db)
+    $ startPetulantForWwRoot.bat // start the bin version of petulant for accessing wwwroot folder of github repo (used from bin folder : web server,  db)
+
+when closing the petulant, beware of closing also the getEventStore...
+
 #### app.config
 
 You have to adjust a few things in the PetulantBear.exe.config to make it work for your environment.
@@ -71,15 +81,7 @@ you can also start the petulant and add command line arguments, these will be ov
     --eventStoreClientPort (int)-> the port the eventstore client should connect to
     --elmah (string)-> the key to configure elmah logging
 
-#### batch
 
-There are 3 cmd that allows ou to start the bundle according to what you need to do :
-
-    $ startPetulant.bat // start the full bin version of petulant (used from bin folder : web server, wwwroot, db)
-    $ startPetulantFordevRoot.bat // start the bin version of petulant for accessing devroot folder of github repo (used from bin folder : web server,  db)
-    $ startPetulantForWwRoot.bat // start the bin version of petulant for accessing wwwroot folder of github repo (used from bin folder : web server,  db)
-
-when closing the petulant, beware of closing also the getEventStore...
 
 ### database
 
