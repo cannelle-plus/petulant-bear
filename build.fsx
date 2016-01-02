@@ -128,6 +128,7 @@ Target "CopyDB" (fun _ ->
 // setup env variable for production use
 Target "deployToProd" (fun _ ->
     CopyFile  "bin/PetulantBear/PetulantBear.exe.config" "src/PetulantBear/app.config.prod"
+    CopyFile  "bin/PetulantBear.Projections.Email/PetulantBear.Projections.Email.exe.config" "src/projections/PetulantBear.Projections.Email/app.config.prod"
 )
 // --------------------------------------------------------------------------------------
 // Clean build results
@@ -153,10 +154,9 @@ Target "BuildDB" (fun _ ->
 #if MONO
     Shell.Exec "./src/db/build.sh" |> ignore
 #else
-    Copy "src/db" ["paket-files/www.sqlite.org/sqlite3.exe"]
     Shell.Exec "src/db/buildDB.bat" |> ignore
 #endif
-    
+
 )
 
 // --------------------------------------------------------------------------------------
@@ -372,6 +372,7 @@ Target "FtpUpload" (fun _ ->
 // Run all targets by default. Invoke 'build <Target>' to override
 
 Target "All" DoNothing
+Target "BuildOnly" DoNothing
 
 
 "Clean"
@@ -390,7 +391,15 @@ Target "All" DoNothing
   ==> "All"
   //=?> ("ReleaseDocs",isLocalBuild)
 
-
+"Clean"
+    ==> "AssemblyInfo"
+    ==> "Build"
+    ==> "BuildDB"
+    ==> "CopyBinaries"
+    ==> "CopyDB"
+    ==> "deployToProd"
+    ==> "CopyStaticWebSite"
+    ==> "BuildOnly"
 
 "CleanDocs"
   ==> "GenerateHelp"

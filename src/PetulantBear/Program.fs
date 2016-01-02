@@ -34,7 +34,7 @@ open System.Data.SQLite
 //    homeFolder            = None
 //    compressedFilesFolder = None
 //    logger                = logger
-//    cookieSerialiser = 
+//    cookieSerialiser =
 
 open Suave.Logging
 open Logary
@@ -75,34 +75,100 @@ type EmbeddedEventStore() =
         else printfn "stopped embedded EventStore"
 
 
-let rootPath = ConfigurationManager.AppSettings.["rootPath"]
-let ipAddress = ConfigurationManager.AppSettings.["IPAddress"]
-let port = Int32.Parse( ConfigurationManager.AppSettings.["Port"])
-let urlSite = ConfigurationManager.AppSettings.["urlSite"]
-let eventStoreConnectionString = ConfigurationManager.AppSettings.["eventStoreConnectionString"]
-let couldParseIsEmbedded,isEmbedded = bool.TryParse(ConfigurationManager.AppSettings.["isEmbedded"])
-let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].ConnectionString
+type PetulantConfig = {
+    RootPath:string;
+    IpAddress :string;
+    Port :int;
+    UrlSite: string;
+    EventStoreConnectionString :string;
+    EventStoreClientIp :string;
+    EventStoreClientPort :int;
+    DbConnection :string;
+    Elmah:Logary.Targets.ElmahIO.ElmahIOConf;
+}
+with static member Initial = {RootPath=""; IpAddress =""; Port =0; UrlSite= ""; EventStoreConnectionString =""; EventStoreClientIp=""; EventStoreClientPort=0; DbConnection =""; Elmah={ logId = Guid.Empty; };}
 
-let confElmah :Logary.Targets.ElmahIO.ElmahIOConf =
-    match Guid.TryParse(ConfigurationManager.AppSettings.Get("elmah.io")) with
-    | true, logId ->{ logId = logId; }
-    | false, _->{ logId = Guid.Empty; }
-     
+let parseArg conf (arg:string) =
+    match arg.Split([|'='|],2) with
+    | [|a;b|] ->
+        match a with
+        | "--help" ->
+            Console.WriteLine("parameters accepted : --help, --rootPath,--ipAddress,--port,--urlSite,--eventStoreConnectionString,--dbConnection,--elmah")
+            conf
+        | "--rootPath" -> { conf with RootPath=b}
+        | "--ipAddress" -> { conf with IpAddress=b}
+        | "--port" ->
+            match Int32.TryParse( b) with
+            | true,x ->  { conf with Port=x}
+            | false,_ -> conf
+        | "--urlSite" -> { conf with UrlSite=b}
+        | "--eventStoreConnectionString" -> { conf with EventStoreConnectionString=b}
+        | "--eventStoreClientIp" -> { conf with EventStoreClientIp=b}
+        | "--eventStoreClientPort" ->
+          match Int32.TryParse( b) with
+          | true,x ->  { conf with EventStoreClientPort=x}
+          | false,_ -> conf
+        | "--dbConnection" -> { conf with DbConnection=b}
+        | "--elmah" ->
+            match Guid.TryParse( b) with
+            | true,x ->  { conf with Elmah={ logId = x; }}
+            | false,_ -> conf
+        | x ->
+            sprintf "unknown parameter %s" x
+            |> Exception
+            |> raise
+    | [|a|] ->
+        sprintf "unrecognised parameter format %s, --myParameter=value expected" a
+        |> Exception
+        |> raise
+    | _ ->
+        sprintf "bouh! non ho capito!!" 
+        |> Exception
+        |> raise
+
+
 
 [<EntryPoint>]
 let main args =
-    
-    use connection = new SQLiteConnection(dbConnection)
+
+    // parse the app config to extract values
+    let rootPath = ConfigurationManager.AppSettings.["rootPath"]
+    let ipAddress = ConfigurationManager.AppSettings.["IPAddress"]
+    let coukdParsePort,port = Int32.TryParse( ConfigurationManager.AppSettings.["Port"])
+    let urlSite = ConfigurationManager.AppSettings.["urlSite"]
+    let eventStoreConnectionString = ConfigurationManager.AppSettings.["eventStoreConnectionString"]
+    let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].ConnectionString
+    let couldParseElmah,elmah = Guid.TryParse(ConfigurationManager.AppSettings.Get("elmah.io"))
+    let eventStoreClientIp = ConfigurationManager.AppSettings.["eventStoreClientIp"]
+    let couldParseClientPort, eventStoreClientPort = Int32.TryParse( ConfigurationManager.AppSettings.["eventStoreClientPort"])
+
+    // apply default values to config over appConfig
+    let initialConfig = {
+        PetulantConfig.Initial with
+            RootPath = if (rootPath <>"") then rootPath else "wwwwroot"
+            IpAddress = if (ipAddress <>"") then ipAddress else "127.0.0.1"
+            Port = if coukdParsePort then port else 8084
+            UrlSite = if (urlSite <>"") then urlSite else "http://localhost:8084"
+            EventStoreConnectionString = if (eventStoreConnectionString <>"") then eventStoreConnectionString else "tcp://127.0.0.1:1113"
+            Elmah = if couldParseElmah then { logId = elmah; } else { logId = Guid.Empty; }
+            EventStoreClientIp = if eventStoreClientIp <> "" then eventStoreClientIp else "127.0.0.1"
+            EventStoreClientPort = if couldParseClientPort then eventStoreClientPort else 2113
+    }
+
+    // apply args values to config
+    let confPetulant = args |> Seq.fold parseArg initialConfig
+
+    use connection = new SQLiteConnection(confPetulant.DbConnection)
     connection.Open()
 
-    let repo = EventSourceRepo.create connection eventStoreConnectionString
+    let repo = EventSourceRepo.create connection confPetulant.EventStoreConnectionString
     let conn =(repo:>IEventStoreRepository).Connect()
-    
+
     use logary =
         withLogary' "bear2bear.web" (
             withTargets [
                 Console.create Console.empty "console"
-                Logary.Targets.ElmahIO.create  confElmah "elmah"
+                Logary.Targets.ElmahIO.create  confPetulant.Elmah "elmah"
 
             ] >>
                 withRules [
@@ -111,29 +177,29 @@ let main args =
                 ]
         )
 
-    
+
     let section = ConfigurationManager.GetSection("akka"):?> AkkaConfigurationSection
-    
-    
+
+
 
 
     let system = System.create "System" ( section.AkkaConfig)
-    let config = 
-        { defaultConfig with 
+    let config =
+        { defaultConfig with
             logger = SuaveAdapter(logary.GetLogger "suave")
-            bindings = [ HttpBinding.mk' HTTP ipAddress port ] 
-            homeFolder = Some(rootPath)
+            bindings = [ HttpBinding.mk' HTTP confPetulant.IpAddress confPetulant.Port ]
+            homeFolder = Some(confPetulant.RootPath)
         }
 
 
 
-    
-    let httpendPoint = new IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), 2113);
-    let ctx = Projections.CatchUp.create (repo:>IEventStoreProjection)  connection httpendPoint
-    
+
     //create the subscription to live events
+    let httpendPoint = new IPEndPoint(System.Net.IPAddress.Parse(confPetulant.EventStoreClientIp), confPetulant.EventStoreClientPort);
     let wsSubscribe,wsUnsubscribe,nameLiveProjection,liveProjection = PetulantBear.Projections.Live.create (repo:> IEventStoreProjection) connection httpendPoint
-        
+
+    //create the subscription to catchup projections
+    let ctx = Projections.CatchUp.create (repo:>IEventStoreProjection)  connection httpendPoint
     [
         (nameLiveProjection,liveProjection)
         (PetulantBear.Projections.Games.name,PetulantBear.Projections.Games.projection)
@@ -142,17 +208,16 @@ let main args =
         (PetulantBear.Projections.NotificationGames.name,PetulantBear.Projections.NotificationGames.projection)
         (PetulantBear.Projections.FinishedGame.name,PetulantBear.Projections.FinishedGame.projection)
     ]
-    |> List.iter (fun (name,projection) -> 
+    |> List.iter (fun (name,projection) ->
             Projections.CatchUp.createProjectionAsync ctx name |> Async.RunSynchronously
             Projections.CatchUp.startProjection ctx name projection
-        ) 
+        )
 
-    //subscription.Stop()
     (PetulantBear.Application.app rootPath urlSite connection system repo Users.authenticateWithLogin (wsSubscribe,wsUnsubscribe))
     |> startWebServer config
 
-        
-    
+
+
 
 //    if isEmbedded || not <| couldParseIsEmbedded then
 //        let embeddedEventStore = new EmbeddedEventStore()

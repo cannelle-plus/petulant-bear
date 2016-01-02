@@ -15,8 +15,6 @@ set str="%CD%\src\db\temp\script.sql"
 set str=%str:\=!word!%
 echo %str%
 
-
-
 "%CD%\src\db\sqlite3.exe"  "%CD%\src\db\db\Bear2Bear.db" ".read ""%str%"""
 
 echo ------------------------------------------------------
