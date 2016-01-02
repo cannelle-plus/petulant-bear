@@ -17,6 +17,7 @@ In order to do a fresh install of the petulant , you need to have fsharp install
 
 #### source code
 open github shell and move to petulant bear folder
+    
     git pull
     git branch v0.0.2.0
 
@@ -49,12 +50,13 @@ You have to adjust a few things in the PetulantBear.exe.config to make it work f
     <add key="eventStoreClientPort" value="{EVENTSTORE_PORT}" />
 
 usually in dev these stand for :
-  {YOUR_LOCAL_PATH} -> bin url of the github repo on your pc
-  {YOUR_LOCAL_IP} -> 127.0.0.1
-  {YOUR_LOCAL_PORT} -> 8084
-  {YOUR_LOCAL_URL} -> http://localhost:8084
-  {EVENTSTORE_IP} -> 127.0.0.1
-  {EVENTSTORE_PORT} -> 1113
+    
+    {YOUR_LOCAL_PATH} -> bin url of the github repo on your pc
+    {YOUR_LOCAL_IP} -> 127.0.0.1
+    {YOUR_LOCAL_PORT} -> 8084
+    {YOUR_LOCAL_URL} -> http://localhost:8084
+    {EVENTSTORE_IP} -> 127.0.0.1
+    {EVENTSTORE_PORT} -> 1113
 
 #### command line argument
 you can also start the petulant and add command line arguments, these will be overload any definition made in the app.config
@@ -85,16 +87,16 @@ Building the soft will build the database according to the existing one under \s
 
 #### Building the db from production
 
-    download database prod from petulant ftp, copy it to %YourPath%\petulant-bear\src\db\db
-    rename the prod bear2bear.db in Bear2BearProd.db, it will be used later to apply latest script to prod database
+download database prod from petulant ftp, copy it to %YourPath%\petulant-bear\src\db\db
+rename the prod bear2bear.db in Bear2BearProd.db, it will be used later to apply latest script to prod database
 
-        bear2bear.db -> Bear2BearProd.db
+    bear2bear.db -> Bear2BearProd.db
 
-    execute at the root of your github repo the following command :
+execute at the root of your github repo the following command :
 
       buildDB.bat
 
-    it will copy the previous prod version of the database and try to  apply latest sql scripts. If you want to use it with the batches previously detailled, you will have to run build.cmd once again, so that your changes are deployed to the bin folder.
+it will copy the previous prod version of the database and try to  apply latest sql scripts. If you want to use it with the batches previously detailled, you will have to run build.cmd once again, so that your changes are deployed to the bin folder.
 
 #### databases
 
