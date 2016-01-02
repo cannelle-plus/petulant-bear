@@ -1,26 +1,22 @@
 ﻿module Program
 
 open Suave // always open suave
-open Suave.Types
-open Suave.Cookie
-open Suave.Auth
 open Suave.Logging
-open Suave.Http
-open Suave.Http.Applicatives
-open Suave.Http.Successful // for OK-result
+open Suave.Types
 open Suave.Web // for config
 open System.Configuration
 
+open Logary
+open Logary.Configuration
+open Logary.Targets
+
 open Akka.Configuration.Hocon
 open Akka.FSharp
-
-open EventStore.ClientAPI
 
 open PetulantBear
 
 open System
 open System.Net
-open System.Collections.Generic
 open System.Text.RegularExpressions
 open System.Data.SQLite
 
@@ -35,45 +31,6 @@ open System.Data.SQLite
 //    compressedFilesFolder = None
 //    logger                = logger
 //    cookieSerialiser =
-
-open Suave.Logging
-open Logary
-open Logary.Configuration
-open Logary.Targets
-open Logary.Metrics
-open NodaTime
-
-open EventStore.ClientAPI.Embedded
-open System.Threading
-open EventStore.Core.Bus
-open EventStore.Core.Messages
-
-
-
-
-type EmbeddedEventStore() =
-    let node = EmbeddedVNodeBuilder.AsSingleNode()
-                                   .OnDefaultEndpoints()
-                                  .WithExternalTcpOn(new Net.IPEndPoint(Net.IPAddress.Parse("127.0.0.1"),1789))
-                                  .WithInternalTcpOn(new Net.IPEndPoint(Net.IPAddress.Parse("127.0.0.1"),1790))
-                                  .WithExternalHttpOn(new Net.IPEndPoint(Net.IPAddress.Parse("127.0.0.1"),1791))
-                                  .WithInternalHttpOn(new Net.IPEndPoint(Net.IPAddress.Parse("127.0.0.1"),1792))
-                                  .RunInMemory()
-                                  .RunProjections(ProjectionsMode.All)
-                                  .WithWorkerThreads(16)
-                                  .Build()
-
-    member this.start() =
-        printfn "starting embedded EventStore"
-        node.Start()
-
-    member this.stop() =
-        let stopped = new AutoResetEvent(false)
-        node.MainBus.Subscribe( new AdHocHandler<SystemMessage.BecomeShutdown>(fun m -> stopped.Set() |> ignore))
-        node.Stop() |> ignore
-        if not (stopped.WaitOne(20000)) then  printfn "couldn't stop ES within 20000 ms"
-        else printfn "stopped embedded EventStore"
-
 
 type PetulantConfig = {
     RootPath:string;
@@ -213,22 +170,8 @@ let main args =
             Projections.CatchUp.startProjection ctx name projection
         )
 
-    (PetulantBear.Application.app rootPath urlSite connection system repo Users.authenticateWithLogin (wsSubscribe,wsUnsubscribe))
+    (PetulantBear.Application.app confPetulant.RootPath confPetulant.UrlSite connection system repo Users.authenticateWithLogin (wsSubscribe,wsUnsubscribe))
     |> startWebServer config
-
-
-
-
-//    if isEmbedded || not <| couldParseIsEmbedded then
-//        let embeddedEventStore = new EmbeddedEventStore()
-//        embeddedEventStore.start()
-//
-//        startPetulant
-//
-//        embeddedEventStore.stop()
-//    else startPetulant
-
-//    testES.sampleAppAsync repo |> Async.RunSynchronously |> ignore
 
     //close the eventStore repo and its subscriptions
     (repo:>IEventStoreProjection).Dispose()

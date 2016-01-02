@@ -31,7 +31,8 @@
     <NoWarn>
     </NoWarn>
     <StartAction>Project</StartAction>
-    <StartArguments>--dbConnection="Data Source=%CD%\bin\db\Bear2Bear.db;Version=3" --rootPath="%CD%\bin\wwwroot" --ipAddress="127.0.0.1" --port=8084 --urlSite="http://localhost:8084" --eventStoreConnectionString="tcp://127.0.0.1:1113"</StartArguments>
+    <StartArguments>
+    </StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
