@@ -4,6 +4,4 @@ build_script:
   - cmd: build.cmd All
 test: off
 version: 0.0.2.{build}
-artifacts:
-  - path: bin
-    name: bin
+
