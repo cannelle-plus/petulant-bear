@@ -9,7 +9,7 @@ artifacts:
     name: petulant
 deploy:
   provider: FTP
-  protocol: ftps
+  protocol: ftp
   host: www.bear2bear.fr
   username: yoann
   password:
