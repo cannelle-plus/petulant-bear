@@ -7,3 +7,12 @@ version: 0.0.2.{build}
 artifacts:
   - path: bin
     name: petulant
+deploy:
+  provider: FTP
+  protocol: ftps
+  host: www.bear2bear.fr
+  username: yoann
+  password:
+    secure: yq58DiRu4wPwcsvUm3gRCg==
+  folder: builds\$(appveyor_build_version)
+  artifact: 
