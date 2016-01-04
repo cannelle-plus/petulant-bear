@@ -31,9 +31,7 @@ module Navigation =
     let kickPlayer = "/api/games/kickPlayer"
     let changeMaxPlayer = "/api/games/changeMaxPlayer"
 
-
 module Contracts =
-  
 
     type GamesFilter =
       {

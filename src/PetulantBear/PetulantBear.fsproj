@@ -129,6 +129,8 @@
     <Compile Include="aggregateCoordinator.fs" />
     <Compile Include="eventSourceRepo.fs" />
     <Compile Include="servingFiles.fs" />
+    <Compile Include="visibility.fs" />
+    <Compile Include="groups.fs" />
     <Compile Include="games.fs" />
     <Compile Include="gamesSaga.fs" />
     <Compile Include="finishedGames.fs" />

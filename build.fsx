@@ -357,16 +357,16 @@ Target "Release" (fun _ ->
     |> Async.RunSynchronously
 )
 
-Target "Zip" (fun _ ->
-         [
-            @"/", !! "/bin/**"
-         ]
-         |> ZipOfIncludes (sprintf @"deploy\petulant.%s.build.zip" buildVersion)
-     )
+//Target "Zip" (fun _ ->
+//         [
+//            @"/", !! "/bin/**"
+//         ]
+//         |> ZipOfIncludes (sprintf @"deploy\petulant.%s.build.zip" buildVersion)
+//     )
 
-Target "FtpUpload" (fun _ ->
-        Fake.FtpHelper.uploadAFile "ftp://52.18.124.147" "yoann" "yogolo49" (sprintf @"/petulant.%s.build.zip" buildVersion) (sprintf @"deploy\petulant.%s.build.zip" buildVersion)
-    )
+//Target "FtpUpload" (fun _ ->
+//        Fake.FtpHelper.uploadAFile "ftp://52.18.124.147" "yoann" "yogolo49" (sprintf @"/petulant.%s.build.zip" buildVersion) (sprintf @"deploy\petulant.%s.build.zip" buildVersion)
+//    )
 
 // --------------------------------------------------------------------------------------
 // Run all targets by default. Invoke 'build <Target>' to override
@@ -386,8 +386,8 @@ Target "BuildOnly" DoNothing
   //==> "RunTests"
   //==> "GenerateReferenceDocs"
   //==> "GenerateDocs"
-  ==> "Zip"
-  ==> "FtpUpload"
+  //==> "Zip"
+  //==> "FtpUpload"
   ==> "All"
   //=?> ("ReleaseDocs",isLocalBuild)
 
@@ -417,4 +417,4 @@ Target "BuildOnly" DoNothing
 
 
 
-RunTargetOrDefault "All"
+RunTargetOrDefault "BuildOnly"
