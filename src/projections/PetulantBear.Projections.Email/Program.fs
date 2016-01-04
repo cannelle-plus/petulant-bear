@@ -19,6 +19,13 @@ open NodaTime
 
 open System.Text.RegularExpressions
 
+let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].ConnectionString
+let host =ConfigurationManager.AppSettings.["host"]
+let userName =ConfigurationManager.AppSettings.["userName"]
+let password =ConfigurationManager.AppSettings.["password"]
+let from =ConfigurationManager.AppSettings.["from"]
+let port = Int32.Parse( ConfigurationManager.AppSettings.["port"])
+
 type MailNotification = 
     {
         NotificationId:Guid;
@@ -32,7 +39,7 @@ type MyJob()=
     let sendMail (smtpClient:SmtpClient) connection notification=
         let send() =
             let mailMessage = new MailMessage()
-            mailMessage.From <- new MailAddress( "Bear2Bear ")
+            mailMessage.From <- new MailAddress(from)
             mailMessage.To.Add (new MailAddress(notification.Recipient))
             mailMessage.Subject <-  notification.Subject
             mailMessage.Body <- notification.Body
@@ -56,18 +63,19 @@ type MyJob()=
             | :? System.Net.Mail.SmtpException as smtpEx-> () //retry send?
             | :? System.Data.SQLite.SQLiteException as dbEx-> () //retry save? log error?
     
-    let dbConnection = ConfigurationManager.ConnectionStrings.["bear2bearDB"].ConnectionString
+    
+    
 
     interface  IJob with
         member this.Execute ctx =
             use connection = new SQLiteConnection(dbConnection)
             connection.Open()
             let smtpClient = new SmtpClient()
-            smtpClient.Host <- "smtp.gmail.com"
+            smtpClient.Host <- host
             smtpClient.EnableSsl <- true
             smtpClient.UseDefaultCredentials <- true
-            smtpClient.Credentials <- new NetworkCredential("cannelleplus@gmail.com", "Infomilf69")
-            smtpClient.Port <- 587;
+            smtpClient.Credentials <- new NetworkCredential(userName, password)
+            smtpClient.Port <- port;
             
             let sql= "select notificationId, subject,body,recipient from emailToSend"
             use sqlCmd = new SQLiteCommand(sql,connection)

@@ -72,16 +72,13 @@ let parseArg conf (arg:string) =
             | false,_ -> conf
         | x ->
             sprintf "unknown parameter %s" x
-            |> Exception
-            |> raise
+            |> failwith
     | [|a|] ->
         sprintf "unrecognised parameter format %s, --myParameter=value expected" a
-        |> Exception
-        |> raise
+        |> failwith
     | _ ->
         sprintf "bouh! non ho capito!!" 
-        |> Exception
-        |> raise
+        |> failwith
 
 
 
