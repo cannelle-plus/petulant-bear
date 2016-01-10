@@ -194,11 +194,6 @@ this.PetulantBear = this.PetulantBear || {};
                         msg.push('<li class="' + cssWaitingList  + '" data-id=" ' + data.players[i].bearId + '">');
                         msg.push(data.players[i].bearUsername);
                         msg.push(infos);
-                        //msgPlayers.push("<TD>" + data.players[i].bearAvatarId + "</TD>");
-                        //msgPlayers.push("<TD>" + data.players[i].mark + "</TD>");
-                        //msgPlayers.push("<TD>" + data.players[i].comment + "</TD>");
-                        //msgPlayers.push("<TD><div href='#' class='markBearBtn' data-id='" + data.players[i].bearId + "'>mark</div><div id='markBearResult'></div></TD>");
-                        //msgPlayers.push("<TD><div href='#' class='commentBearBtn' data-id='" + data.players[i].bearId + "'>comment</div><div id='commentBearResult'></div></TD>");
                         msg.push('</li>');
                     }                    
 
@@ -213,14 +208,11 @@ this.PetulantBear = this.PetulantBear || {};
 
 
                     //room of the game
-                    msg.push("<a href='#' class='roomDetailButton' data-target='room' data-id='" + data.roomId + "' data-id='" + data.roomVersion + "'><img src='images/chat-icon.png' width='20' height='20' /> Chat</a>")
-                    msg.push("<div class='roomDetail' data-target='room'></div>");
+                    msg.push("<a href='#' class='roomDetailButton' data-target='room' data-id='" + data.id + "' data-version='" + data.roomVersion + "'><img src='images/chat-icon.png' width='20' height='20' /> Chat</a>")
+                    msg.push("<div class='roomDetail' data-target='room' data-id='" + data.id + "' data-version='" + data.roomVersion + "'></div>");
                     $("#gameDetailled").html(msg.join(''));
                     $("#chat .infos strong").html(data.name);
                     room.getDetailRoom(data.id);
-                    bearInterval = setInterval(function() {
-                      room.getDetailRoom(data.id);
-                    }, 30000);
                 } else {
                     $("#gameDetailled").html("no game found");
                 }
@@ -235,7 +227,7 @@ this.PetulantBear = this.PetulantBear || {};
                         room.postMessageToRoom(roomId,roomVersion,  message, data.id);    
                 });
 
-                $('body').on('click', '.roomDetailButton', function() {
+                $('body').on('click', '.roomDetailButton, .roomDetail', function() {
                     $('#chat').data('id', $(this).data('id'));
                 });
 

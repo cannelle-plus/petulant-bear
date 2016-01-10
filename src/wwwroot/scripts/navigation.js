@@ -1,10 +1,3 @@
-var bearInterval = 0;
-
-doNothing = function(event){
-	event.preventDefault();
-	event.stopPropagation();
-}
-
 showSection = function(destination) {
 	clearInterval(bearInterval);
 	var id = '#' + destination,
@@ -32,14 +25,4 @@ window.addEventListener("hashchange", function(e) {
 })
 if(window.location.hash.substr(2) !== null) {
 	$('header h1 a').click();
-}
-
-// Loader
-var loader = {
-	show: function() {
-        $('.loading').show();
-	},
-	hide: function() {
-        $('.loading').hide();
-	}
 }

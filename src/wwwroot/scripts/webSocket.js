@@ -1,10 +1,12 @@
+//WebSocket
+(function ($, room) {
+
 var counter = 0;
 var wsUri = "ws://localhost:8084/api/websocket";
 
 var output;
 
 function init() {
-    output = document.getElementById("output");
     testWebSocket();
 }
 
@@ -33,11 +35,23 @@ function onClose(evt) {
 }
 
 function onMessage(evt) {
-    writeToScreen('<span style="color: blue;">RESPONSE: ' + evt.data + '</span>');
+    var data = JSON.parse(evt.data);
+    switch (data.PayLoad.Case) {
+        case "MessagePosted":
+        if($('.roomDetailButton').data('id') === data.Enveloppe.aggregateId) {
+            setTimeout( function() {
+                room.getDetailRoom(data.Enveloppe.aggregateId);
+            }, 2000);
+        }
+        break;
+    
+        default:
+    }
+    writeToScreen(evt.data);
 }
 
 function onError(evt) {
-    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+    writeToScreen(evt.data);
 }
 
 function doSend(message) {
@@ -46,10 +60,11 @@ function doSend(message) {
 }
 
 function writeToScreen(message) {
-    var pre = document.createElement("p");
-    pre.style.wordWrap = "break-word";
-    pre.innerHTML = message;
-    output.appendChild(pre);
+    console.log(message);
 }
 
 window.addEventListener("load", init, false);
+
+
+}).call(this.PetulantBear.WebSosket || (this.PetulantBear.WebSosket = {}), jQuery, this.PetulantBear.Room);
+

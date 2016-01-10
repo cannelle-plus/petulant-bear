@@ -4,49 +4,6 @@
 
       bears.init().done(games.init);
 
-        var guid = function () {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                var r = Math.random() * 16 | 0,
-                  v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
-
-        
-
-        /*var markBear = function (gameId, version, bearId,  mark) {
-            var markBearCmd = createCommand(gameId, version, {
-                "bearId" : bearId,
-                "mark": mark
-            });
-            loader.show();
-            return $.ajax({
-                type: "POST",
-                url: "api/finishedGames/markBear",
-                dataType: "json",
-                data: JSON.stringify(markBearCmd)
-            })
-              .fail(function (err) {
-                  $("#markBearResult").html(err);
-              });
-        }
-
-        var commentBear = function (gameId,version, bearId,  comment) {
-            var commentBearCmd = createCommand(gameId, version, {
-                "bearId" : bearId,
-                "comment": comment
-            });
-            loader.show();
-            return $.ajax({
-                type: "POST",
-                url: "api/finishedGames/commentBear",
-                dataType: "json",
-                data: JSON.stringify(commentBearCmd)
-            })
-              .fail(function (err) {
-                  $("#commentBearResult").html(err);
-              });
-        }*/
 
         var signalSent = function (transmitterId, version, receiverId, signalStrength, receptionDate) {
             var signalsSent = createCommand(transmitterId, version, {

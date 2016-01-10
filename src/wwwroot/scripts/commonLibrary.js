@@ -1,5 +1,3 @@
-
-
 this.PetulantBear = this.PetulantBear || {};
 //COMMON
 Date.prototype.addHours = function (h) {
@@ -33,4 +31,21 @@ var toBEARDATE = function(MSDate) {
       min = bearDate[1].split(':')[1];
 
   return day + '/' + month + '/' + year + ' à ' + hour + 'h' + min;
+}
+
+var bearInterval = 0;
+
+doNothing = function(event){
+  event.preventDefault();
+  event.stopPropagation();
+}
+
+// Loader
+var loader = {
+  show: function() {
+        $('.loading').show();
+  },
+  hide: function() {
+        $('.loading').hide();
+  }
 }

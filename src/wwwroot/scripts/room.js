@@ -19,7 +19,6 @@
           })
           .done(function(data){                                
               setTimeout(function () {
-                  self.getDetailRoom(roomId);
                   loader.hide();
               }, 2000);
           })
