@@ -15,9 +15,9 @@ CREATE TABLE if not exists gameFinished (gameId text primary key not null,teamAI
 
 CREATE TABLE if not exists notifications (notificationId text not null, notificationType text not null, eventId text not null);
 --email part
-CREATE TABLE if not exists emailToSend (notificationId text not null, subject text not null, body text not null, recipient text not null, nbAttempt int not null);
-CREATE TABLE if not exists emailSent (notificationId text not null, subject text not null, body text not null, recipient text not null, nbAttempt int not null);
-CREATE TABLE if not exists deadQueue (notificationId text not null, subject text not null, body text not null, recipient text not null, nbAttempt int not null);
+CREATE TABLE if not exists emailToSend (notificationId text not null, subject text not null, body text not null, recipient text not null,scheduledDate text not null, nbAttempt int not null);
+CREATE TABLE if not exists emailSent (notificationId text not null, subject text not null, body text not null, recipient text not null, nbAttempt int not null, sentDate text not null);
+CREATE TABLE if not exists deadQueue (notificationId text not null, subject text not null, body text not null, recipient text not null, scheduledDate text not null, nbAttempt int not null);
 
 ALTER TABLE Bears ADD COLUMN email text ;
 ALTER TABLE GamesList ADD Version  text ;

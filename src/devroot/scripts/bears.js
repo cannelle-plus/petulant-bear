@@ -161,7 +161,7 @@ this.PetulantBear = this.PetulantBear || {};
 
         
         $("#bearChangeEmailBtn").click(function () {
-            var newEmail = "artissae@hotmail.com";
+            var newEmail = "artissae@gmail.com";
             self.changeEmail(newEmail).done(function (data) {
                 $("#changeEmailResult").html("received at " + Date.now() + ", " + JSON.stringify(data));
             });

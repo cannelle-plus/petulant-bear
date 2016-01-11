@@ -79,11 +79,12 @@ let saveScheduledGame connection (m:Enveloppe) (e:GameScheduled)=
 
         add("@notificationId", notificationId.ToString())
         add("@eventId", m.messageId.ToString())
+        add("@scheduledDate",  e.startDate.AddDays(float <| 7).ToString("yyyy-MM-ddTHH:mm:ssZ"))        
         
         let sql = recipients
                     |> List.fold (fun (agg,i) b  ->
                 
-                        let sql = sprintf "insert into emailToSend (notificationId,subject,body,recipient) VALUES (@notificationId%i,@subject%i,@body%i,@recipient%i);" i i i i
+                        let sql = sprintf "insert into emailToSend (notificationId,subject,body,recipient,scheduledDate,nbAttempt) VALUES (@notificationId%i,@subject%i,@body%i,@recipient%i,@scheduledDate,0);" i i i i
 
                         let subject = getTemplate "scheduledGameSubject";
                         let body = getTemplate "scheduledGameBody";
@@ -93,6 +94,8 @@ let saveScheduledGame connection (m:Enveloppe) (e:GameScheduled)=
                         add(sprintf "@subject%i" i, subject)
                         add(sprintf "@body%i" i,  body)
                         add(sprintf "@recipient%i" i,  b.bearEmail)
+                        
+                        
                         let newIndex = i+1
                         sql::agg,newIndex
                     )  (sqlNotification,0)

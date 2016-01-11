@@ -25,6 +25,7 @@ let userName =ConfigurationManager.AppSettings.["userName"]
 let password =ConfigurationManager.AppSettings.["password"]
 let from =ConfigurationManager.AppSettings.["from"]
 let port = Int32.Parse( ConfigurationManager.AppSettings.["port"])
+let nbAttemptMax = Int32.Parse( ConfigurationManager.AppSettings.["NbAttemptMax"])
 
 type MailNotification = 
     {
@@ -32,12 +33,15 @@ type MailNotification =
         Recipient:string;
         Subject :string;
         Body :string;
+        ScheduledDate :DateTime;
+        NbAttempt : int;
     } 
 
 type MyJob()=
     
     let sendMail (smtpClient:SmtpClient) connection notification=
         let send() =
+            Console.WriteLine("sending mail...")
             let mailMessage = new MailMessage()
             mailMessage.From <- new MailAddress(from)
             mailMessage.To.Add (new MailAddress(notification.Recipient))
@@ -48,11 +52,13 @@ type MyJob()=
             smtpClient.Send(mailMessage)
 
         let saveSentEmail () =
-            let sql = "Insert into emailSent (notificationId , subject , body , recipient , nbAttempt) select notificationId , subject , body , recipient , nbAttempt from emailToSend where notificationId=@notificationId and recipient=@recipient; delete from emailToSend where notificationId=@notificationId and recipient=@recipient"
+            Console.WriteLine("saving mail to sent queue...")
+            let sql = "Insert into emailSent (notificationId , subject , body , recipient , nbAttempt,sentDate) select notificationId , subject , body , recipient , nbAttempt,@now from emailToSend where notificationId=@notificationId and recipient=@recipient; delete from emailToSend where notificationId=@notificationId and recipient=@recipient"
 
             use sqlCmd = new SQLiteCommand(sql,connection)
             sqlCmd.Parameters.Add(new SQLiteParameter("@notificationId",Data.DbType.String, notification.NotificationId.ToString())) |> ignore
             sqlCmd.Parameters.Add(new SQLiteParameter("@recipient", notification.Recipient.ToString())) |> ignore
+            sqlCmd.Parameters.Add(new SQLiteParameter("@now", DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ssZ")))
 
             sqlCmd.ExecuteNonQuery() |> ignore
 
@@ -60,7 +66,27 @@ type MyJob()=
             send()
             saveSentEmail()
         with 
-            | :? System.Net.Mail.SmtpException as smtpEx-> () //retry send?
+            | :? System.Net.Mail.SmtpException as smtpEx-> 
+                if notification.NbAttempt<=nbAttemptMax then
+                    //increment the counter of attempt to send the email
+                    let sqlNbAttempt = "Update emailToSend set nbAttempt = nbAttempt +1 where notificationId=@notificationId and recipient=@recipient;"
+
+                    use sqlCmdNbAttempt = new SQLiteCommand(sqlNbAttempt,connection)
+                    sqlCmdNbAttempt.Parameters.Add(new SQLiteParameter("@notificationId",Data.DbType.String, notification.NotificationId.ToString())) |> ignore
+                    sqlCmdNbAttempt.Parameters.Add(new SQLiteParameter("@recipient", notification.Recipient.ToString())) |> ignore
+
+                    sqlCmdNbAttempt.ExecuteNonQuery() |> ignore
+                else
+                    //pass the email to the deadQueue
+                    let sql = "Insert into deadQueue (notificationId , subject , body , recipient , nbAttempt,scheduledDate) select notificationId , subject , body , recipient , nbAttempt, scheduledDate from emailToSend where notificationId=@notificationId and recipient=@recipient; delete from emailToSend where notificationId=@notificationId and recipient=@recipient"
+
+                    use sqlCmd = new SQLiteCommand(sql,connection)
+                    sqlCmd.Parameters.Add(new SQLiteParameter("@notificationId",Data.DbType.String, notification.NotificationId.ToString())) |> ignore
+                    sqlCmd.Parameters.Add(new SQLiteParameter("@recipient", notification.Recipient.ToString())) |> ignore
+
+                    sqlCmd.ExecuteNonQuery() |> ignore
+                
+                () //retry send?
             | :? System.Data.SQLite.SQLiteException as dbEx-> () //retry save? log error?
     
     
@@ -68,6 +94,7 @@ type MyJob()=
 
     interface  IJob with
         member this.Execute ctx =
+            Console.WriteLine("checking in...")
             use connection = new SQLiteConnection(dbConnection)
             connection.Open()
             let smtpClient = new SmtpClient()
@@ -77,17 +104,19 @@ type MyJob()=
             smtpClient.Credentials <- new NetworkCredential(userName, password)
             smtpClient.Port <- port;
             
-            let sql= "select notificationId, subject,body,recipient from emailToSend"
+            let sql= "select notificationId, subject,body,recipient,scheduledDate,nbAttempt from emailToSend where ScheduledDate<@now"
             use sqlCmd = new SQLiteCommand(sql,connection)
+
+            sqlCmd.Parameters.Add(new SQLiteParameter("@now", DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ssZ")))
 
             let mailsToSend =
                 [ use reader = sqlCmd.ExecuteReader();
                   while reader.Read() do
-                    yield {Recipient=reader.["recipient"].ToString(); Subject=reader.["subject"].ToString();Body=reader.["body"].ToString(); NotificationId=Guid.Parse(reader.["notificationId"].ToString()); }
+                    yield {Recipient=reader.["recipient"].ToString(); Subject=reader.["subject"].ToString();Body=reader.["body"].ToString(); NotificationId=Guid.Parse(reader.["notificationId"].ToString()); ScheduledDate=DateTime.Parse( reader.["scheduledDate"].ToString()) ; NbAttempt=Int32.Parse( reader.["nbAttempt"].ToString())}
                 ]
             mailsToSend
             |> List.iter (sendMail smtpClient connection)
-            Console.WriteLine("test")
+            Console.WriteLine("checking out...")
             
     
 

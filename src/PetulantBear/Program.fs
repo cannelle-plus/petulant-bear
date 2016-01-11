@@ -99,6 +99,7 @@ let main args =
     // apply default values to config over appConfig
     let initialConfig = {
         PetulantConfig.Initial with
+            DbConnection = dbConnection
             RootPath = if (rootPath <>"") then rootPath else "wwwwroot"
             IpAddress = if (ipAddress <>"") then ipAddress else "127.0.0.1"
             Port = if coukdParsePort then port else 8084
