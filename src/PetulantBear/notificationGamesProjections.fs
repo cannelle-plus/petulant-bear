@@ -158,8 +158,24 @@ let catchup escus =
     |> Logary.LogLine.error 
     |> Logary.Logging.getCurrentLogger().Log
 
-let onError escus sdr e = 
-    sprintf "error!"
+let onError (escus:EventStoreCatchUpSubscription) (sdr:SubscriptionDropReason) (e:Exception) = 
+    let msgError = 
+        match sdr with
+        | SubscriptionDropReason.AccessDenied -> "AccessDenied" 
+        | SubscriptionDropReason.CatchUpError -> "CatchUpError" 
+        | SubscriptionDropReason.ConnectionClosed -> "ConnectionClosed" 
+        | SubscriptionDropReason.EventHandlerException -> "EventHandlerException" 
+        | SubscriptionDropReason.MaxSubscribersReached -> "MaxSubscribersReached" 
+        | SubscriptionDropReason.UserInitiated -> "UserInitiated" 
+        | SubscriptionDropReason.NotAuthenticated -> "NotAuthenticated" 
+        | SubscriptionDropReason.NotFound -> "NotFound" 
+        | SubscriptionDropReason.PersistentSubscriptionDeleted -> "PersistentSubscriptionDeleted" 
+        | SubscriptionDropReason.ProcessingQueueOverflow -> "ProcessingQueueOverflow" 
+        | SubscriptionDropReason.ServerError -> "ServerError" 
+        | SubscriptionDropReason.SubscribingError -> "SubscribingError" 
+        | SubscriptionDropReason.Unknown -> "Unknown" 
+
+    sprintf "error! - SubscriptionDropReason= %s, exception : %A" msgError e
     |> Logary.LogLine.error 
     |> Logary.Logging.getCurrentLogger().Log
 

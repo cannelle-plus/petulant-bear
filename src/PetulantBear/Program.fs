@@ -123,7 +123,7 @@ let main args =
         withLogary' "bear2bear.web" (
             withTargets [
                 Console.create Console.empty "console"
-                Logary.Targets.ElmahIO.create  confPetulant.Elmah "elmah"
+                Logary.Targets.ElmahIO.create  confPetulant .Elmah "elmah"
 
             ] >>
                 withRules [

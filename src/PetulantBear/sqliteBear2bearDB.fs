@@ -515,6 +515,9 @@ let postMessage (sqlCmd : SQLiteCommand) ((id, version, bear) : Guid * Nullable<
 let mapRoomCmds (sqlCmd : SQLiteCommand) (id, version, bearId) (command : PetulantBear.Rooms.Commands) = 
     match command with
     | PostMessage(cmd) -> postMessage sqlCmd (id, version, bearId) cmd
+    | PostImage (cmd) -> ()
+    | PostMusic (cmd) -> ()
+    | PostVideo (cmd) -> ()
 
 
 let changeEmail (sqlCmd : SQLiteCommand) ((id, version, bear) : Guid * Nullable<int> * BearSession) (cmd : ChangeEmail) = 

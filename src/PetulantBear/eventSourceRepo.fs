@@ -33,6 +33,9 @@ type Repository(connection:SQLiteConnection, eventStoreConnectionString) =
     
     let conn =  EventStore.ClientAPI.EventStoreConnection.Create(settingsBuilder.Build(),new Uri(eventStoreConnectionString),"Bear2BearESConnection")
     let createNameAgg streamName id = sprintf "%s-%s" streamName (id.ToString())
+
+    let subscriptionsFactory = new Dictionary<Guid, unit -> EventStoreStreamCatchUpSubscription>()
+    let activeSubscriptions = new Dictionary<Guid, EventStoreStreamCatchUpSubscription>()
     
     let onClosed (evtArgs:ClientClosedEventArgs) = 
         status <- Closed
@@ -64,10 +67,41 @@ type Repository(connection:SQLiteConnection, eventStoreConnectionString) =
         |> LogLine.create' LogLevel.Info 
         |> Logging.getCurrentLogger().Log
 
+    let runSubscription subscriptionId = 
+        if activeSubscriptions.ContainsKey subscriptionId then
+            activeSubscriptions.[subscriptionId].Stop()
+            activeSubscriptions.Remove(subscriptionId)|> ignore
 
+        if subscriptionsFactory.ContainsKey(subscriptionId) then
+            activeSubscriptions.Add(subscriptionId,subscriptionsFactory.[subscriptionId]()) 
+    
+        
+    let onError subscriptionId onerror (escus:EventStoreCatchUpSubscription) (sdr:SubscriptionDropReason) (e:Exception) = 
+            
+        let logError msgError =
+            sprintf "error! - SubscriptionDropReason= %s, exception : %A" msgError e
+            |> Logary.LogLine.error 
+            |> Logary.Logging.getCurrentLogger().Log
 
-    let catchupSubscriptions = new Dictionary<Guid, EventStoreCatchUpSubscription>()
-    let activeSubscriptions = new Dictionary<Guid, EventStoreSubscription>()
+        onerror escus sdr e
+    
+        match sdr with
+            | SubscriptionDropReason.AccessDenied -> logError "AccessDenied" 
+            | SubscriptionDropReason.CatchUpError ->  
+                logError "CatchUpError" 
+            | SubscriptionDropReason.ConnectionClosed -> logError "ConnectionClosed" 
+            | SubscriptionDropReason.EventHandlerException -> 
+                logError "EventHandlerException" 
+            | SubscriptionDropReason.MaxSubscribersReached -> logError "MaxSubscribersReached" 
+            | SubscriptionDropReason.UserInitiated -> logError "UserInitiated" 
+            | SubscriptionDropReason.NotAuthenticated -> logError "NotAuthenticated" 
+            | SubscriptionDropReason.NotFound -> logError "NotFound" 
+            | SubscriptionDropReason.PersistentSubscriptionDeleted -> logError "PersistentSubscriptionDeleted" 
+            | SubscriptionDropReason.ProcessingQueueOverflow -> logError "ProcessingQueueOverflow" 
+            | SubscriptionDropReason.ServerError -> logError "ServerError" 
+            | SubscriptionDropReason.SubscribingError -> logError "SubscribingError" 
+            | _ -> logError "Unknown" 
+
         
     interface IEventStoreRepository with 
 
@@ -167,94 +201,18 @@ type Repository(connection:SQLiteConnection, eventStoreConnectionString) =
 
     interface IEventStoreProjection with 
         
-//
-//        member this.SubscribeToLiveStream name (resolveLinkTo:bool) eventAppeared subscriptionDropped =
-//
-//            let subscriptionId = Guid.NewGuid()
-//
-//            let removeSubscription() =
-//                if activeSubscriptions.ContainsKey subscriptionId then
-//                    activeSubscriptions.[subscriptionId].Close()
-//                    activeSubscriptions.Remove subscriptionId |> ignore
-//            
-//            let createSubscription() = 
-//                removeSubscription()
-//                if not <| activeSubscriptions.ContainsKey subscriptionId then
-//                    let ea = Action<EventStoreSubscription,ResolvedEvent> eventAppeared
-//                    let sd = Action<EventStoreSubscription,SubscriptionDropReason,exn> subscriptionDropped
-//
-//                    let subscription =
-//                        conn.SubscribeToStreamAsync(name,  resolveLinkTo, ea, sd,  defaultUserCredentials) 
-//                        |> Async.AwaitTask 
-//                        |> Async.RunSynchronously
-//            
-//                    activeSubscriptions.Add(subscriptionId,subscription) 
-//
-//            //deals with reconnection
-//            let onReconnection (evArgs:ClientReconnectingEventArgs) = 
-//                sprintf "SubscribeToLiveStream: onReconnection... name : %s subscriptionId :%A " name subscriptionId
-//                |> Logary.LogLine.create' Logary.LogLevel.Info
-//                |> Logary.Logging.getCurrentLogger().Log
-//
-//            let onClosed (evtArgs:ClientClosedEventArgs) = 
-//                sprintf "SubscribeToLiveStream name : %s subscriptionId :%A closed connection %A" name subscriptionId evtArgs
-//                |> LogLine.create' LogLevel.Info 
-//                |> Logging.getCurrentLogger().Log
-//                removeSubscription()
-//
-//            let onConnected (evtArgs:ClientConnectionEventArgs) = 
-//                sprintf "SubscribeToLiveStream: name : %s subscriptionId :%A conected %A"  name subscriptionId evtArgs
-//                |> LogLine.create' LogLevel.Info 
-//                |> Logging.getCurrentLogger().Log
-//                createSubscription()
-//
-//            let onDisconnected (evtArgs:ClientConnectionEventArgs) = 
-//                sprintf "SubscribeToLiveStream: name : %s subscriptionId :%A disconected %A" name subscriptionId evtArgs
-//                |> LogLine.create' LogLevel.Info 
-//                |> Logging.getCurrentLogger().Log
-//                removeSubscription()
-//
-//            let onErrorOccurred (evtArgs:ClientErrorEventArgs) = 
-//                sprintf "SubscribeToLiveStream: name : %s subscriptionId :%A error occured %A" name subscriptionId evtArgs
-//                |> LogLine.create' LogLevel.Info 
-//                |> Logging.getCurrentLogger().Log
-//                removeSubscription()
-//
-//            let onReconnecting (evtArgs:ClientReconnectingEventArgs) = 
-//                sprintf "SubscribeToLiveStream: name : %s subscriptionId :%A reconnecting occured %A" name subscriptionId evtArgs
-//                |> LogLine.create' LogLevel.Info 
-//                |> Logging.getCurrentLogger().Log
-//
-//                
-//
-//            conn.Closed.Add(onClosed)
-//            conn.Connected.Add(onConnected)
-//            conn.Disconnected.Add(onDisconnected)
-//            conn.ErrorOccurred.Add(onErrorOccurred)
-//            conn.Reconnecting.Add(onReconnecting)
-//
-//            createSubscription()
-            
-
         member this.SubscribeToStreamFrom name (lastCheckPoint:Nullable<int>) (resolveLinkTo:bool) (projection:Projection) =
 
             let subscriptionId = Guid.NewGuid()
+            
+            let evtAppeared =projection.eventAppeared connection
+            let evtAppeared = Action<EventStoreCatchUpSubscription,ResolvedEvent> evtAppeared
+            let catchUp = Action<EventStoreCatchUpSubscription> projection.catchup
+            let error = Action<EventStoreCatchUpSubscription, SubscriptionDropReason, Exception> (onError subscriptionId projection.onError)
 
-            let createSubscription() = 
-                if activeSubscriptions.ContainsKey subscriptionId then
-                    activeSubscriptions.[subscriptionId].Close()
-                    activeSubscriptions.Remove(subscriptionId)|> ignore
-                
-                let evtAppeared =projection.eventAppeared connection
-                let evtAppeared = Action<EventStoreCatchUpSubscription,ResolvedEvent> evtAppeared
-                let catchUp = Action<EventStoreCatchUpSubscription> projection.catchup
-                let onError = Action<EventStoreCatchUpSubscription, SubscriptionDropReason, Exception> projection.onError
-
-                let subscription = conn.SubscribeToStreamFrom(name, lastCheckPoint, resolveLinkTo, evtAppeared, catchUp, onError, defaultUserCredentials, 500) 
-
-                catchupSubscriptions.Add(subscriptionId,subscription) 
-
-            createSubscription()
+            subscriptionsFactory.Add(subscriptionId , (fun () -> 
+                conn.SubscribeToStreamFrom(name, lastCheckPoint, resolveLinkTo, evtAppeared, catchUp, error, defaultUserCredentials, 500) )
+            )
 
             //deals with reconnection
             let onReconnection (evArgs:ClientReconnectingEventArgs) = 
@@ -262,14 +220,13 @@ type Repository(connection:SQLiteConnection, eventStoreConnectionString) =
                 |> Logary.LogLine.create' Logary.LogLevel.Info
                 |> Logary.Logging.getCurrentLogger().Log
 
-                
-
             conn.Reconnecting.Add onReconnection
+
+            runSubscription subscriptionId
     
     interface IDisposable with 
         member this.Dispose()  =
-            for entry in activeSubscriptions do entry.Value.Dispose()
-            for entry in catchupSubscriptions do entry.Value.Stop()
-            ()
+            for entry in activeSubscriptions do entry.Value.Stop()
+            
 
 let create dbConnection cs = (new Repository(dbConnection,cs))
