@@ -421,8 +421,7 @@ let getBearFromSocialId connection (socialId : string) =
     else 
         reader.Dispose()
         sqlCmdBear.Dispose()
-        
-        
+       
         None
 
 let login connection username password = 

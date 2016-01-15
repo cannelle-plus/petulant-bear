@@ -46,7 +46,7 @@ let app root urlSite (connection:SQLiteConnection) (system:ActorSystem) repo aut
         |> addRoutes Cleaveage.routes (Cleaveage.authRoutes system repo (getCleaveages connection) )
         |> addRoutes CurrentBear.routes (CurrentBear.authRoutes (getBear connection) system repo (getGames connection) (getGame connection) (saveToDB connection mapCurrentBearCmds))
         |> addRoutes FinishedGames.routes (FinishedGames.authRoutes system repo)
-        |> addRoutes (Bears.routes (signinToDB connection) (signinBearToDB connection)) (Bears.authRoutes (getBears connection) (getBear connection))
+        |> addRoutes (Bears.routes (signinToDB connection) (signinBearToDB connection)) (Bears.authRoutes (getBears connection) (getBear connection) (getBearFromSocialId connection))
         |> addRoutes Rooms.routes (Rooms.authRoutes repo (getRoomDetail connection) (saveToDB connection mapRoomCmds))
         |> addRoutes Home.routes Home.authRoutes
         

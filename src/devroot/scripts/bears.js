@@ -106,6 +106,32 @@ this.PetulantBear = this.PetulantBear || {};
           });
     }
 
+    this.isBearKnown = function (socialId) {
+        //extract the detail of the first bear
+        $.ajax({
+            type: "POST",
+            url: "/api/bears/isBearKnown",
+            dataType: "json",
+            data: JSON.stringify({
+                "socialId": socialId
+            })
+        })
+          .done(function (data) {
+              if (data !== null && data !== undefined) {
+                  var msg = [];
+                  msg.push(data);
+                  $("#isBearKnown").html(msg.join(''));
+              } else {
+                  $("#isBearKnown").html("no bear found");
+              }
+
+
+          })
+          .fail(function (err) {
+              $("#bearDetail").html(err);
+          });
+    }
+
 
 
 
@@ -158,6 +184,9 @@ this.PetulantBear = this.PetulantBear || {};
         
 
         $("#bearsListBtn").click(self.getBears);
+        $("#isBearKnownBtn").click(function (e) { self.isBearKnown('1388221448136137') });
+
+        
 
         
         $("#bearChangeEmailBtn").click(function () {

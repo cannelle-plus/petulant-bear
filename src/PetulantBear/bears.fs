@@ -18,13 +18,12 @@ module Navigation =
     let currentBear = "/api/bears/current"
     let list = "/api/bears/list"
     let detail = "/api/bears/detail"
+    let isBearKnown = "/api/bears/isBearKnown"
     let signinBear = "/api/bears/signinBear"
     let signin = "/api/bears/signin"
-    
-    
+
 
 module Contracts = 
-
 
     [<DataContract>]
     type BearsFilter =
@@ -34,7 +33,14 @@ module Contracts =
       [<field: DataMember(Name = "fromBearId")>]
       fromBearId : Guid;
       }
+    
 
+    [<DataContract>]
+    type IsBearKnown =
+      { 
+      [<field: DataMember(Name = "socialId")>]
+      SocialId : string;
+      }
 
     [<DataContract>]
     type SignIn =
@@ -95,8 +101,7 @@ module Contracts =
 type Commands = 
     | SignIn of Contracts.SignIn
 
-let getBears getBearList (filter:Contracts.BearsFilter) = getBearList filter
-let getBear findBear (filter:Contracts.BearsFilter) = findBear filter.bearId
+
 
 let signIn (store:StateStore) saveSignin bearId socialId  = 
     Types.request(fun r ->
@@ -190,11 +195,16 @@ let routes save saveBear=
         path Navigation.signinBear >>= signinBear saveBear
     ]
 
-let authRoutes  findBears findBear   =
+let authRoutes  findBears findBear fromSocialId  =
     [
         POST >>= choose [ 
-            path Navigation.list >>=  mapJson (getBears findBears)
-            path Navigation.detail >>=  mapJson (getBear  findBear)
+            path Navigation.list >>=  mapJson findBears
+            path Navigation.detail >>=  mapJson (fun (x:Contracts.BearsFilter) -> findBear x.bearId)
+            path Navigation.isBearKnown >>= mapJson (fun (x:Contracts.IsBearKnown)-> 
+                match fromSocialId x.SocialId with
+                | Some(b) -> Some(true)
+                | None -> Some(false)
+            )
         ]
         GET >>= choose [ 
             path Navigation.currentBear >>= session ( fun s ->
