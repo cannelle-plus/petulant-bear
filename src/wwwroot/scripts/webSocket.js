@@ -2,7 +2,10 @@
 (function ($, room) {
 
 var counter = 0;
-var wsUri = "ws://localhost:8084/api/websocket";
+var wsUri = "ws://" + window.location.hostname;
+if(window.location.port) 
+    wsUri += ":" + window.location.port;
+wsUri += "/api/websocket";
 
 var output;
 
