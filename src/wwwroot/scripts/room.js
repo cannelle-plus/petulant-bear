@@ -68,6 +68,23 @@
               });
     };
 
+    this.handle = function(evt) {
+        var data = JSON.parse(evt.data),
+            msg = '';
+        switch (data.PayLoad.Case) {
+            case "MessagePosted":
+            if($('.roomDetailButton').data('id') === data.Enveloppe.aggregateId) {
+
+                msg = "<dt style='background-image:url(" + $('header img').attr('src') + ");'>" + data.Enveloppe.bear.username + "</dt>";
+                msg += "<dd class='" + data.PayLoad.Fields[0].message + "'>" + data.PayLoad.Fields[0].message + "</dd>";
+                $('.chat').prepend(msg);                
+            }
+            break;
+        
+            default:
+        }
+    };
+
 
 }).call(this.PetulantBear.Room || (this.PetulantBear.Room = {}), jQuery, this.PetulantBear.Bears);
 

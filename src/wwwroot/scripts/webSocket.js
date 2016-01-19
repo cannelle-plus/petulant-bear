@@ -38,18 +38,7 @@ function onClose(evt) {
 }
 
 function onMessage(evt) {
-    var data = JSON.parse(evt.data);
-    switch (data.PayLoad.Case) {
-        case "MessagePosted":
-        if($('.roomDetailButton').data('id') === data.Enveloppe.aggregateId) {
-            setTimeout( function() {
-                room.getDetailRoom(data.Enveloppe.aggregateId);
-            }, 2000);
-        }
-        break;
-    
-        default:
-    }
+    room.handle(evt);
     writeToScreen(evt.data);
 }
 
