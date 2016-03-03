@@ -146,21 +146,23 @@ let getGame connection bearId (filter : GamesFilter) =
         
         let isPartOfGame = bearPlayersList.Any(fun b -> b.bearId = bearId)
         let couldParse, version = Int32.TryParse(readerGame.["version"].ToString())
+        let startDate = DateTime.Parse(readerGame.["startDate"].ToString())
+        let isFutureGame = startDate>DateTime.Now
         
         let gameDetail : GameDetail = 
             { id = Guid.Parse(readerGame.["id"].ToString())
               name = readerGame.["name"].ToString()
               ownerId = ownerId
               ownerUserName = readerGame.["ownerBearName"].ToString()
-              startDate = DateTime.Parse(readerGame.["startDate"].ToString())
+              startDate = startDate
               location = readerGame.["location"].ToString()
               players = bearPlayersList
               nbPlayers = Int32.Parse(readerGame.["nbPlayers"].ToString())
               maxPlayers = Int32.Parse(readerGame.["maxPlayers"].ToString())
-              isJoinable = not <| isPartOfGame
-              isCancellable = isOwner
+              isJoinable = isFutureGame && not <| isPartOfGame
+              isCancellable = isFutureGame && isOwner 
               isOwner = isOwner
-              isAbandonnable = isPartOfGame
+              isAbandonnable = isFutureGame && isPartOfGame
               version = 
                   if couldParse then Nullable(version)
                   else Nullable<int>() }
@@ -273,19 +275,21 @@ let getGames connection bearId filter =
         let gameId = Guid.Parse(reader.["id"].ToString())
         let ownerId = reader.["ownerId"].ToString()
         let couldParse, version = Int32.TryParse(reader.["version"].ToString())
+        let startDate = DateTime.Parse(reader.["startDate"].ToString())
+        let isFutureGame = startDate > DateTime.Now
         gamesList.Add({ id = gameId
                         name = reader.["name"].ToString()
                         ownerId = Guid.Parse(ownerId)
                         ownerUserName = reader.["ownerBearName"].ToString()
-                        startDate = DateTime.Parse(reader.["startDate"].ToString())
+                        startDate = startDate
                         location = reader.["location"].ToString()
                         players = reader.["bearnames"].ToString()
                         nbPlayers = Int32.Parse(reader.["nbPlayers"].ToString())
                         maxPlayers = Int32.Parse(reader.["maxPlayers"].ToString())
-                        isJoinable = bool.Parse(reader.["isJoinable"].ToString())
-                        isCancellable = bool.Parse(reader.["isCancellable"].ToString())
+                        isJoinable = isFutureGame && bool.Parse(reader.["isJoinable"].ToString())
+                        isCancellable = isFutureGame&& bool.Parse(reader.["isCancellable"].ToString())
                         isOwner = bool.Parse(reader.["isOwner"].ToString())
-                        isAbandonnable = bool.Parse(reader.["isAbandonnable"].ToString())
+                        isAbandonnable = isFutureGame&& bool.Parse(reader.["isAbandonnable"].ToString())
                         version = 
                             if couldParse then Nullable(version)
                             else Nullable<int>() })

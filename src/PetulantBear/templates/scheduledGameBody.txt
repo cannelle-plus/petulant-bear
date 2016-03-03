@@ -1,1 +1,10 @@
-﻿a new game has arrived!!!
+﻿<p>Etes vous pret a relever ce nouveau challenge !!!</p>
+
+startDate : $game.startDate<br>
+location : $game.location<br>
+maxPlayer : $game.maxPlayer<br>
+nbPlayer : $game.nbPlayer<br>
+Owner : $game.owner<br>
+
+<p>SPARTA!!!!!!!</p>
+

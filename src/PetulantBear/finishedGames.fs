@@ -78,7 +78,7 @@ module private Assert =
     let validCommentBear (comment:CommentBear) state = validator (fun m -> state.isScoreGiven  ) [GamesText.locationUnknow] comment
         
 
-let exec state = function
+let exec state bear = function
     | GiveScore(s)-> Choice1Of2([ScoreGiven({teamAId = s.teamAId; teamAScore = s.teamAScore; teamBId = s.teamBId; teamBScore = s.teamBScore;})])
     | MarkBear(m) -> Assert.validMarkBear m state <?> [BearMarked({bearId= m.bearId; mark = m.mark })]
     | CommentBear(c) -> Assert.validCommentBear c state <?> [BearCommented({bearId= c.bearId; comment = c.comment })]

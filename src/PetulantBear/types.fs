@@ -8,6 +8,7 @@ open System.Runtime.Serialization
 open System.Data.SQLite
 open Akka.Actor
 
+
 open Suave // always open suave
 open Suave.Types
 open Suave.Http
@@ -305,6 +306,8 @@ let getInSession f =
 let withBear  =
     statefulForSession 
     >>= context (fun x ->
+            
+
             let store = x |> HttpContext.state
             match  store with
             | None -> Http.RequestErrors.BAD_REQUEST "no state found"
@@ -370,8 +373,11 @@ type IEventStoreProjection =
     inherit IDisposable
     abstract member SubscribeToStreamFrom:  string -> Nullable<int> -> bool -> Projection -> unit
 
-let processingCommand<'TAgg, 'TContract,'TCommand, 'TEvents>   (repo:IEventStoreRepository) streamName apply initialState (exec:'TAgg -> 'TCommand -> Choice<'TEvents list,string list>)  (mapCmd:'TContract->'TCommand) x =
+let processingCommand<'TAgg, 'TContract,'TCommand, 'TEvents>   (repo:IEventStoreRepository) streamName apply initialState (exec:'TAgg -> BearSession -> 'TCommand -> Choice<'TEvents list,string list>)  (mapCmd:'TContract->'TCommand) x =
      async {
+
+        
+
         // check global context first
         if not <| x.userState.ContainsKey "cmd" || not <| x.userState.ContainsKey "bear" then 
             return Some(x)
@@ -379,14 +385,33 @@ let processingCommand<'TAgg, 'TContract,'TCommand, 'TEvents>   (repo:IEventStore
             let cmd = x.userState.["cmd"] :?> Command<'TContract>
             let bear = x.userState.["bear"] :?> BearSession
             let idAggregate = cmd.id
+
+            let logger = Logary.Logging.getLoggerByName "Logary.Targets.ElmahIO"
+            
+//            Logary.LogLine.warn (x.request.url.ToString())
+//            |> Logary.LogLine.setData "bear" bear
+//            |> Logary.LogLine.setData "cmd" cmd
+//            |> Logary.LogLine.setData "url" x.request.url
+//            |> Logary.LogLine.setData "headers" x.request.headers
+//            |> logger.Log
         
             // if there is no version it means the aggregate does not support event sourcing
             if (not <| repo.IsCommandProcessed cmd.idCommand) && cmd.version.HasValue then
                 let! state,v = repo.HydrateAggAsync<'TAgg,'TEvents> streamName  apply initialState idAggregate
 
-                match cmd.payLoad |> mapCmd |> exec state  with
+                match cmd.payLoad |> mapCmd |> exec state bear  with
                 | Choice1Of2(evts) ->
+
+                    sprintf "Events to Apply : %A" evts
+                    |> Logary.LogLine.warn
+                    |> Logary.Logging.getCurrentLogger().Log
+
                     let newState = List.fold apply state evts
+                    
+                    sprintf "Aggregate After applying Events  : %A" newState
+                    |> Logary.LogLine.warn
+                    |> Logary.Logging.getCurrentLogger().Log
+
                     let enveloppe = createEnveloppe  cmd.idCommand cmd.id bear v
                     do! repo.SaveEvtsAsync<'TEvents> streamName enveloppe evts
                     do! repo.SaveCommandProcessedAsync cmd

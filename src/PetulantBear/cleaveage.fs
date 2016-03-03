@@ -178,7 +178,7 @@ module private Assert =
     let validActionCleaveage state = validator (fun s -> s.isOpenned  )  ["err:the cleaveage is closed"] state
     let validProposeCleaveage cmd state = validator (fun (cmd:Contracts.ProposeCleaveage) -> cmd.gameId <> Guid.Empty) ["err:the gameId is empty"] cmd
 
-let exec state = function
+let exec state bear = function
     | ProposeCleaveage (cmd) -> Assert.validProposeCleaveage cmd state <?> [CleaveageProposed({ gameId= cmd.gameId; teamAId = Guid.NewGuid(); nameTeamA = cmd.nameTeamA; teamBId = Guid.NewGuid();nameTeamB = cmd.nameTeamB; })]
     | ChangeNameTeam(cmd) -> Assert.validActionCleaveage state <?> [NameTeamChanged({ teamId = cmd.teamId; nameTeam= cmd.nameTeam })]
     | JoinTeam (cmd) -> Assert.validActionCleaveage state <?> [TeamJoined({ teamId = cmd.teamId })]

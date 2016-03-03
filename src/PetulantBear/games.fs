@@ -2,6 +2,7 @@ module PetulantBear.Games
 
 open System
 open System.Collections.Generic
+open System.Linq
 open Newtonsoft.Json
 
 open Suave // always open suave
@@ -32,6 +33,19 @@ module Navigation =
     let changeMaxPlayer = "/api/games/changeMaxPlayer"
 
 module Contracts =
+
+    type EmptyClass() =
+        override x.Equals(yobj) =
+            match yobj with
+            | :? EmptyClass as y -> true
+            | _ -> false
+ 
+        override x.GetHashCode() = hash 7
+        interface System.IComparable with
+          member x.CompareTo yobj =
+              match yobj with
+              | :? EmptyClass as y -> 0
+              | _ -> invalidArg "yobj" "cannot compare values of different types"
 
     type GamesFilter =
       {
@@ -123,15 +137,21 @@ module Contracts =
       kickedBearId : Guid;
       }
 
-    type Join() = class end
-    type Abandon() = class end
-    type Cancel() = class end
-    type Close() = class end
+    type Join = EmptyClass
+    type Abandon = EmptyClass
+    type Cancel = EmptyClass
+    type Close = EmptyClass
 
-    type GameAbandonned() = class end
-    type GameJoined() = class end
-    type GameCancelled() = class end
-    type GameClosed() = class end
+    type GameAbandonned = 
+      {
+      bearId : Guid;
+      }
+    type GameJoined = 
+      {
+      bearId : Guid;
+      }
+    type GameCancelled = EmptyClass
+    type GameClosed = EmptyClass
 
     type GameScheduled =
       {
@@ -166,6 +186,23 @@ module Contracts =
       {
       maxPlayers : int;
       }
+    type PlayerAddedToTheLineUp =
+      {
+        bearId : Guid;
+      }
+    type PlayerRemovedFromTheLineUp =
+      {
+        bearId : Guid;
+      }
+    type PlayerAddedToTheBench =
+      {
+        bearId : Guid;
+      }
+    type PlayerRemovedFromTheBench =
+      {
+        bearId : Guid;
+        isRemovedFromTheGame : bool;
+      }
 
 type Commands =
   | Schedule of Contracts.ScheduleGame
@@ -179,8 +216,6 @@ type Commands =
   | KickPlayer of Contracts.KickPlayer
   | ChangeMaxPlayer of Contracts.ChangeMaxPlayer
 
-
-
 type Events =
   | Scheduled of Contracts.GameScheduled
   | Abandonned  of Contracts.GameAbandonned
@@ -192,16 +227,20 @@ type Events =
   | LocationChanged of Contracts.LocationChanged
   | PlayerKicked of Contracts.PlayerKicked
   | MaxPlayerChanged of Contracts.MaxPlayerChanged
-
+  | PlayerAddedToTheLineUp of Contracts.PlayerAddedToTheLineUp
+  | PlayerRemovedFromTheLineUp of Contracts.PlayerRemovedFromTheLineUp
+  | PlayerAddedToTheBench of Contracts.PlayerAddedToTheBench
+  | PlayerRemovedFromTheBench of Contracts.PlayerRemovedFromTheBench
 
 type State = {
     nbPlayer : int;
     maxPlayer : int;
     startDate : DateTime;
     isOpenned : bool;
-}
-with static member Initial = { nbPlayer = 0; maxPlayer=0; startDate = DateTime.MaxValue; isOpenned= false}
-
+    lineUp : Guid list;
+    bench : Guid list;
+    }
+with static member Initial = { nbPlayer = 0; maxPlayer=0; startDate = DateTime.MaxValue; isOpenned= false; lineUp= []; bench = []}
 
 module private Assert =
 
@@ -211,67 +250,86 @@ module private Assert =
         validator (fun (cmd:Contracts.ScheduleGame) -> cmd.location <> ""  ) [GamesText.locationUnknow] command
         <* validator (fun g -> not<| g.isOpenned ) [GamesText.gameAlreadyScheduled] state
     
-    let validJoinGame state = 
+    let validJoinGame bear state = 
         validAction state
         <* validator (fun g -> g.startDate>DateTime.Now    ) ["err:the game has already started"] state
+        <* validator (fun (b,g) -> not <| (g.lineUp |> Seq.append g.bench |> Seq.exists (fun x -> x=b.bearId))) ["err:this bear is already part of the game"] (bear,state)
 
-    let validAbandonGame state = 
+    let validAbandonGame bear state = 
         validAction state
         <* validator (fun g->  g.startDate>DateTime.Now ) ["err:the game has already started"] state
+        <* validator (fun (b,g) -> g.lineUp |> Seq.append g.bench |> Seq.exists (fun x -> x=b.bearId)) ["err:this bear is not part of the game"] (bear,state)
 
     let validChangeStartDate (cmd:Contracts.ChangeStartDate) state = 
         validAction state
         <* validator (fun g-> cmd.startDate>DateTime.Now) ["It is not possible to reschedule a game in the past"] state
 
-let exec state = function
-    | Schedule (cmd) -> Assert.validScheduleGame cmd state <?> [Scheduled({ name = cmd.name; startDate = cmd.startDate ; location = cmd.location; players = cmd.players;  nbPlayers = cmd.nbPlayers; maxPlayers = cmd.maxPlayers; });Joined(Contracts.GameJoined())]
-    | Abandon(cmd)  -> Assert.validAbandonGame state <?> [Abandonned(Contracts.GameAbandonned())]
-    | Cancel(cmd) -> Assert.validAbandonGame state <?> [Cancelled(Contracts.GameCancelled())]
+let exec state bear = function
+    | Schedule (cmd) -> 
+        let evts = [
+            Scheduled({ name = cmd.name; startDate = cmd.startDate ; location = cmd.location; players = cmd.players;  nbPlayers = cmd.nbPlayers; maxPlayers = cmd.maxPlayers; });
+            Joined({bearId=bear.bearId})
+            PlayerAddedToTheLineUp({ bearId=bear.bearId})
+        ]
+        Assert.validScheduleGame cmd state <?> evts
+    | Abandon(cmd)  -> 
+        let evts =
+            if (state.lineUp.Contains(bear.bearId)) then  
+                let playerOnTheBench = if (state.bench.Any())  then [PlayerAddedToTheLineUp({ bearId=state.bench.First()});PlayerRemovedFromTheBench({bearId= state.bench.First(); isRemovedFromTheGame=false })] else []
+                 
+                playerOnTheBench
+                |> List.append [Abandonned({bearId=bear.bearId});PlayerRemovedFromTheLineUp({bearId= bear.bearId})] 
+            else 
+                [Abandonned({bearId=bear.bearId});PlayerRemovedFromTheBench({bearId= bear.bearId;isRemovedFromTheGame= true })]
+            
+        Assert.validAbandonGame bear state <?> evts
+    | Cancel(cmd) -> Assert.validAction state <?> [Cancelled(Contracts.GameCancelled())]
     | Close(cmd) -> Assert.validAction state <?> [Closed(Contracts.GameClosed())]
-    | Join(cmd) -> Assert.validAbandonGame state <?> [Joined(Contracts.GameJoined())]
+    | Join(cmd) -> 
+        if (state.lineUp.Length = state.maxPlayer ) then  Assert.validJoinGame bear state <?> [Joined({bearId=bear.bearId});PlayerAddedToTheBench({ bearId=bear.bearId})]
+        else Assert.validJoinGame bear state <?> [Joined({bearId=bear.bearId});PlayerAddedToTheLineUp({ bearId=bear.bearId})] 
     | ChangeName(cmd) -> Assert.validAction state <?> [NameChanged({ name=cmd.name})]
     | ChangeStartDate(cmd) -> Assert.validChangeStartDate cmd state <?> [StartDateChanged({ startDate= cmd.startDate})]
     | ChangeLocation(cmd) -> Assert.validAction state <?> [LocationChanged({ location=cmd.location})]
-    | KickPlayer(cmd) ->  Assert.validAction state <?> [PlayerKicked({ kickedBearId=cmd.kickedBearId})]
+    | KickPlayer(cmd) ->  
+        let evts =
+            if (state.lineUp.Contains(bear.bearId)) then  
+                let playerOnTheBench = if (state.bench.Any())  then [PlayerAddedToTheLineUp({ bearId=state.bench.Last()});PlayerRemovedFromTheBench({bearId=state.bench.Last(); isRemovedFromTheGame=false })] else []
+
+                playerOnTheBench
+                |> List.append [PlayerKicked({ kickedBearId=cmd.kickedBearId});PlayerRemovedFromTheLineUp({bearId= bear.bearId})]
+            else 
+                [PlayerKicked({ kickedBearId=cmd.kickedBearId});PlayerRemovedFromTheBench({bearId= bear.bearId;isRemovedFromTheGame= true })]
+        Assert.validAction state <?> evts
     | ChangeMaxPlayer(cmd) -> Assert.validAction state <?> [MaxPlayerChanged({ maxPlayers=cmd.maxPlayers})]
 
-
 let applyEvts state = function
-    | Scheduled(evt) -> { state with isOpenned= true; startDate= evt.startDate}
+    | Scheduled(evt) -> { state with isOpenned= true; startDate= evt.startDate; maxPlayer= evt.maxPlayers}
     | Abandonned(evt) -> { state with nbPlayer= state.nbPlayer-1 }
     | Cancelled(evt) -> { state with isOpenned = false }
     | Closed(evt) -> { state with isOpenned = false }
-    | Joined(evt)  -> { state with nbPlayer= state.nbPlayer+1 }
-    | PlayerKicked(evt) -> { state with nbPlayer= state.nbPlayer-1 }
+    | Joined(evt)  ->  { state with nbPlayer= state.nbPlayer+1;}
+    | PlayerKicked(evt) ->  { state with nbPlayer= state.nbPlayer-1 ; }
+    | PlayerAddedToTheLineUp(evt) -> {state with lineUp= evt.bearId::state.lineUp}
+    | PlayerRemovedFromTheLineUp(evt) -> 
+        let newLineUp =
+            state.lineUp
+            |> Seq.filter (fun x-> x<>evt.bearId)
+            |> Seq.toList
+        {state with lineUp= newLineUp}
+    | PlayerAddedToTheBench(evt) ->  {state with bench= evt.bearId::state.bench}
+    | PlayerRemovedFromTheBench(evt) -> 
+        let newBench =
+            state.bench
+            |> Seq.filter (fun x-> x<>evt.bearId)
+            |> Seq.toList
+        {state with bench= newBench}
     | _ -> state
-
 
 let routes = []
 
-//should I ever use the actors.. I wonder:: may be when the situations will become more complex
-//
-//let gameActor id saveEvents  saveToDB=
-//    fun (mailbox:Actor<Guid*int*Guid*Commands>) ->
-//        let rec loop (currentVersion, state:State) = actor {
-//            let! (id,version,bearId,cmd) = mailbox.Receive()
-//            let evts = cmd |> exec state
-//            match evts with
-//            | Choice1Of2(evts) ->
-//                let newState = List.fold applyEvts state evts
-//                saveEvents "game" (id, currentVersion, evts)
-//                saveToDB (id,version,bearId) cmd |> ignore
-//                mailbox.Sender() <! ResultFound(Success(cmd))
-//                return! loop(currentVersion+ evts.Length,newState)
-//            | Choice2Of2(failure) ->
-//                return! loop(currentVersion,state)
-//        }
-//        loop(0,State.Initial)
-
-
 //open the contracts for simple use in the definition of the routes
 open Contracts
-
-    
 
 let authRoutes (system:ActorSystem) repo getGameList getGame  saveToDB=
 

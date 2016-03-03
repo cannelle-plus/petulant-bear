@@ -200,9 +200,9 @@ this.PetulantBear = this.PetulantBear || {};
                     msg.push('</ul></li><br />');
 
                     if (data.isJoinable)
-                        msg.push('<li class="detailAction infos"><a href="#" class="actionJoin button button-small" data-id="' + data.id + '" data-version="' + data.version + '">Rejoindre</a></li>');
+                        msg.push('<li class="detailAction infos"><a href="#" id="actionDetailJoin" class="actionJoin detail button button-small" data-id="' + data.id + '" data-version="' + data.version + '">Rejoindre</a></li>');
                     else if (data.isAbandonnable)
-                        msg.push('<li class="detailAction infos"><a href="#" class="actionAbandonGame button button-small" data-id="' + data.id + '" data-version="' + data.version + '">Quitter</a></li>');
+                        msg.push('<li class="detailAction infos"><a href="#" id="actionDetailAbandonGame" class="actionAbandonGame detail button button-small" data-id="' + data.id + '" data-version="' + data.version + '">Quitter</a></li>');
                     
                     msg.push('</ul>');
 
@@ -246,9 +246,9 @@ this.PetulantBear = this.PetulantBear || {};
                         });
                     }
                 }
-                $(".actionJoin").click(gameAction(self.join, "joinResult"));
-                $(".actionCancelGame").click(gameAction(self.cancel, "cancelResult"));
-                $(".actionAbandonGame").click(gameAction(self.abandon, "abandonResult"));
+                $("#actionDetailJoin").click(gameAction(self.join, "joinResult"));
+                $("#actionDetailCancelGame").click(gameAction(self.cancel, "cancelResult"));
+                $("#actionDetailAbandonGame").click(gameAction(self.abandon, "abandonResult"));
                   
                 loader.hide();
 
@@ -260,13 +260,15 @@ this.PetulantBear = this.PetulantBear || {};
 
     this.getGames = function () {
         loader.show();
+        fromDate = $("#fromDate").val();
+        toDate = $("#toDate").val();
         $.ajax({
             type: "POST",
             url: "api/games/list",
             dataType: "json",
             data: JSON.stringify({
-                "from": new Date(),
-                "to": new Date().addHours(168)
+                "from": (new Date(fromDate)).toJSON(),
+                "to": (new Date(toDate)).toJSON()
             })
         })
               .done(function (data) {
@@ -295,16 +297,16 @@ this.PetulantBear = this.PetulantBear || {};
 
 
                         if (data[i].isJoinable)
-                            msg.push('<button type="button" class="actionJoin" data-id="' + data[i].id + '" data-version="' + data[i].version + '">Rejoindre</button>');
+                            msg.push('<button type="button"  class="actionListJoin" data-id="' + data[i].id + '" data-version="' + data[i].version + '">Rejoindre</button>');
                         else
                             msg.push('&nbsp;');
 
                         if (data[i].isAbandonnable)
-                            msg.push('<button type="button" class="actionAbandonGame" data-id="' + data[i].id + '" data-version="' + data[i].version + '">Quitter</button>');
+                            msg.push('<button type="button" class="actionListAbandonGame" data-id="' + data[i].id + '" data-version="' + data[i].version + '">Quitter</button>');
                         else
                             msg.push('&nbsp;');
                         if (data[i].isCancellable)
-                            msg.push('<button type="button" class="actionCancelGame" data-id="' + data[i].id + '" data-version="' + data[i].version + '">Supprimer</button>');
+                            msg.push('<button type="button" class="actionListCancelGame" data-id="' + data[i].id + '" data-version="' + data[i].version + '">Supprimer</button>');
                         else
                             msg.push('&nbsp;');
                         
@@ -346,9 +348,9 @@ this.PetulantBear = this.PetulantBear || {};
                       }
                   }
 
-                  $(".actionJoin").click(gameAction(self.join, "joinResult"));
-                  $(".actionCancelGame").click(gameAction(self.cancel, "cancelResult"));
-                  $(".actionAbandonGame").click(gameAction(self.abandon, "abandonResult"));
+                  $(".actionListJoin").click(gameAction(self.join, "joinResult"));
+                  $(".actionListCancelGame").click(gameAction(self.cancel, "cancelResult"));
+                  $(".actionListAbandonGame").click(gameAction(self.abandon, "abandonResult"));
                   $('.more a').on('click', function(e){
                     doNothing(e);
                     $(this).closest('li').find('.action').show();
@@ -378,6 +380,10 @@ this.PetulantBear = this.PetulantBear || {};
             });
         });
 
+        $("#getGames").click(self.getGames);
+        $("#fromDate").val(new Date().toHtml5Date());
+        $("#toDate").val(new Date().addHours(168).toHtml5Date());
+        
         self.getGames();
     }
 

@@ -10,6 +10,7 @@ open PetulantBear.ServingFiles
 open PetulantBear.Tests.Games.Domain
 open PetulantBear.Tests.Games.Actor
 open PetulantBear.Tests.Games.API
+open PetulantBear.Tests
 
 
 let rootPath = @"src\"
@@ -22,13 +23,13 @@ let main args =
 //          getting_the_application_page(rootPath);
 //          bears_api(rootPath);
           //games tests
-//          gamesDomainTests
+           gamesDomainTests
+//           EventStoreRepo.eventStoreRepoTests
 //          gamesActorBasedTests;
 //          games_api(rootPath);
         ]
         |> List.map run
-        |> List.reduce (fun x y -> x+y)
     //|> Test.filter (fun n -> n.Contains "simple")
     Console.WriteLine("test finished...")
-    //Console.ReadKey() |> ignore
+    Console.ReadKey() |> ignore
     0

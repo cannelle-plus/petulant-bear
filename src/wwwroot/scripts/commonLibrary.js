@@ -5,6 +5,18 @@ Date.prototype.addHours = function (h) {
     return this;
 };
 
+Date.prototype.toHtml5Date = function () {
+    var year = this.getFullYear();
+    var m = this.getMonth() + 1;
+    var month = m > 9 ? m : "0" + m;
+    var day = this.getDate() > 9 ? this.getDate() : "0" + this.getDate();
+    return year + "-" + month + "-" + day;
+};
+
+var toHtml5Date = function (d) {
+    
+}
+
 var guid = function () {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         var r = Math.random() * 16 | 0,

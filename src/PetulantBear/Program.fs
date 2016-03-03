@@ -40,10 +40,13 @@ type PetulantConfig = {
     EventStoreConnectionString :string;
     EventStoreClientIp :string;
     EventStoreClientPort :int;
+    EventStoreClientUsername :string;
+    EventStoreClientPassword :string;
     DbConnection :string;
     Elmah:Logary.Targets.ElmahIO.ElmahIOConf;
 }
-with static member Initial = {RootPath=""; IpAddress =""; Port =0; UrlSite= ""; EventStoreConnectionString =""; EventStoreClientIp=""; EventStoreClientPort=0; DbConnection =""; Elmah={ logId = Guid.Empty; };}
+    
+with static member Initial = {RootPath=""; IpAddress =""; Port =0; UrlSite= ""; EventStoreConnectionString =""; EventStoreClientIp=""; EventStoreClientPort=0; EventStoreClientUsername=""; EventStoreClientPassword=""; DbConnection =""; Elmah={ logId = Guid.Empty; }}
 
 let parseArg conf (arg:string) =
     match arg.Split([|'='|],2) with
@@ -65,6 +68,8 @@ let parseArg conf (arg:string) =
           match Int32.TryParse( b) with
           | true,x ->  { conf with EventStoreClientPort=x}
           | false,_ -> conf
+        | "--eventStoreConnectionUsername" -> { conf with EventStoreClientUsername=b}
+        | "--eventStoreConnectionPassword" -> { conf with EventStoreClientPassword=b}
         | "--dbConnection" -> { conf with DbConnection=b}
         | "--elmah" ->
             match Guid.TryParse( b) with
@@ -95,6 +100,8 @@ let main args =
     let couldParseElmah,elmah = Guid.TryParse(ConfigurationManager.AppSettings.Get("elmah.io"))
     let eventStoreClientIp = ConfigurationManager.AppSettings.["eventStoreClientIp"]
     let couldParseClientPort, eventStoreClientPort = Int32.TryParse( ConfigurationManager.AppSettings.["eventStoreClientPort"])
+    let eventStoreUsername = ConfigurationManager.AppSettings.["eventStoreUserName"]
+    let eventStorePassword = ConfigurationManager.AppSettings.["eventStorePassword"]
 
     // apply default values to config over appConfig
     let initialConfig = {
@@ -108,6 +115,8 @@ let main args =
             Elmah = if couldParseElmah then { logId = elmah; } else { logId = Guid.Empty; }
             EventStoreClientIp = if eventStoreClientIp <> "" then eventStoreClientIp else "127.0.0.1"
             EventStoreClientPort = if couldParseClientPort then eventStoreClientPort else 2113
+            EventStoreClientUsername = if eventStoreUsername<>"" then eventStoreUsername else "admin"
+            EventStoreClientPassword = if eventStorePassword<>"" then eventStorePassword else "changeit"
     }
 
     // apply args values to config
@@ -116,7 +125,7 @@ let main args =
     use connection = new SQLiteConnection(confPetulant.DbConnection)
     connection.Open()
 
-    let repo = EventSourceRepo.create connection confPetulant.EventStoreConnectionString
+    let repo = EventSourceRepo.create connection confPetulant.EventStoreConnectionString confPetulant.EventStoreClientUsername confPetulant.EventStoreClientPassword
     let conn =(repo:>IEventStoreRepository).Connect()
 
     use logary =
@@ -151,10 +160,10 @@ let main args =
 
     //create the subscription to live events
     let httpendPoint = new IPEndPoint(System.Net.IPAddress.Parse(confPetulant.EventStoreClientIp), confPetulant.EventStoreClientPort);
-    let wsSubscribe,wsUnsubscribe,nameLiveProjection,liveProjection = PetulantBear.Projections.Live.create (repo:> IEventStoreProjection) connection httpendPoint
+    let wsSubscribe,wsUnsubscribe,nameLiveProjection,liveProjection = PetulantBear.Projections.Live.create (repo:> IEventStoreProjection) connection httpendPoint (confPetulant.EventStoreClientUsername) (confPetulant.EventStoreClientPassword)
 
     //create the subscription to catchup projections
-    let ctx = Projections.CatchUp.create (repo:>IEventStoreProjection)  connection httpendPoint
+    let ctx = Projections.CatchUp.create (repo:>IEventStoreProjection)  connection httpendPoint (confPetulant.EventStoreClientUsername) (confPetulant.EventStoreClientPassword)
     [
         (nameLiveProjection,liveProjection)
         (PetulantBear.Projections.Games.name,PetulantBear.Projections.Games.projection)

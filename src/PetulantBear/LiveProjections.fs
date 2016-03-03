@@ -39,8 +39,8 @@ let liveProjection  (ctx:ProjectionsCtx) =
         let jsonMeta = System.Text.Encoding.UTF8.GetString( re.Event.Metadata);
         let meta = JsonConvert.DeserializeObject<Enveloppe>(jsonMeta);
 
-        sprintf "eventAppeared live subscription:, jsonMeta: %A, json %A"  jsonMeta json 
-        |> ctx.logger.Info
+//        sprintf "eventAppeared live subscription:, jsonMeta: %A, json %A"  jsonMeta json 
+//        |> ctx.logger.Info
 
         let  evt = {
             Enveloppe = meta;
@@ -71,9 +71,9 @@ let liveProjection  (ctx:ProjectionsCtx) =
     subscribe,unsubscribe,name,projection
 
 
-let create (projectionRepo:IEventStoreProjection ) (connection:SQLiteConnection) (httpEndPoint:IPEndPoint) = 
+let create (projectionRepo:IEventStoreProjection ) (connection:SQLiteConnection) (httpEndPoint:IPEndPoint) (eventStoreUserName:string) (eventStorePassword :string)= 
     let log = new EventStore.ClientAPI.Common.Log.ConsoleLogger()
-    let defaultUserCredentials = new SystemData.UserCredentials("admin","changeit")
+    let defaultUserCredentials = new SystemData.UserCredentials(eventStoreUserName,eventStorePassword)
     let ctx = { 
         logger  = log
         ep      = httpEndPoint

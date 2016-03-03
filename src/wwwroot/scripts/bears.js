@@ -184,13 +184,27 @@ this.PetulantBear = this.PetulantBear || {};
         $("#changeBearEmail").on('submit', function (e) {
             doNothing(e);
             loader.show();
-            self.changeEmail($('#changeBearEmail').val()).done(function(){
+            self.changeEmail($('#bearEmail').val()).done(function () {
               loader.hide();
             });
         });
 
         //Onload
-        this.setAvatar(); 
+        this.setAvatar();
+
+        $('.logout').on('click', function (e) {
+            doNothing(e);
+            loader.show();
+            $.ajax({
+                url: "/logout"
+            })
+              .done(function (data) {
+                  window.location.href = '/'
+              })
+              .fail(function (err) {
+                  console.error(err);
+              })
+        });
 
         //extract the detail of the current bear
         return $.ajax({
@@ -226,19 +240,7 @@ this.PetulantBear = this.PetulantBear || {};
             $("#bearDetail").html(err);
         });       
 
-        $('.logout').on('click', function(e){
-          doNothing(e);
-          loader.show();
-          $.ajax({
-              url: "/logout"
-          })
-            .done(function (data) {
-              window.location.href = '/'
-            })
-            .fail(function (err) {
-              console.error(err);
-            })
-        });
+        
 
     }
 

@@ -30,9 +30,11 @@
     <add key="IPAddress" value="172.31.20.17"/>
     <add key="Port" value="80"/>
     <add key="urlSite" value="http://www.bear2bear.fr"/>
-    <add key="eventStoreConnectionString" value="tcp://127.0.0.1:1113" />
-    <add key="eventStoreClientIp" value="127.0.0.1" />
+    <add key="eventStoreConnectionString" value="tcp://172.31.20.17:1113" />
+    <add key="eventStoreClientIp" value="172.31.20.17" />
     <add key="eventStoreClientPort" value="2113" />
+    <add key="eventStoreUserName" value="admin" />
+    <add key="eventStorePassword" value="changeit" />
   </appSettings>
   <runtime>
     <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">

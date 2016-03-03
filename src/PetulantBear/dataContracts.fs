@@ -5,7 +5,6 @@ open System
 open System.Runtime.Serialization
 
 
-
 [<DataContract>]
 type ResultResponse = 
   {

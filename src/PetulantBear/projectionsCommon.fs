@@ -74,11 +74,11 @@ let withEvent connection name f escus (resolvedEvent:ResolvedEvent)  =
         f meta jsonEvent 
         updateProjection connection name meta.messageId
 
-let logProjection name  (resolvedEvent:ResolvedEvent) m evt =
-    let streamId = resolvedEvent.OriginalEvent.EventStreamId 
-    let eventId = resolvedEvent.Event.EventId
-    let eventType  = resolvedEvent.Event.EventType
-    sprintf "Projection : %s  --> stream : %A, evtAppeared type:%A id:%A metaData = %A , data:%A" name streamId eventType eventId m evt
-    |> Logary.LogLine.error 
-    |> Logary.Logging.getCurrentLogger().Log
+let logProjection name  (resolvedEvent:ResolvedEvent) m evt =()
+//    let streamId = resolvedEvent.OriginalEvent.EventStreamId 
+//    let eventId = resolvedEvent.Event.EventId
+//    let eventType  = resolvedEvent.Event.EventType
+//    sprintf "Projection : %s  --> stream : %A, evtAppeared type:%A id:%A metaData = %A , data:%A" name streamId eventType eventId m evt
+//    |> Logary.LogLine.error 
+//    |> Logary.Logging.getCurrentLogger().Log
     

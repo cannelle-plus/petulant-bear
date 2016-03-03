@@ -17,10 +17,10 @@ type Status =
     | Connected
     | Closed
 
-type Repository(connection:SQLiteConnection, eventStoreConnectionString) =
+type Repository(connection:SQLiteConnection, eventStoreConnectionString, eventStoreUserName, eventStorePassword) =
 
     let mutable status = Closed
-    let defaultUserCredentials = new SystemData.UserCredentials("admin","changeit")
+    let defaultUserCredentials = new SystemData.UserCredentials(eventStoreUserName,eventStorePassword)
     let settingsBuilder = ConnectionSettings.Create()
                                      .KeepRetrying()
                                      .KeepReconnecting()
@@ -172,29 +172,35 @@ type Repository(connection:SQLiteConnection, eventStoreConnectionString) =
 
         member this.HydrateAggAsync<'TAgg,'TEvent>  streamName (applyTo:'TAgg -> 'TEvent ->'TAgg) (initialState:'TAgg)  (id:Guid) =
 
-            let rec applyRemainingEvents evts =
-                match evts with
-                | [] ->  initialState
-                | head :: tail ->  applyTo (applyRemainingEvents tail) head
+            
+            let rec readEventsSequentially start step state = async {
 
-
-            async {
-
-                printfn "reading stream events..."
+                
                 let n = createNameAgg streamName id
 
-                let! slice = conn.ReadStreamEventsForwardAsync(n,0,99,false) |> Async.AwaitTask
+                let! slice = conn.ReadStreamEventsForwardAsync(n,start,step,false) |> Async.AwaitTask
 
                 let evts =
                     slice.Events
                     |> Seq.map (fun (e:ResolvedEvent) -> JsonConvert.DeserializeObject<'TEvent>(System.Text.Encoding.UTF8.GetString(e.Event.Data)))
                     |> Seq.toList
-                printfn "%i events read" evts.Length
-                evts |> List.iteri (fun i e-> printfn "applying event %i" i)
-                let (aggregate:'TAgg) = evts |> applyRemainingEvents 
+                
 
-                return aggregate,evts.Length-1
+                sprintf "Events used to hydrate : %A" evts
+                    |> Logary.LogLine.warn
+                    |> Logary.Logging.getCurrentLogger().Log
+                
+                let (aggregate:'TAgg) = List.fold applyTo state evts
+
+                if (slice.IsEndOfStream) then 
+                    sprintf "Aggregate Hydrated : %A" aggregate
+                    |> Logary.LogLine.warn
+                    |> Logary.Logging.getCurrentLogger().Log
+                    return aggregate,slice.NextEventNumber-1
+                else return! readEventsSequentially slice.NextEventNumber step aggregate
             }
+
+            readEventsSequentially 0 99 initialState
             
 
     
@@ -229,4 +235,4 @@ type Repository(connection:SQLiteConnection, eventStoreConnectionString) =
             for entry in activeSubscriptions do entry.Value.Stop()
             
 
-let create dbConnection cs = (new Repository(dbConnection,cs))
+let create dbConnection cs username password = (new Repository(dbConnection,cs,username,password))

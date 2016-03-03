@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+﻿<!DOCTYPE HTML>
 <html lang="fr">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -19,9 +19,18 @@
   </header>
   <div id="main">
     <section id="games">
+      
       <div id="gamesList"></div>
       <footer class="clearfix">
-        <p><a href="#" data-target="scheduleGame">Créer une nouvelle partie</a></p>
+
+        <p>
+            <div class="clearfix headerGames">
+                <input type="date" placeholder="Date" id="fromDate" ref="from" />
+                <input type="date" placeholder="Date" id="toDate" ref="to" />
+                <button id="getGames">get games</button>
+            </div>
+          <a href="#" data-target="scheduleGame">Créer une nouvelle partie</a>
+        </p>
       </footer>
     </section>
     <section id="gameDetail">

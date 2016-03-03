@@ -70,9 +70,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{121CBE16-6D50-46AF-93D7-C3D0A3699812}"
 	ProjectSection(SolutionItems) = preProject
 		src\wwwroot\scripts\app.js = src\wwwroot\scripts\app.js
+		src\wwwroot\scripts\bears.js = src\wwwroot\scripts\bears.js
+		src\wwwroot\scripts\cleaveage.js = src\wwwroot\scripts\cleaveage.js
+		src\wwwroot\scripts\commonLibrary.js = src\wwwroot\scripts\commonLibrary.js
+		src\wwwroot\scripts\games.js = src\wwwroot\scripts\games.js
 		src\wwwroot\scripts\home.js = src\wwwroot\scripts\home.js
 		src\wwwroot\scripts\navigation.js = src\wwwroot\scripts\navigation.js
+		src\wwwroot\scripts\room.js = src\wwwroot\scripts\room.js
 		src\wwwroot\scripts\signin.js = src\wwwroot\scripts\signin.js
+		src\wwwroot\scripts\webSocket.js = src\wwwroot\scripts\webSocket.js
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "css", "css", "{FE7E1B9D-4197-4328-BD43-BB853D79297B}"

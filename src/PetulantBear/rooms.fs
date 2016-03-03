@@ -146,7 +146,7 @@ type State = {
 }
 with static member Initial = { NbMessages = 0}
 
-let exec state = function
+let exec state bear = function
     | PostMessage(cmd) -> Choice1Of2([MessagePosted({ message=cmd.message})])
     | PostImage(cmd) -> Choice1Of2([ImagePosted({ urlImage=cmd.urlImage})])
     | PostVideo(cmd) -> Choice1Of2([VideoPosted({ urlVideo=cmd.urlVideo})])

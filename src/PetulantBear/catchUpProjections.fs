@@ -134,9 +134,9 @@ let startProjection ctx name projection =
             ctx.projectionRepo.SubscribeToStreamFrom name (Nullable<int>()) true projection
 
             
-let create (projectionRepo:IEventStoreProjection ) (connection:SQLiteConnection) (httpEndPoint:IPEndPoint) = 
+let create (projectionRepo:IEventStoreProjection ) (connection:SQLiteConnection) (httpEndPoint:IPEndPoint) eventStoreUserName eventStorePassword = 
     let log = new EventStore.ClientAPI.Common.Log.ConsoleLogger()
-    let defaultUserCredentials = new SystemData.UserCredentials("admin","changeit")
+    let defaultUserCredentials = new SystemData.UserCredentials(eventStoreUserName,eventStorePassword)
     let ctx = { 
         logger  = log
         ep      = httpEndPoint
