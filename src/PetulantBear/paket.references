@@ -14,4 +14,4 @@ NodaTime
 Logary.Adapters.Suave
 EventStore.Client
 EventStore.Client.Embedded
-
+FParsec

@@ -24,6 +24,7 @@ NUGET
       EventStore.Client (3.4.0)
     Facebook (7.0.6)
     FAKE (4.7.3)
+    FParsec (1.0.2)
     FsCheck (2.2.0)
       FSharp.Core (>= 3.1.2.5 < 3.1.3)
     FSharp.Actor-logary (3.4.2)
@@ -96,7 +97,7 @@ NUGET
 GITHUB
   remote: fsharp/FAKE
   specs:
-    modules/Octokit/Octokit.fsx (29cd4ee57792f0f35e18bd97d4517eb8c94de569)
+    modules/Octokit/Octokit.fsx (5116ef18816c17fc62a6b8c9ffc9ea91015c78bf)
       Octokit
 HTTP
   remote: https://www.sqlite.org

@@ -24,6 +24,7 @@ nuget elmah.io
 nuget EventStore.Client
 nuget EventStore.Client.Embedded
 nuget Quartz
+nuget FParsec
 
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx
