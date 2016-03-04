@@ -118,7 +118,7 @@ let saveScheduledGame connection (m:Enveloppe) (e:GameScheduled)=
     
     root.add("game", game );
     let body = PetulantBear.Runner.run root bodyTemplate
-    saveNotifications connection m recipients (e.startDate.AddDays(float <| 7)) subject body
+    saveNotifications connection m recipients (e.startDate.AddDays(float <| -7)) subject body
 
 let savePlayerRemovedFromTheBench connection (m:Enveloppe) (e:PlayerRemovedFromTheBench)=
     

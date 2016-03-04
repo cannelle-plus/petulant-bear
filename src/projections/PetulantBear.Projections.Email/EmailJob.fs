@@ -18,6 +18,7 @@ open Logary.Metrics
 open NodaTime
 
 open System.Text.RegularExpressions
+open System.Text
 
 [<DisallowConcurrentExecution>]
 type MyJob()=
@@ -28,12 +29,14 @@ type MyJob()=
         let send() =
             Console.WriteLine("sending mail...")
             let mailMessage = new MailMessage()
+            mailMessage.SubjectEncoding <- Encoding.UTF8
+            mailMessage.BodyEncoding <- Encoding.UTF8
+
             mailMessage.From <- new MailAddress(from)
             mailMessage.To.Add (new MailAddress(notification.Recipient))
-            mailMessage.Subject <-  notification.Subject
-            mailMessage.Body <- notification.Body
+            mailMessage.Subject <-  notification.Subject.Replace("\r", "").Replace("\n", "")
+            mailMessage.Body <- notification.Body.Replace("\r", "").Replace("\n", "")
 
-            let client = new SmtpClient()
             smtpClient.Send(mailMessage)
 
         let saveSentEmail () =
@@ -74,11 +77,12 @@ type MyJob()=
 
                     sqlCmd.ExecuteNonQuery() |> ignore
                 
-            | :? System.Data.SQLite.SQLiteException as dbEx-> 
+            | :? Exception as dbEx-> 
                 sprintf "error occured %A" dbEx
                 |> LogLine.create' LogLevel.Error 
                 |> Logging.getCurrentLogger().Log 
                 raise dbEx 
+
     
 
     interface  IJob with
@@ -98,11 +102,13 @@ type MyJob()=
             let smtpClient = new SmtpClient()
             smtpClient.Host <- host
             smtpClient.EnableSsl <- true
-//            smtpClient.UseDefaultCredentials <- true
+            smtpClient.UseDefaultCredentials <- false
             smtpClient.Credentials <- new NetworkCredential(userName, password)
             smtpClient.Port <- port;
             
-            let sql= "select notificationId, subject,body,recipient,scheduledDate,nbAttempt from emailToSend where ScheduledDate<@now"
+            
+            
+            let sql= "select notificationId, subject,body,recipient,scheduledDate,nbAttempt from emailToSend where ScheduledDate<'@now'"
             use sqlCmd = new SQLiteCommand(sql,connection)
 
             sqlCmd.Parameters.Add(new SQLiteParameter("@now", DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ssZ"))) |> ignore

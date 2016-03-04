@@ -51,7 +51,7 @@ let main argv =
         let trigger = TriggerBuilder.Create()
                                     .WithIdentity("trigger1","group1")
                                     .StartNow()
-                                    .WithSimpleSchedule(fun x -> x.WithIntervalInSeconds(10).RepeatForever()|> ignore)
+                                    .WithSimpleSchedule(fun x -> x.WithIntervalInMinutes(10).RepeatForever()|> ignore)
                                     .Build()
         
                 
