@@ -163,10 +163,10 @@ type Repository(connection:SQLiteConnection, eventStoreConnectionString, eventSt
                 let streamName = createNameAgg name (envInitial.aggregateId.ToString())
 
 
-                printfn "uncommitted events have been produced according to version %i" expectedVersion
+                
                 let! writeResult = conn.AppendToStreamAsync(streamName,expectedVersion,events) |> Async.AwaitTask
 
-                printfn "events appended to %s, next expected version : %i"  streamName writeResult.NextExpectedVersion
+                ()
 
             }
 
@@ -186,6 +186,8 @@ type Repository(connection:SQLiteConnection, eventStoreConnectionString, eventSt
                     |> Seq.toList
                 
 
+
+                let logger = Logary.Logging.getCurrentLogger()
                 sprintf "Events used to hydrate : %A" evts
                     |> Logary.LogLine.warn
                     |> Logary.Logging.getCurrentLogger().Log

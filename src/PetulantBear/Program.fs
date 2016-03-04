@@ -127,17 +127,21 @@ let main args =
 
     let repo = EventSourceRepo.create connection confPetulant.EventStoreConnectionString confPetulant.EventStoreClientUsername confPetulant.EventStoreClientPassword
     let conn =(repo:>IEventStoreRepository).Connect()
-
+    
+    
+    let logConf = Logary.Targets.TextWriter.TextWriterConf.Create ((System.IO.File.AppendText "petulant.log"),(System.IO.File.AppendText "petulant-err.log"))
     use logary =
         withLogary' "bear2bear.web" (
             withTargets [
-                Console.create Console.empty "console"
+                //Console.create Console.empty "console"
+                Logary.Targets.TextWriter.create logConf "fileLogger"  
                 Logary.Targets.ElmahIO.create  confPetulant .Elmah "elmah"
 
             ] >>
                 withRules [
-                    Rule.create (Regex(".*", RegexOptions.Compiled)) "console" (fun _ -> true) (fun _ -> true) Info
-                    Rule.create (Regex(".*", RegexOptions.Compiled)) "elmah" (fun _ -> true) (fun _ -> true) Error
+                  //  Rule.create (Regex(".*", RegexOptions.Compiled)) "console" (fun _ -> true) (fun _ -> true) Info
+                    Rule.createForTarget  "fileLogger" 
+                    Rule.createForTarget "elmah" 
                 ]
         )
 
@@ -150,7 +154,7 @@ let main args =
     let system = System.create "System" ( section.AkkaConfig)
     let config =
         { defaultConfig with
-            logger = SuaveAdapter(logary.GetLogger "suave")
+            logger = SuaveAdapter(logary.GetLogger "fileLogger")
             bindings = [ HttpBinding.mk' HTTP confPetulant.IpAddress confPetulant.Port ]
             homeFolder = Some(confPetulant.RootPath)
         }

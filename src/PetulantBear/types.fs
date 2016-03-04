@@ -386,14 +386,14 @@ let processingCommand<'TAgg, 'TContract,'TCommand, 'TEvents>   (repo:IEventStore
             let bear = x.userState.["bear"] :?> BearSession
             let idAggregate = cmd.id
 
-            let logger = Logary.Logging.getLoggerByName "Logary.Targets.ElmahIO"
+            let logger = Logary.Logging.getLoggerByName "fileLogger"
             
-//            Logary.LogLine.warn (x.request.url.ToString())
-//            |> Logary.LogLine.setData "bear" bear
-//            |> Logary.LogLine.setData "cmd" cmd
-//            |> Logary.LogLine.setData "url" x.request.url
-//            |> Logary.LogLine.setData "headers" x.request.headers
-//            |> logger.Log
+            Logary.LogLine.warn (x.request.url.ToString())
+            |> Logary.LogLine.setData "bear" bear
+            |> Logary.LogLine.setData "cmd" cmd
+            |> Logary.LogLine.setData "url" x.request.url
+            |> Logary.LogLine.setData "headers" x.request.headers
+            |> logger.Log
         
             // if there is no version it means the aggregate does not support event sourcing
             if (not <| repo.IsCommandProcessed cmd.idCommand) && cmd.version.HasValue then
