@@ -1,10 +1,30 @@
-﻿<p>Etes vous pret a relever ce nouveau challenge !!!</p>
-
-startDate : $game.startDate<br>
-location : $game.location<br>
-maxPlayer : $game.maxPlayer<br>
-nbPlayer : $game.nbPlayer<br>
-Owner : $game.owner<br>
-
-<p>SPARTA!!!!!!!</p>
-
+﻿<div>&nbsp;</div>
+<div>c'est votre putain de G.O. pr&eacute;f&eacute;r&eacute; qui vous &eacute;crit !!!</div>
+<div>&nbsp;</div>
+<div>Ce soir tas de vomi, vous coucherez avec votre ballon ! Vous le baptiserez d'un nom de fille, parce que c'est le seul petit minou que vous pourrez vous cogner. Le temps de la main au panier avec la Marie-Jeanne qui a la chatte pourrie &agrave; travers son p'tit slip rose de pucelle, c'est termin&eacute; ! C'est avec &ccedil;a que tirerez votre coup, avec cette arme de cuir, d'air vicie et de couture, et en plus faudra lui &ecirc;tre fid&egrave;le !</div>
+<div>&nbsp;</div>
+<table style="margin-left: auto; margin-right: auto;" border="0">
+<tbody>
+<tr>
+<td>startDate</td>
+<td>$game.startDate</td>
+</tr>
+<tr>
+<td>location</td>
+<td>$game.location</td>
+</tr>
+<tr>
+<td>maxPlayer</td>
+<td>$game.maxPlayer</td>
+</tr>
+<tr>
+<td>Sarge</td>
+<td>$game.owner</td>
+</tr>
+</tbody>
+</table>
+<div>&nbsp;</div>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="http://www.craveonline.com/images/stories/2011/2012/October/Film/Myth%20of%20Macho/Full%20Metal%20Jacket/Full_Metal_Jacket_R_Lee_Ermey.jpg" alt="go go go marines!! Kick your ball!!" width="359" height="202" /></p>
+<p>&nbsp;</p>
+<h2 style="text-align: center;"><strong>Go go go marines!!!!!!!!!!</strong></h2>
+<p style="text-align: center;"><strong>KICK ME THAT BALL!&nbsp;</strong></p>

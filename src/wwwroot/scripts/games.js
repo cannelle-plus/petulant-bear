@@ -56,6 +56,22 @@ this.PetulantBear = this.PetulantBear || {};
           });
     }
 
+    this.registerPlayer = function (id, version) {
+        var registerPlayerCmd = createCommand(id, version, {
+              bearId: $('#bearsToRegistration').val()
+        });
+        loader.show();
+        return $.ajax({
+        type: "POST",
+                url: "api/games/join",
+                dataType: "json",
+                data: JSON.stringify(joinCmd)
+            })
+          .fail(function(err) {
+          $("#joinResult").html(err);
+          });
+          }
+
     this.changeName = function (id, version) {
         var changeNameCmd = createCommand(id, version, {
             name: "new Name" + guid()

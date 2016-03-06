@@ -68,6 +68,13 @@ let saveJoined connection (m:Enveloppe)  =
     let message = sprintf "%s vient de joindre le match!" m.bear.username
     writeMessage connection m.aggregateId m.version m.bear.bearId message "joined"
 
+let savePlayerRegistered connection (m:Enveloppe) (e:PlayerRegistered) =
+    match PetulantBear.SqliteBear2bearDB.getBear connection e.bearId with 
+    | Some (b) -> 
+        let message = sprintf "%s vient de se faire inscrire au match!" b.bearUsername
+        writeMessage connection m.aggregateId m.version m.bear.bearId message "registered"
+    | None -> ()
+
 let saveAbandonned connection (m:Enveloppe) =
     let message = sprintf "%s vient de quitter le match!" m.bear.username
     writeMessage connection m.aggregateId m.version m.bear.bearId message "abandonned"
@@ -111,6 +118,10 @@ let evtAppeared  connection escus (resolvedEvent:ResolvedEvent)=
             let e = deserializeEvt<GameJoined> resolvedEvent
             logProjection name resolvedEvent  m e
             saveJoined connection m
+        | "PlayerRegistered" -> 
+            let e = deserializeEvt<PlayerRegistered> resolvedEvent
+            logProjection name resolvedEvent  m e
+            savePlayerRegistered connection m e
         | "Cancelled" -> 
             let e = deserializeEvt<GameCancelled> resolvedEvent
             logProjection name resolvedEvent  m e

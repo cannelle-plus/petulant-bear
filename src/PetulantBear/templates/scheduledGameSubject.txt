@@ -1,1 +1,1 @@
-﻿new game in the hood
+﻿$game.name

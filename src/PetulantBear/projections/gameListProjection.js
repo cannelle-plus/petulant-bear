@@ -8,6 +8,10 @@
         linkTo('gameListProjection', e);
         return s;
     },
+    'PlayerRegistered': function (s, e) {
+        linkTo('gameListProjection', e);
+        return s;
+    },
     'Abandonned': function (s, e) {
         linkTo('gameListProjection', e);
         return s;

@@ -322,4 +322,40 @@ let gamesDomainTests =
             test <@ exec state bear <| cmd
                     |> isEvent expectedEvents @>
         
+        testCase "When GameScheduled, GameJoined, PlayerAddedToTheLineUp, RegisterPlayer -> PlayerRegistered ,PlayerAddedToTheLineUp " <| fun _ ->
+            
+            let bear = {
+                bearId=Guid.NewGuid()
+                socialId="testSocialId"
+                username = "toto"
+            }
+
+            let registeredBearId = Guid.NewGuid()
+            let startDate = DateTime.Now.AddHours(float 25)
+            let pastEvents = 
+                [
+                    Scheduled({
+                        name= "test";
+                        startDate = startDate;
+                        location = "playSoccer";
+                        players = "julien";
+                        nbPlayers = 0;
+                        maxPlayers = 3;
+                    })
+                    Joined({bearId=bear.bearId})
+                    PlayerAddedToTheLineUp({bearId=bear.bearId})
+                ]
+            
+            let cmd =  RegisterPlayer({bearId= registeredBearId})
+
+            let expectedEvents = 
+                [
+                    PlayerRegistered({ bearId=registeredBearId  })
+                    PlayerAddedToTheLineUp({bearId=registeredBearId})
+                ]   
+
+            let state = List.fold applyEvts State.Initial pastEvents 
+
+            test <@ exec state bear <| cmd
+                    |> isEvent expectedEvents @>
     ]

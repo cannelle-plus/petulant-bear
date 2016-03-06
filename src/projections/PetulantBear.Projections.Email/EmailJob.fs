@@ -31,6 +31,7 @@ type MyJob()=
             let mailMessage = new MailMessage()
             mailMessage.SubjectEncoding <- Encoding.UTF8
             mailMessage.BodyEncoding <- Encoding.UTF8
+            mailMessage.IsBodyHtml <- true 
 
             mailMessage.From <- new MailAddress(from)
             mailMessage.To.Add (new MailAddress(notification.Recipient))
@@ -58,8 +59,10 @@ type MyJob()=
             saveSentEmail()
         with 
             | :? System.Net.Mail.SmtpException as smtpEx-> 
+                Console.WriteLine("smtpException :" + smtpEx.ToString())
                 if notification.NbAttempt<=nbAttemptMax then
                     //increment the counter of attempt to send the email
+                    Console.WriteLine(" increment the counter of attempt to send the email")
                     let sqlNbAttempt = "Update emailToSend set nbAttempt = nbAttempt +1 where notificationId=@notificationId and recipient=@recipient;"
 
                     use sqlCmdNbAttempt = new SQLiteCommand(sqlNbAttempt,connection)
@@ -67,8 +70,10 @@ type MyJob()=
                     sqlCmdNbAttempt.Parameters.Add(new SQLiteParameter("@recipient", notification.Recipient.ToString())) |> ignore
 
                     sqlCmdNbAttempt.ExecuteNonQuery() |> ignore
+                    Console.WriteLine(" incremented")
                 else
                     //pass the email to the deadQueue
+                    Console.WriteLine("pass the email to the deadQueue")
                     let sql = "Insert into deadQueue (notificationId , subject , body , recipient , nbAttempt,scheduledDate) select notificationId , subject , body , recipient , nbAttempt, scheduledDate from emailToSend where notificationId=@notificationId and recipient=@recipient; delete from emailToSend where notificationId=@notificationId and recipient=@recipient"
 
                     use sqlCmd = new SQLiteCommand(sql,connection)
@@ -76,8 +81,10 @@ type MyJob()=
                     sqlCmd.Parameters.Add(new SQLiteParameter("@recipient", notification.Recipient.ToString())) |> ignore
 
                     sqlCmd.ExecuteNonQuery() |> ignore
+                    Console.WriteLine("passed")
                 
             | :? Exception as dbEx-> 
+                Console.WriteLine("general exception" + dbEx.ToString())
                 sprintf "error occured %A" dbEx
                 |> LogLine.create' LogLevel.Error 
                 |> Logging.getCurrentLogger().Log 

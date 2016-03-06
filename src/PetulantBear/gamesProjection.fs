@@ -60,6 +60,19 @@ let saveJoined connection m  =
 
     sqlCmd.ExecuteNonQuery() |> ignore
 
+let saveRegisteredPlayer connection m (e:PlayerRegistered) =
+    let sql = "delete from GamesBears  where gameId=@id and bearId=@bearId; Insert into GamesBears (gameId,bearId)  VALUES (@id,@bearId); Update GamesList set version =@version where id=@id;"
+    use sqlCmd = new SQLiteCommand(sql, connection) 
+
+    let add (name:string, value: string) = 
+        sqlCmd.Parameters.Add(new SQLiteParameter(name,value)) |> ignore
+
+    add("@id", m.aggregateId.ToString())
+    add("@bearId",  e.bearId.ToString())
+    add("@version", m.version.ToString())
+
+    sqlCmd.ExecuteNonQuery() |> ignore
+
 let saveAbandonned connection m =
     
     let sql = "delete from GamesBears  where gameId=@id and bearId=@bearId; Update GamesList set version =@version where id=@id;"

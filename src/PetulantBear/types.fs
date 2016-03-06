@@ -232,6 +232,9 @@ let session f=
                 | _ , _,_ -> f NoSession 
         )
 
+ 
+    
+
 let inSession f =
     context (fun x ->
         let store = x |> HttpContext.state
@@ -318,6 +321,40 @@ let withBear  =
                 | None ,  Some (_) , None->Http.RequestErrors.BAD_REQUEST "new bear found"
                 | _ , _,_ -> Http.RequestErrors.BAD_REQUEST "no session found" 
         )
+
+let withBear' x= 
+    let store = x |> HttpContext.state
+    match  store with
+    | None -> NoSession 
+    | Some state ->
+        match state.get bearStore,state.get socialIdStore, state.get userNameStore  with
+        | Some bearId, Some socialId, Some username -> Bear( { bearId= bearId; socialId=socialId; username = username})
+        | None ,  Some socialId , None-> NewBear({socialId = socialId})
+        | _ , _,_ -> NoSession
+
+
+let withCommand'<'T> bear = 
+    context (fun x ->
+        match fromJson<Command<'T>> x.request.rawForm with
+            | Serialized(cmd) -> Writers.setUserData "cmd"  cmd
+            | DeserializingException(rawText,ex) ->
+
+                let logger = Logary.Logging.getLoggerByName "Logary.Targets.ElmahIO"
+            
+                Logary.LogLine.error "DeserializingException"
+                |> Logary.LogLine.setExn ex
+                |> Logary.LogLine.setData "bear" bear
+                |> Logary.LogLine.setData "url" x.request.url
+                |> Logary.LogLine.setData "url" x.request.url
+                |> Logary.LogLine.setData "rawForm" rawText
+                |> Logary.LogLine.setData "serializationType" (typedefof<'T>).FullName
+                |> Logary.LogLine.setData "headers" x.request.headers
+                
+                |> logger.Log
+            
+                RequestErrors.BAD_REQUEST "body not understood"
+    )
+ 
 
 let logErrorWithBear x bear name  =
     let logger = Logary.Logging.getLoggerByName "Logary.Targets.ElmahIO"

@@ -8,6 +8,10 @@
         linkTo('petulantBearProjection', e);
         return s;
     },
+    'PlayerRegistered': function (s, e) {
+        linkTo('petulantBearProjection', e);
+        return s;
+    },
     'Abandonned': function (s, e) {
         linkTo('petulantBearProjection', e);
         return s;

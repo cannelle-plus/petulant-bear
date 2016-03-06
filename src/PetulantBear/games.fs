@@ -21,6 +21,7 @@ open Akka.FSharp
 module Navigation =
     let list = "/api/games/list"
     let detail = "/api/games/detail"
+    let bearsAvailable = "/api/games/%A/bearsAvailable"
     let schedule = "/api/games/schedule"
     let join = "/api/games/join"
     let cancel = "/api/games/cancel"
@@ -137,6 +138,11 @@ module Contracts =
       kickedBearId : Guid;
       }
 
+    type RegisterPlayer = 
+      {
+      bearId : Guid;
+      }
+
     type Join = EmptyClass
     type Abandon = EmptyClass
     type Cancel = EmptyClass
@@ -147,6 +153,10 @@ module Contracts =
       bearId : Guid;
       }
     type GameJoined = 
+      {
+      bearId : Guid;
+      }
+    type PlayerRegistered = 
       {
       bearId : Guid;
       }
@@ -210,6 +220,7 @@ type Commands =
   | Cancel of Contracts.Cancel
   | Close of Contracts.Close
   | Join of Contracts.Join
+  | RegisterPlayer of Contracts.RegisterPlayer
   | ChangeName of Contracts.ChangeName
   | ChangeStartDate of Contracts.ChangeStartDate
   | ChangeLocation of Contracts.ChangeLocation
@@ -222,6 +233,7 @@ type Events =
   | Cancelled  of Contracts.GameCancelled
   | Closed  of Contracts.GameClosed
   | Joined  of Contracts.GameJoined
+  | PlayerRegistered of Contracts.PlayerRegistered
   | NameChanged of Contracts.NameChanged
   | StartDateChanged of Contracts.StartDateChanged
   | LocationChanged of Contracts.LocationChanged
@@ -254,6 +266,11 @@ module private Assert =
         validAction state
         <* validator (fun g -> g.startDate>DateTime.Now    ) ["err:the game has already started"] state
         <* validator (fun (b,g) -> not <| (g.lineUp |> Seq.append g.bench |> Seq.exists (fun x -> x=b.bearId))) ["err:this bear is already part of the game"] (bear,state)
+
+    let validRegisterPlayer bearId state = 
+        validAction state
+        <* validator (fun g -> g.startDate>DateTime.Now    ) ["err:the game has already started"] state
+        <* validator (fun (b,g) -> not <| (g.lineUp |> Seq.append g.bench |> Seq.exists (fun x -> x=b))) ["err:this bear is already part of the game"] (bearId,state)
 
     let validAbandonGame bear state = 
         validAction state
@@ -288,6 +305,9 @@ let exec state bear = function
     | Join(cmd) -> 
         if (state.lineUp.Length = state.maxPlayer ) then  Assert.validJoinGame bear state <?> [Joined({bearId=bear.bearId});PlayerAddedToTheBench({ bearId=bear.bearId})]
         else Assert.validJoinGame bear state <?> [Joined({bearId=bear.bearId});PlayerAddedToTheLineUp({ bearId=bear.bearId})] 
+    | RegisterPlayer(cmd) ->
+        if (state.lineUp.Length = state.maxPlayer ) then  Assert.validRegisterPlayer cmd.bearId state <?> [PlayerRegistered({bearId=cmd.bearId});PlayerAddedToTheBench({ bearId=cmd.bearId})]
+        else Assert.validRegisterPlayer cmd.bearId state <?> [PlayerRegistered({bearId=cmd.bearId});PlayerAddedToTheLineUp({ bearId=cmd.bearId})] 
     | ChangeName(cmd) -> Assert.validAction state <?> [NameChanged({ name=cmd.name})]
     | ChangeStartDate(cmd) -> Assert.validChangeStartDate cmd state <?> [StartDateChanged({ startDate= cmd.startDate})]
     | ChangeLocation(cmd) -> Assert.validAction state <?> [LocationChanged({ location=cmd.location})]
@@ -309,6 +329,7 @@ let applyEvts state = function
     | Cancelled(evt) -> { state with isOpenned = false }
     | Closed(evt) -> { state with isOpenned = false }
     | Joined(evt)  ->  { state with nbPlayer= state.nbPlayer+1;}
+    | PlayerRegistered(evt)  ->  { state with nbPlayer= state.nbPlayer+1;}
     | PlayerKicked(evt) ->  { state with nbPlayer= state.nbPlayer-1 ; }
     | PlayerAddedToTheLineUp(evt) -> {state with lineUp= evt.bearId::state.lineUp}
     | PlayerRemovedFromTheLineUp(evt) -> 

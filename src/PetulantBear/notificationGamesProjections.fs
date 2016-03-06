@@ -90,7 +90,7 @@ let saveNotifications connection (m:Enveloppe) recipients (notificationDate:Date
         sqlCmd.ExecuteNonQuery() |> ignore
 
 let saveScheduledGame connection (m:Enveloppe) (e:GameScheduled)=
-    let subject = getTemplate "scheduledGameSubject";
+    let subjectTemplate = getTemplate "scheduledGameSubject";
     let bodyTemplate = getTemplate "scheduledGameBody";
     
     let sqlPlayers = "select b.bearId,b.bearUsername,b.email,u.socialId,b.bearAvatarId from Bears as b inner join users as u on b.bearId=u.bearId where b.email IS NOT NULL"
@@ -111,6 +111,7 @@ let saveScheduledGame connection (m:Enveloppe) (e:GameScheduled)=
     let game = new PetulantBear.Formatter.Context()    
 
     game.add("startDate", e.startDate.ToString());
+    game.add("name", e.name);
     game.add("location", e.location);
     game.add("maxPlayer", e.maxPlayers.ToString());
     game.add("nbPlayer", e.nbPlayers.ToString());
@@ -118,6 +119,7 @@ let saveScheduledGame connection (m:Enveloppe) (e:GameScheduled)=
     
     root.add("game", game );
     let body = PetulantBear.Runner.run root bodyTemplate
+    let subject = PetulantBear.Runner.run root subjectTemplate
     saveNotifications connection m recipients (e.startDate.AddDays(float <| -7)) subject body
 
 let savePlayerRemovedFromTheBench connection (m:Enveloppe) (e:PlayerRemovedFromTheBench)=

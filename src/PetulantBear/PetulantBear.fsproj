@@ -128,10 +128,10 @@
     </Content>
     <Compile Include="parser.fs" />
     <Compile Include="formatter.fs" />
+    <Compile Include="validator.fs" />
     <Compile Include="runner.fs" />
     <Compile Include="Logary.Targets.ElmahIO.fs" />
     <Compile Include="staticTexts.fs" />
-    <Compile Include="validator.fs" />
     <Compile Include="dataContracts.fs" />
     <Compile Include="types.fs" />
     <Compile Include="perRequest.fs" />
